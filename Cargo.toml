@@ -1,0 +1,13 @@
+[package]
+name = "pg_query"
+version = "0.1.0"
+authors = ["Paul Mason <paul@paulmason.me>"]
+edition = "2018"
+build = "build.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+[build-dependencies]
+bindgen = "0.58"

@@ -1,0 +1,3 @@
+[submodule "lib/libpg_query"]
+	path = lib/libpg_query
+	url = https://github.com/pganalyze/libpg_query
