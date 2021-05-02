@@ -2,9 +2,8 @@
 fn it_can_generate_an_ast() {
     let result =
         pg_query::parse("CREATE INDEX ix_test ON contacts.person (id, ssn) WHERE ssn IS NOT NULL;");
-    assert!(result.is_ok());
-
-    assert!(false)
+    println!("{:?}", result.unwrap());
+    //assert!(result.is_ok());
 }
 
 #[test]

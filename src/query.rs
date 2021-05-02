@@ -4,7 +4,19 @@ use std::os::raw::c_char;
 use crate::bindings::*;
 use crate::error::*;
 
-pub fn parse(stmt: &str) -> Result<()> {
+#[derive(Debug, serde::Deserialize)]
+struct ParseResult {
+    version: u32,
+    stmts: Vec<Stmt>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct Stmt {
+    stmt: crate::ast::Node,
+    stmt_len: u32,
+}
+
+pub fn parse(stmt: &str) -> Result<Vec<crate::ast::Node>> {
     unsafe {
         // Execute the query
         let c_str = CString::new(stmt).unwrap();
@@ -19,9 +31,12 @@ pub fn parse(stmt: &str) -> Result<()> {
         }
 
         // Parse the JSON into the AST
-        println!("{:?}", CStr::from_ptr(result.parse_tree));
+        let raw = CStr::from_ptr(result.parse_tree);
+        println!("{:?}", raw);
+        let parsed: ParseResult =
+            serde_json::from_slice(raw.to_bytes()).map_err(|e| Error::InvalidAst(e.to_string()))?;
         pg_query_free_parse_result(result);
-        Ok(())
+        Ok(parsed.stmts.into_iter().map(|s| s.stmt).collect())
     }
 }
 /*
