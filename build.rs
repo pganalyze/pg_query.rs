@@ -1,7 +1,8 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::env;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Write};
+use std::iter::FromIterator;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
@@ -96,29 +97,63 @@ fn generate_ast(build_dir: &PathBuf, out_dir: &PathBuf) -> std::io::Result<()> {
     let out_file = File::create(out_dir.join("ast.rs"))?;
     let mut out_file = BufWriter::new(out_file);
 
-    // Type defs first
+    // Keep track of types for type resolution
+    let mut type_resolver = TypeResolver::new();
+
+    // Read in all "Node" types as this helps generating struct vs node
+    let node_types = File::open(srcdata_dir.join("nodetypes.json"))?;
+    let node_types = BufReader::new(node_types);
+    let node_types: Vec<String> = serde_json::from_reader(node_types)?;
+    for ty in node_types.iter() {
+        type_resolver.add_node(ty);
+    }
+    let node_types = HashSet::from_iter(node_types.into_iter());
+
+    // Generate type aliases first
     let type_defs = File::open(srcdata_dir.join("typedefs.json"))?;
     let type_defs = BufReader::new(type_defs);
     let type_defs: Vec<TypeDef> = serde_json::from_reader(type_defs)?;
-    make_aliases(&type_defs, &mut out_file)?;
+    for ty in type_defs.iter() {
+        type_resolver.add_type(&ty.new_type_name);
+    }
+    make_aliases(&mut out_file, &type_defs, &node_types, &mut type_resolver)?;
 
     // Enums
     let enum_defs = File::open(srcdata_dir.join("enum_defs.json"))?;
     let enum_defs = BufReader::new(enum_defs);
     let enum_defs: HashMap<String, HashMap<String, Enum>> = serde_json::from_reader(enum_defs)?;
-    make_enums(&enum_defs, &mut out_file)?;
+    for map in enum_defs.values() {
+        for ty in map.keys() {
+            type_resolver.add_type(ty);
+        }
+    }
+    make_enums(&mut out_file, &enum_defs)?;
 
     // Structs
     let struct_defs = File::open(srcdata_dir.join("struct_defs.json"))?;
     let struct_defs = BufReader::new(struct_defs);
     let struct_defs: HashMap<String, HashMap<String, Struct>> =
         serde_json::from_reader(struct_defs)?;
-    make_primitives(&struct_defs, &mut out_file)?;
-    make_nodes(&struct_defs, &mut out_file)?;
+    for map in struct_defs.values() {
+        for ty in map.keys() {
+            if !type_resolver.contains(ty) {
+                type_resolver.add_type(ty);
+            }
+        }
+    }
+
+    // Finally make the nodes and the primitives
+    make_nodes(&mut out_file, &struct_defs, &node_types, &type_resolver)?;
+    make_structs(&mut out_file, &struct_defs, &node_types, &type_resolver)?;
     Ok(())
 }
 
-fn make_aliases(type_defs: &Vec<TypeDef>, out: &mut BufWriter<File>) -> std::io::Result<()> {
+fn make_aliases(
+    out: &mut BufWriter<File>,
+    type_defs: &Vec<TypeDef>,
+    node_types: &HashSet<String>,
+    type_resolver: &mut TypeResolver,
+) -> std::io::Result<()> {
     const IGNORE: [&str; 5] = [
         "BlockId",
         "ExpandedObjectHeader",
@@ -130,6 +165,11 @@ fn make_aliases(type_defs: &Vec<TypeDef>, out: &mut BufWriter<File>) -> std::io:
     for def in type_defs {
         // TODO: Look into what these are actually for
         if IGNORE.iter().any(|e| def.new_type_name.eq(e)) {
+            continue;
+        }
+        if node_types.contains(&def.source_type) {
+            // Type alias won't work, so just ignore this and replace the type
+            type_resolver.add_node(&def.new_type_name);
             continue;
         }
         if let Some(comment) = &def.comment {
@@ -156,13 +196,14 @@ fn make_aliases(type_defs: &Vec<TypeDef>, out: &mut BufWriter<File>) -> std::io:
             unexpected => panic!("Unrecognized type for alias: {}", unexpected),
         };
         writeln!(out, "pub type {} = {};", def.new_type_name, ty)?;
+        type_resolver.add_type(&def.new_type_name);
     }
     Ok(())
 }
 
 fn make_enums(
-    enum_defs: &HashMap<String, HashMap<String, Enum>>,
     out: &mut BufWriter<File>,
+    enum_defs: &HashMap<String, HashMap<String, Enum>>,
 ) -> std::io::Result<()> {
     let sections = vec![
         "nodes/parsenodes",
@@ -199,63 +240,107 @@ fn make_enums(
     Ok(())
 }
 
-fn make_primitives(
-    struct_defs: &HashMap<String, HashMap<String, Struct>>,
+fn make_structs(
     out: &mut BufWriter<File>,
+    struct_defs: &HashMap<String, HashMap<String, Struct>>,
+    node_types: &HashSet<String>,
+    type_resolver: &TypeResolver,
 ) -> std::io::Result<()> {
-    for (name, def) in &struct_defs["nodes/primnodes"] {
-        write!(out, "#[derive(Debug, serde::Deserialize)]\n")?;
-        write!(out, "pub struct {} {{\n", name)?;
-        for field in &def.fields {
-            let (name, c_type) = match (&field.name, &field.c_type) {
-                (&Some(ref name), &Some(ref c_type)) => (name, c_type),
-                _ => continue,
-            };
+    let sections = vec!["nodes/parsenodes", "nodes/primnodes"];
 
-            if name == "type" {
+    for section in sections {
+        for (name, def) in &struct_defs[section] {
+            // Do not generate node types
+            if node_types.contains(name) {
                 continue;
             }
-            if is_reserved(&name) {
-                write!(out, "    #[serde(rename = \"{}\")]\n", name)?;
-                write!(out, "    pub {}_: {},\n", name, c_to_rust_type(c_type))?;
-            } else {
-                write!(out, "    pub {}: {},\n", name, c_to_rust_type(c_type))?;
+
+            write!(out, "#[derive(Debug, serde::Deserialize)]\n")?;
+            write!(out, "pub struct {} {{\n", name)?;
+            for field in &def.fields {
+                let (name, c_type) = match (&field.name, &field.c_type) {
+                    (&Some(ref name), &Some(ref c_type)) => (name, c_type),
+                    _ => continue,
+                };
+
+                if name == "type" {
+                    continue;
+                }
+                if is_reserved(&name) {
+                    write!(out, "    #[serde(rename = \"{}\")]\n", name)?;
+                    write!(
+                        out,
+                        "    pub {}_: {},\n",
+                        name,
+                        type_resolver.resolve(c_type)
+                    )?;
+                } else {
+                    write!(
+                        out,
+                        "    pub {}: {},\n",
+                        name,
+                        type_resolver.resolve(c_type)
+                    )?;
+                }
             }
+            write!(out, "}}\n")?;
         }
-        write!(out, "}}\n")?;
     }
+
     Ok(())
 }
 
 fn make_nodes(
-    struct_defs: &HashMap<String, HashMap<String, Struct>>,
     out: &mut BufWriter<File>,
+    struct_defs: &HashMap<String, HashMap<String, Struct>>,
+    node_types: &HashSet<String>,
+    type_resolver: &TypeResolver,
 ) -> std::io::Result<()> {
+    let sections = vec!["nodes/parsenodes", "nodes/primnodes"];
+
     write!(out, "#[derive(Debug, serde::Deserialize)]\n")?;
     write!(out, "pub enum Node {{\n")?;
 
-    for (name, def) in &struct_defs["nodes/parsenodes"] {
-        write!(out, "    {} {{\n", name)?;
-
-        for field in &def.fields {
-            let (name, c_type) = match (&field.name, &field.c_type) {
-                (&Some(ref name), &Some(ref c_type)) => (name, c_type),
-                _ => continue,
-            };
-
-            if name == "type" {
+    for section in sections {
+        for (name, def) in &struct_defs[section] {
+            // Only generate node types
+            if !node_types.contains(name) {
                 continue;
             }
-            if is_reserved(&name) {
-                write!(out, "        #[serde(rename = \"{}\")]\n", name)?;
-                write!(out, "        {}_: {},\n", name, c_to_rust_type(c_type))?;
-            } else {
-                write!(out, "        {}: {},\n", name, c_to_rust_type(c_type))?;
-            }
-        }
 
-        write!(out, "    }},\n")?;
+            write!(out, "    {} {{\n", name)?;
+
+            for field in &def.fields {
+                let (name, c_type) = match (&field.name, &field.c_type) {
+                    (&Some(ref name), &Some(ref c_type)) => (name, c_type),
+                    _ => continue,
+                };
+
+                if name == "type" {
+                    continue;
+                }
+                if is_reserved(&name) {
+                    write!(out, "        #[serde(rename = \"{}\")]\n", name)?;
+                    write!(
+                        out,
+                        "        {}_: {},\n",
+                        name,
+                        type_resolver.resolve(c_type)
+                    )?;
+                } else {
+                    write!(
+                        out,
+                        "        {}: {},\n",
+                        name,
+                        type_resolver.resolve(c_type)
+                    )?;
+                }
+            }
+
+            write!(out, "    }},\n")?;
+        }
     }
+
     write!(out, "}}\n")?;
     Ok(())
 }
@@ -268,115 +353,82 @@ fn is_reserved(variable: &str) -> bool {
     }
 }
 
-fn c_to_rust_type(c_type: &str) -> &str {
-    match c_type {
-        // Primitive mappings
-        "uint32" => "u32",
-        "uint64" => "u64",
-        "bits32" => "bits32", // Alias
-        "bool" => "bool",
-        "int" => "i32",
-        "long" => "i64",
-        "int32" => "i32",
-        "char*" => "Option<String>", // Make all strings optional
-        "int16" => "i16",
-        "char" => "char",
-        "double" => "f64",
+struct TypeResolver {
+    primitive: HashMap<&'static str, &'static str>,
+    nodes: HashSet<String>,
+    types: HashSet<String>,
+}
 
-        // Vec
-        "List*" => "Option<Vec<Node>>",
+impl TypeResolver {
+    pub fn new() -> Self {
+        let mut primitive = HashMap::new();
+        primitive.insert("uint32", "u32");
+        primitive.insert("uint64", "u64");
+        primitive.insert("bits32", "bits32"); // Alias
+        primitive.insert("bool", "bool");
+        primitive.insert("int", "i32");
+        primitive.insert("long", "i64");
+        primitive.insert("int32", "i32");
+        primitive.insert("char*", "Option<String>"); // Make all strings optional
+        primitive.insert("int16", "i16");
+        primitive.insert("char", "char");
+        primitive.insert("double", "f64");
 
-        // Box<Node>
-        "Node*" => "Option<Box<Node>>",
-        "Bitmapset*" => "Box<Node>",
-        "CollateClause*" => "Box<Node>",
-        "CreateStmt" => "Box<Node>",
-        "FuncCall*" => "Box<Node>",
-        "GrantStmt*" => "Box<Node>",
-        "Index" => "Box<Node>",
-        "InferClause*" => "Box<Node>",
-        "ObjectWithArgs*" => "Box<Node>",
-        "Oid" => "uuid::Uuid",
-        "OnConflictClause*" => "Box<Node>",
-        "PartitionSpec*" => "Box<Node>",
-        "PartitionBoundSpec*" => "Box<Node>",
-        "Query*" => "Box<Node>",
-        "RoleSpec*" => "Box<Node>",
-        "SelectStmt*" => "Box<Node>",
-        "TableSampleClause*" => "Box<Node>",
-        "TypeName*" => "Box<Node>",
-        "Value*" => "Box<Node>",
-        "VariableSetStmt*" => "Box<Node>",
-        "WindowDef*" => "Box<Node>",
-        "WithClause*" => "Box<Node>",
+        // Similar to primitives
+        primitive.insert("List*", "Option<Vec<Node>>");
+        primitive.insert("Node*", "Option<Box<Node>>");
+        primitive.insert("Expr*", "Option<Box<Node>>");
 
-        // Other fields
-        "A_Expr_Kind" => "A_Expr_Kind",
-        "AclMode" => "AclMode",
-        "AggSplit" => "AggSplit",
-        "Alias*" => "Option<Alias>",
-        "AlterSubscriptionType" => "AlterSubscriptionType",
-        "AlterTableType" => "AlterTableType",
-        "AlterTSConfigType" => "AlterTSConfigType",
-        "AttrNumber" => "AttrNumber",
-        "BoolExprType" => "BoolExprType",
-        "BoolTestType" => "BoolTestType",
-        "CmdType" => "CmdType",
-        "CoercionContext" => "CoercionContext",
-        "CoercionForm" => "CoercionForm",
-        "ConstrType" => "ConstrType",
-        "Cost" => "Cost",
-        "CTEMaterialize" => "CTEMaterialize",
-        "Datum" => "Datum",
-        "DefElemAction" => "DefElemAction",
-        "DiscardMode" => "DiscardMode",
-        "DropBehavior" => "DropBehavior",
-        "Expr" => "Expr",
-        "Expr*" => "Option<Expr>",
-        "FetchDirection" => "FetchDirection",
-        "FromExpr*" => "Option<FromExpr>",
-        "FuncExpr*" => "Option<FuncExpr>",
-        "FunctionParameterMode" => "FunctionParameterMode",
-        "GrantTargetType" => "GrantTargetType",
-        "GroupingSetKind" => "GroupingSetKind",
-        "ImportForeignSchemaType" => "ImportForeignSchemaType",
-        "IntoClause*" => "Option<IntoClause>",
-        "JoinType" => "JoinType",
-        "LimitOption" => "LimitOption",
-        "LockClauseStrength" => "LockClauseStrength",
-        "LockWaitPolicy" => "LockWaitPolicy",
-        "MinMaxOp" => "MinMaxOp",
-        "NullTestType" => "NullTestType",
-        "ObjectType" => "ObjectType",
-        "OnCommitAction" => "OnCommitAction",
-        "OnConflictAction" => "OnConflictAction",
-        "OnConflictExpr*" => "Option<OnConflictExpr>",
-        "OverridingKind" => "OverridingKind",
-        "ParamKind" => "ParamKind",
-        "PartitionRangeDatumKind" => "PartitionRangeDatumKind",
-        "QuerySource" => "QuerySource",
-        "RangeVar*" => "Option<RangeVar>",
-        "ReindexObjectType" => "ReindexObjectType",
-        "RoleSpecType" => "RoleSpecType",
-        "RoleStmtType" => "RoleStmtType",
-        "RowCompareType" => "RowCompareType",
-        "RTEKind" => "RTEKind",
-        "SetOperation" => "SetOperation",
-        "SortByDir" => "SortByDir",
-        "SortByNulls" => "SortByNulls",
-        "SQLValueFunctionOp" => "SQLValueFunctionOp",
-        "SubLinkType" => "SubLinkType",
-        "SubTransactionId" => "SubTransactionId",
-        "TableFunc*" => "Option<TableFunc>",
-        "TransactionStmtKind" => "TransactionStmtKind",
-        "Value" => "Value", // TODO: Implement this one
-        "VariableSetKind" => "VariableSetKind",
-        "ViewCheckOption" => "ViewCheckOption",
-        "WCOKind" => "WCOKind",
-        "XmlExprOp" => "XmlExprOp",
-        "XmlOptionType" => "XmlOptionType",
+        // TODO: Bitmapset is defined in bitmapset.h and is roughly equivalent to a vector of u32's.
+        //       It'll do for now.
+        primitive.insert("Bitmapset*", "Option<Vec<u32>>");
 
-        // This is a sanity check. We want this list to be exhaustive
-        unexpected => panic!("Unexpected type: {}", unexpected),
+        TypeResolver {
+            primitive,
+
+            nodes: HashSet::new(),
+            types: HashSet::new(),
+        }
+    }
+
+    pub fn add_node(&mut self, ty: &str) {
+        self.nodes.insert(ty.to_string());
+    }
+
+    pub fn add_type(&mut self, ty: &str) {
+        self.types.insert(ty.to_string());
+    }
+
+    pub fn contains(&self, ty: &str) -> bool {
+        self.primitive.contains_key(ty) || self.nodes.contains(ty) || self.types.contains(ty)
+    }
+
+    pub fn resolve(&self, c_type: &str) -> String {
+        if let Some(ty) = self.primitive.get(c_type) {
+            return ty.to_string();
+        }
+        if let Some(ty) = c_type.strip_suffix('*') {
+            if self.nodes.contains(ty) {
+                return "Option<Box<Node>>".into();
+            }
+            if self.types.contains(ty) {
+                return format!("Option<{}>", ty);
+            }
+        } else {
+            if self.nodes.contains(c_type) {
+                return "Box<Node>".into();
+            }
+            if self.types.contains(c_type) {
+                return c_type.into();
+            }
+        }
+
+        // SHOULD be unreachable
+        // let mut expected = String::new();
+        // for ty in self.types.keys() {
+        //     expected.push_str(ty);
+        //     expected.push(',');
+        // }
+        unreachable!("Unexpected type: {}", c_type)
     }
 }
