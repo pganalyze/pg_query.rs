@@ -13,6 +13,15 @@
 //!
 //! Warning! This library is in early stages of development so any APIs exposed are subject to change.
 //!
+//! ## Getting started
+//!
+//! Add the following to your `Cargo.toml`
+//!
+//! ```toml
+//! [dependencies]
+//! pg_query = "0.1"
+//! ```
+//!
 //! # Example: Parsing a query
 //!
 //! ```rust

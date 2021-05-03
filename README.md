@@ -11,7 +11,16 @@ pg_query &emsp; [![Build Status]][actions] [![Latest Version]][crates.io] [![Doc
 PostgreSQL parser for Rust that uses the [actual PostgreSQL server source]((https://github.com/pganalyze/libpg_query)) to parse 
 SQL queries and return the internal PostgreSQL parse tree.
 
-Warning! This library is in early stages of development so any APIs exposed are subject to change. 
+Warning! This library is in early stages of development so any APIs exposed are subject to change.
+
+## Getting started
+
+Add the following to your `Cargo.toml`
+
+```toml
+[dependencies]
+pg_query = "0.1"
+```
 
 ## Example: Parsing a query
 
