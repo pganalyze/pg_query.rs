@@ -16,6 +16,11 @@ struct Stmt {
     stmt_len: u32,
 }
 
+pub struct Fingerprint {
+    pub value: u64,
+    pub hex: String,
+}
+
 pub fn parse(stmt: &str) -> Result<Vec<crate::ast::Node>> {
     unsafe {
         let c_str = CString::new(stmt).unwrap();
@@ -48,7 +53,7 @@ pub fn normalize(stmt: &str) -> Result<String> {
             let error = &*result.error;
             let message = CStr::from_ptr(error.message).to_string_lossy().into();
             pg_query_free_normalize_result(result);
-            return Err(Error::NormalizeError(message));
+            return Err(Error::ParseError(message));
         }
 
         // Parse the query back
@@ -59,8 +64,48 @@ pub fn normalize(stmt: &str) -> Result<String> {
     }
 }
 
-/*
-pub fn parse_plpgsql(stmt: &str) {}
+pub fn fingerprint(stmt: &str) -> Result<Fingerprint> {
+    unsafe {
+        let c_str = CString::new(stmt).unwrap();
+        let result = pg_query_fingerprint(c_str.as_ptr() as *const c_char);
 
-pub fn fingerprint(stmt: &str) {}
-*/
+        // Capture any errors first
+        if !result.error.is_null() {
+            let error = &*result.error;
+            let message = CStr::from_ptr(error.message).to_string_lossy().into();
+            pg_query_free_fingerprint_result(result);
+            return Err(Error::ParseError(message));
+        }
+
+        // Parse the fingerprint
+        let raw = CStr::from_ptr(result.fingerprint_str);
+        let owned = Fingerprint {
+            value: result.fingerprint,
+            hex: raw.to_string_lossy().to_string(),
+        };
+        pg_query_free_fingerprint_result(result);
+        Ok(owned)
+    }
+}
+
+pub fn parse_plpgsql(stmt: &str) -> Result<serde_json::Value> {
+    unsafe {
+        let c_str = CString::new(stmt).unwrap();
+        let result = pg_query_parse_plpgsql(c_str.as_ptr() as *const c_char);
+
+        // Capture any errors first
+        if !result.error.is_null() {
+            let error = &*result.error;
+            let message = CStr::from_ptr(error.message).to_string_lossy().into();
+            pg_query_free_plpgsql_parse_result(result);
+            return Err(Error::ParseError(message));
+        }
+
+        // Parse the pglpsql tree
+        let raw = CStr::from_ptr(result.plpgsql_funcs);
+        let owned = serde_json::from_str(&raw.to_string_lossy())
+            .map_err(|e| Error::InvalidJson(e.to_string()))?;
+        pg_query_free_plpgsql_parse_result(result);
+        Ok(owned)
+    }
+}

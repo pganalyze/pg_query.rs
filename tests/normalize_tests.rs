@@ -15,6 +15,6 @@ fn it_will_error_on_invalid_input() {
     assert!(result.is_err());
     assert_eq!(
         result.err().unwrap(),
-        pg_query::Error::NormalizeError("syntax error at or near \"RANDOM\"".into())
+        pg_query::Error::ParseError("syntax error at or near \"RANDOM\"".into())
     );
 }
