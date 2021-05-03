@@ -15,7 +15,6 @@ repository = "https://github.com/paupino/pg_query"
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-uuid = { version = "0.8", features = ["serde"] }
 
 [build-dependencies]
 bindgen = "0.58"
