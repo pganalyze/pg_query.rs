@@ -55,7 +55,7 @@ fn main() {
     println!("cargo:rustc-link-lib=static=pg_query");
 }
 
-fn copy_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<bool, std::io::Error> {
+fn copy_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> std::io::Result<bool> {
     let mut stack = vec![PathBuf::from(from.as_ref())];
 
     let output_root = PathBuf::from(to.as_ref());
@@ -142,6 +142,11 @@ pub struct TypeDef {
 
 fn generate_ast(build_dir: &Path, out_dir: &Path) -> std::io::Result<()> {
     let srcdata_dir = build_dir.join("srcdata");
+    assert!(
+        srcdata_dir.exists(),
+        "srcdata_dir did not exist: {}",
+        srcdata_dir.display()
+    );
 
     // Common out dir
     let out_file = File::create(out_dir.join("ast.rs"))?;
