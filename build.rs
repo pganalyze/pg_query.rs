@@ -7,7 +7,6 @@ use std::collections::{HashMap, HashSet};
 use std::env;
 use std::fs::{self, File};
 use std::io::{BufReader, BufWriter, Write};
-use std::os::macos::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
@@ -87,8 +86,14 @@ fn copy_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<bool, std:
                 if dest_path.exists() {
                     if let Ok(source) = path.metadata() {
                         if let Ok(dest) = dest_path.metadata() {
-                            if source.len() == dest.len() && source.st_mtime() == dest.st_mtime() {
-                                continue;
+                            if source.len() == dest.len() {
+                                if let Ok(smtime) = source.modified() {
+                                    if let Ok(dmtime) = dest.modified() {
+                                        if smtime == dmtime {
+                                            continue;
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
