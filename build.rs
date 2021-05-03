@@ -81,6 +81,7 @@ fn copy_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> std::io::Result<b
         for entry in fs::read_dir(working_path)? {
             let entry = entry?;
             let path = entry.path();
+            eprintln!("{}", path.display());
             if path.is_dir() {
                 stack.push(path);
             } else if let Some(filename) = path.file_name() {
