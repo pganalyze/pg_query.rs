@@ -1,10 +1,10 @@
 [package]
 name = "pg_query"
 description = "PostgreSQL parser that uses the actual PostgreSQL server source to parse SQL queries and return the internal PostgreSQL parse tree."
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Paul Mason <paul@form1.co.nz>"]
 edition = "2018"
-documentation = "https://docs.rs/pg_query.rs/"
+documentation = "https://docs.rs/pg_query/"
 build = "build.rs"
 license = "MIT"
 readme = "./README.md"
