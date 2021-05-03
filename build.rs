@@ -18,7 +18,6 @@ fn main() {
     run_command(
         Command::new("cp")
             .arg("-R")
-            //.arg("-n")
             .arg("./lib/libpg_query")
             .arg(&out_dir),
     );
@@ -114,7 +113,7 @@ fn generate_ast(build_dir: &PathBuf, out_dir: &PathBuf) -> std::io::Result<()> {
     let type_defs = BufReader::new(type_defs);
     let type_defs: Vec<TypeDef> = serde_json::from_reader(type_defs)?;
     for ty in type_defs.iter() {
-        type_resolver.add_type(&ty.new_type_name);
+        type_resolver.add_alias(&ty.new_type_name, &ty.source_type);
     }
     make_aliases(&mut out_file, &type_defs, &node_types, &mut type_resolver)?;
 
@@ -144,7 +143,6 @@ fn generate_ast(build_dir: &PathBuf, out_dir: &PathBuf) -> std::io::Result<()> {
 
     // Finally make the nodes and the primitives
     make_nodes(&mut out_file, &struct_defs, &node_types, &type_resolver)?;
-    make_structs(&mut out_file, &struct_defs, &node_types, &type_resolver)?;
     Ok(())
 }
 
@@ -205,14 +203,18 @@ fn make_enums(
     out: &mut BufWriter<File>,
     enum_defs: &HashMap<String, HashMap<String, Enum>>,
 ) -> std::io::Result<()> {
-    let sections = vec![
+    const SECTIONS: [&str; 4] = [
         "nodes/parsenodes",
         "nodes/primnodes",
         "nodes/lockoptions",
         "nodes/nodes",
     ];
-    for section in sections {
-        for (name, def) in &enum_defs[section] {
+    for section in &SECTIONS {
+        let map = &enum_defs[*section];
+        let mut map = map.iter().collect::<Vec<_>>();
+        map.sort_by_key(|x| x.0);
+
+        for (name, def) in map {
             write!(out, "#[derive(Debug, serde::Deserialize)]\n")?;
             write!(out, "pub enum {} {{\n", name)?;
             // This enum has duplicate values - I don't think these are really necessary
@@ -240,34 +242,101 @@ fn make_enums(
     Ok(())
 }
 
-fn make_structs(
+fn make_nodes(
     out: &mut BufWriter<File>,
     struct_defs: &HashMap<String, HashMap<String, Struct>>,
     node_types: &HashSet<String>,
     type_resolver: &TypeResolver,
 ) -> std::io::Result<()> {
-    let sections = vec!["nodes/parsenodes", "nodes/primnodes"];
+    const SECTIONS: [&str; 2] = ["nodes/parsenodes", "nodes/primnodes"];
 
-    for section in sections {
-        for (name, def) in &struct_defs[section] {
-            // Do not generate node types
-            if node_types.contains(name) {
+    write!(out, "#[derive(Debug, serde::Deserialize)]\n")?;
+    write!(out, "pub enum Node {{\n")?;
+
+    for section in &SECTIONS {
+        let map = &struct_defs[*section];
+        let mut map = map.iter().collect::<Vec<_>>();
+        map.sort_by_key(|x| x.0);
+
+        for (name, def) in map {
+            // Only generate node types
+            if !node_types.contains(name) {
+                // We panic here since all structs are nodes for our purposes
+                panic!("Unexpected struct `{}` (not a node).", name);
+            }
+            // If no fields just generate an empty variant
+            if def.fields.is_empty() {
+                write!(out, "    {},\n", name)?;
                 continue;
             }
 
+            // Generate with a passable struct
+            write!(out, "    {}({}),\n", name, name)?;
+        }
+    }
+
+    // Also do "Value" type nodes. These are generated differently.
+    writeln!(out, "    // Value nodes")?;
+    let values = &struct_defs["nodes/value"];
+    let mut values = values.iter().collect::<Vec<_>>();
+    values.sort_by_key(|x| x.0);
+
+    for (name, def) in values {
+        if def.fields.is_empty() {
+            write!(out, "    {},\n", name)?;
+            continue;
+        }
+        // Only one
+        let field = &def.fields[0];
+        write!(out, "    {} {{\n", name)?;
+        write!(
+            out,
+            "        #[serde(rename = \"{}\")]\n",
+            field.name.as_ref().unwrap(),
+        )?;
+        write!(
+            out,
+            "        value: {}\n",
+            type_resolver.resolve(field.c_type.as_ref().unwrap())
+        )?;
+        write!(out, "    }},\n")?;
+    }
+
+    write!(out, "}}\n")?;
+
+    // Generate the structs
+    for section in &SECTIONS {
+        let map = &struct_defs[*section];
+        let mut map = map.iter().collect::<Vec<_>>();
+        map.sort_by_key(|x| x.0);
+
+        for (name, def) in map {
+            writeln!(out)?;
             write!(out, "#[derive(Debug, serde::Deserialize)]\n")?;
             write!(out, "pub struct {} {{\n", name)?;
+
             for field in &def.fields {
                 let (name, c_type) = match (&field.name, &field.c_type) {
                     (&Some(ref name), &Some(ref c_type)) => (name, c_type),
                     _ => continue,
                 };
 
-                if name == "type" {
+                // These are meta data fields and have no real use
+                if name == "type" || name == "xpr" {
                     continue;
                 }
+
                 if is_reserved(&name) {
-                    write!(out, "    #[serde(rename = \"{}\")]\n", name)?;
+                    write!(
+                        out,
+                        "    #[serde(rename = \"{}\"{})]\n",
+                        name,
+                        if type_resolver.is_primitive(c_type) {
+                            ", default"
+                        } else {
+                            ""
+                        }
+                    )?;
                     write!(
                         out,
                         "    pub {}_: {},\n",
@@ -275,6 +344,9 @@ fn make_structs(
                         type_resolver.resolve(c_type)
                     )?;
                 } else {
+                    if type_resolver.is_primitive(c_type) {
+                        write!(out, "    #[serde(default)]\n",)?;
+                    }
                     write!(
                         out,
                         "    pub {}: {},\n",
@@ -283,65 +355,11 @@ fn make_structs(
                     )?;
                 }
             }
+
             write!(out, "}}\n")?;
         }
     }
 
-    Ok(())
-}
-
-fn make_nodes(
-    out: &mut BufWriter<File>,
-    struct_defs: &HashMap<String, HashMap<String, Struct>>,
-    node_types: &HashSet<String>,
-    type_resolver: &TypeResolver,
-) -> std::io::Result<()> {
-    let sections = vec!["nodes/parsenodes", "nodes/primnodes"];
-
-    write!(out, "#[derive(Debug, serde::Deserialize)]\n")?;
-    write!(out, "pub enum Node {{\n")?;
-
-    for section in sections {
-        for (name, def) in &struct_defs[section] {
-            // Only generate node types
-            if !node_types.contains(name) {
-                continue;
-            }
-
-            write!(out, "    {} {{\n", name)?;
-
-            for field in &def.fields {
-                let (name, c_type) = match (&field.name, &field.c_type) {
-                    (&Some(ref name), &Some(ref c_type)) => (name, c_type),
-                    _ => continue,
-                };
-
-                if name == "type" {
-                    continue;
-                }
-                if is_reserved(&name) {
-                    write!(out, "        #[serde(rename = \"{}\")]\n", name)?;
-                    write!(
-                        out,
-                        "        {}_: {},\n",
-                        name,
-                        type_resolver.resolve(c_type)
-                    )?;
-                } else {
-                    write!(
-                        out,
-                        "        {}: {},\n",
-                        name,
-                        type_resolver.resolve(c_type)
-                    )?;
-                }
-            }
-
-            write!(out, "    }},\n")?;
-        }
-    }
-
-    write!(out, "}}\n")?;
     Ok(())
 }
 
@@ -354,6 +372,7 @@ fn is_reserved(variable: &str) -> bool {
 }
 
 struct TypeResolver {
+    aliases: HashMap<String, bool>, // bool = primitive
     primitive: HashMap<&'static str, &'static str>,
     nodes: HashSet<String>,
     types: HashSet<String>,
@@ -373,6 +392,9 @@ impl TypeResolver {
         primitive.insert("int16", "i16");
         primitive.insert("char", "char");
         primitive.insert("double", "f64");
+        primitive.insert("signed int", "i32");
+        primitive.insert("unsigned int", "u32");
+        primitive.insert("uintptr_t", "usize");
 
         // Similar to primitives
         primitive.insert("List*", "Option<Vec<Node>>");
@@ -386,9 +408,15 @@ impl TypeResolver {
         TypeResolver {
             primitive,
 
+            aliases: HashMap::new(),
             nodes: HashSet::new(),
             types: HashSet::new(),
         }
+    }
+
+    pub fn add_alias(&mut self, ty: &str, target: &str) {
+        self.aliases
+            .insert(ty.to_string(), self.primitive.contains_key(target));
     }
 
     pub fn add_node(&mut self, ty: &str) {
@@ -400,7 +428,14 @@ impl TypeResolver {
     }
 
     pub fn contains(&self, ty: &str) -> bool {
-        self.primitive.contains_key(ty) || self.nodes.contains(ty) || self.types.contains(ty)
+        self.aliases.contains_key(ty)
+            || self.primitive.contains_key(ty)
+            || self.nodes.contains(ty)
+            || self.types.contains(ty)
+    }
+
+    pub fn is_primitive(&self, ty: &str) -> bool {
+        self.primitive.contains_key(ty) || self.aliases.get(ty).map(|b| *b).unwrap_or_default()
     }
 
     pub fn resolve(&self, c_type: &str) -> String {
@@ -408,18 +443,28 @@ impl TypeResolver {
             return ty.to_string();
         }
         if let Some(ty) = c_type.strip_suffix('*') {
-            if self.nodes.contains(ty) {
-                return "Option<Box<Node>>".into();
+            if let Some(primitive) = self.aliases.get(c_type) {
+                if *primitive {
+                    return format!("Option<{}>", ty);
+                } else {
+                    return format!("Option<Box<{}>>", ty);
+                }
             }
-            if self.types.contains(ty) {
-                return format!("Option<{}>", ty);
+
+            if self.nodes.contains(ty) || self.types.contains(ty) {
+                return format!("Option<Box<{}>>", ty);
             }
         } else {
-            if self.nodes.contains(c_type) {
-                return "Box<Node>".into();
+            if let Some(primitive) = self.aliases.get(c_type) {
+                if *primitive {
+                    return format!("{}", c_type);
+                } else {
+                    return format!("Box<{}>", c_type);
+                }
             }
-            if self.types.contains(c_type) {
-                return c_type.into();
+
+            if self.nodes.contains(c_type) || self.types.contains(c_type) {
+                return format!("Box<{}>", c_type);
             }
         }
 
