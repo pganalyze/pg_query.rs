@@ -1,4 +1,4 @@
-//! pg_query &emsp; [![Build Status]][actions] [![Latest Version]][crates.io] [![Docs Badge]][docs]
+//! Rust pg_query &emsp; [![Build Status]][actions] [![Latest Version]][crates.io] [![Docs Badge]][docs]
 //! ===========
 //!
 //! [Build Status]: https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fpaupino%2Fpg_query%2Fbadge&label=build&logo=none
