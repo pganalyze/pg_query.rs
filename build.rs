@@ -1,9 +1,12 @@
+#![cfg_attr(feature = "clippy", feature(plugin))]
+#![cfg_attr(feature = "clippy", plugin(clippy))]
+
 use std::collections::{HashMap, HashSet};
 use std::env;
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::{BufReader, BufWriter, Write};
-use std::iter::FromIterator;
-use std::path::PathBuf;
+use std::os::macos::fs::MetadataExt;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 fn main() {
@@ -15,27 +18,29 @@ fn main() {
     );
 
     // Copy the files over
-    run_command(
-        Command::new("cp")
-            .arg("-R")
-            .arg("./lib/libpg_query")
-            .arg(&out_dir),
-    );
+    let changed = copy_dir("./lib/libpg_query", &out_dir).expect("Copy failed");
 
     // Generate the AST first
     generate_ast(&build_dir, &out_dir).expect("AST generation");
 
-    // Now compile and generate bindings
-    let mut make = Command::new("make");
-    make.env_remove("PROFILE").arg("-C").arg(&build_dir);
-    if env::var("PROFILE").unwrap() == "debug" {
-        make.arg("DEBUG=1");
+    // Now compile the C library.
+    // We try to optimize the build a bit by only rebuilding if the directory tree has a detected change
+    if changed {
+        let mut make = Command::new("make");
+        make.env_remove("PROFILE").arg("-C").arg(&build_dir);
+        if env::var("PROFILE").unwrap() == "debug" {
+            make.arg("DEBUG=1");
+        }
+        let status = make
+            .stdin(Stdio::null())
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .status()
+            .unwrap();
+        assert!(status.success());
     }
-    run_command(&mut make);
 
-    println!("cargo:rustc-link-search=native={}", build_dir.display());
-    println!("cargo:rustc-link-lib=static=pg_query");
-
+    // Also generate bindings
     let bindings = bindgen::Builder::default()
         .header(build_dir.join("pg_query.h").to_str().unwrap())
         .generate()
@@ -44,16 +49,55 @@ fn main() {
     bindings
         .write_to_file(out_dir.join("bindings.rs"))
         .expect("Couldn't write bindings!");
+
+    println!("cargo:rustc-link-search=native={}", build_dir.display());
+    println!("cargo:rustc-link-lib=static=pg_query");
 }
 
-fn run_command(command: &mut Command) {
-    let status = command
-        .stdin(Stdio::null())
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .status()
-        .unwrap();
-    assert!(status.success());
+fn copy_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<bool, std::io::Error> {
+    let mut stack = vec![PathBuf::from(from.as_ref())];
+
+    let output_root = PathBuf::from(to.as_ref());
+    let input_root = PathBuf::from(from.as_ref()).components().count();
+
+    let mut changed = false;
+    while let Some(working_path) = stack.pop() {
+        // Generate a relative path
+        let src: PathBuf = working_path.components().skip(input_root).collect();
+
+        // Create a destination if missing
+        let dest = if src.components().count() == 0 {
+            output_root.clone()
+        } else {
+            output_root.join(&src)
+        };
+        if fs::metadata(&dest).is_err() {
+            fs::create_dir_all(&dest)?;
+        }
+
+        for entry in fs::read_dir(working_path)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_dir() {
+                stack.push(path);
+            } else if let Some(filename) = path.file_name() {
+                let dest_path = dest.join(filename);
+                if dest_path.exists() {
+                    if let Ok(source) = path.metadata() {
+                        if let Ok(dest) = dest_path.metadata() {
+                            if source.len() == dest.len() && source.st_mtime() == dest.st_mtime() {
+                                continue;
+                            }
+                        }
+                    }
+                }
+                fs::copy(&path, &dest_path)?;
+                changed = true;
+            }
+        }
+    }
+
+    Ok(changed)
 }
 
 #[derive(serde::Deserialize)]
@@ -89,7 +133,7 @@ pub struct TypeDef {
     comment: Option<String>,
 }
 
-fn generate_ast(build_dir: &PathBuf, out_dir: &PathBuf) -> std::io::Result<()> {
+fn generate_ast(build_dir: &Path, out_dir: &Path) -> std::io::Result<()> {
     let srcdata_dir = build_dir.join("srcdata");
 
     // Common out dir
@@ -106,7 +150,7 @@ fn generate_ast(build_dir: &PathBuf, out_dir: &PathBuf) -> std::io::Result<()> {
     for ty in node_types.iter() {
         type_resolver.add_node(ty);
     }
-    let node_types = HashSet::from_iter(node_types.into_iter());
+    let node_types = node_types.into_iter().collect();
 
     // Generate type aliases first
     let type_defs = File::open(srcdata_dir.join("typedefs.json"))?;
@@ -148,7 +192,7 @@ fn generate_ast(build_dir: &PathBuf, out_dir: &PathBuf) -> std::io::Result<()> {
 
 fn make_aliases(
     out: &mut BufWriter<File>,
-    type_defs: &Vec<TypeDef>,
+    type_defs: &[TypeDef],
     node_types: &HashSet<String>,
     type_resolver: &mut TypeResolver,
 ) -> std::io::Result<()> {
@@ -215,28 +259,27 @@ fn make_enums(
         map.sort_by_key(|x| x.0);
 
         for (name, def) in map {
-            write!(out, "#[derive(Debug, serde::Deserialize)]\n")?;
-            write!(out, "pub enum {} {{\n", name)?;
+            writeln!(out, "#[derive(Debug, serde::Deserialize)]")?;
+            writeln!(out, "pub enum {} {{", name)?;
             // This enum has duplicate values - I don't think these are really necessary
             let ignore_value = name.eq("PartitionRangeDatumKind");
 
             for value in &def.values {
                 if let Some(comment) = &value.comment {
-                    write!(out, "    {}\n", comment)?;
+                    writeln!(out, "    {}", comment)?;
                 }
                 if let Some(name) = &value.name {
                     if ignore_value {
-                        write!(out, "    {},\n", name)?;
+                        writeln!(out, "    {},", name)?;
+                    } else if let Some(v) = &value.value {
+                        writeln!(out, "    {} = {},", name, *v)?;
                     } else {
-                        if let Some(v) = &value.value {
-                            write!(out, "    {} = {},\n", name, *v)?;
-                        } else {
-                            write!(out, "    {},\n", name)?;
-                        }
+                        writeln!(out, "    {},", name)?;
                     }
                 }
             }
-            write!(out, "}}\n\n")?;
+            writeln!(out, "}}")?;
+            writeln!(out)?;
         }
     }
     Ok(())
@@ -250,8 +293,8 @@ fn make_nodes(
 ) -> std::io::Result<()> {
     const SECTIONS: [&str; 2] = ["nodes/parsenodes", "nodes/primnodes"];
 
-    write!(out, "#[derive(Debug, serde::Deserialize)]\n")?;
-    write!(out, "pub enum Node {{\n")?;
+    writeln!(out, "#[derive(Debug, serde::Deserialize)]")?;
+    writeln!(out, "pub enum Node {{")?;
 
     for section in &SECTIONS {
         let map = &struct_defs[*section];
@@ -266,12 +309,12 @@ fn make_nodes(
             }
             // If no fields just generate an empty variant
             if def.fields.is_empty() {
-                write!(out, "    {},\n", name)?;
+                writeln!(out, "    {},", name)?;
                 continue;
             }
 
             // Generate with a passable struct
-            write!(out, "    {}({}),\n", name, name)?;
+            writeln!(out, "    {}({}),", name, name)?;
         }
     }
 
@@ -283,26 +326,26 @@ fn make_nodes(
 
     for (name, def) in values {
         if def.fields.is_empty() {
-            write!(out, "    {},\n", name)?;
+            writeln!(out, "    {},", name)?;
             continue;
         }
         // Only one
         let field = &def.fields[0];
-        write!(out, "    {} {{\n", name)?;
-        write!(
+        writeln!(out, "    {} {{", name)?;
+        writeln!(
             out,
-            "        #[serde(rename = \"{}\")]\n",
+            "        #[serde(rename = \"{}\")]",
             field.name.as_ref().unwrap(),
         )?;
-        write!(
+        writeln!(
             out,
-            "        value: {}\n",
+            "        value: {}",
             type_resolver.resolve(field.c_type.as_ref().unwrap())
         )?;
-        write!(out, "    }},\n")?;
+        writeln!(out, "    }},")?;
     }
 
-    write!(out, "}}\n")?;
+    writeln!(out, "}}")?;
 
     // Generate the structs
     for section in &SECTIONS {
@@ -312,8 +355,8 @@ fn make_nodes(
 
         for (name, def) in map {
             writeln!(out)?;
-            write!(out, "#[derive(Debug, serde::Deserialize)]\n")?;
-            write!(out, "pub struct {} {{\n", name)?;
+            writeln!(out, "#[derive(Debug, serde::Deserialize)]")?;
+            writeln!(out, "pub struct {} {{", name)?;
 
             for field in &def.fields {
                 let (name, c_type) = match (&field.name, &field.c_type) {
@@ -327,9 +370,9 @@ fn make_nodes(
                 }
 
                 if is_reserved(&name) {
-                    write!(
+                    writeln!(
                         out,
-                        "    #[serde(rename = \"{}\"{})]\n",
+                        "    #[serde(rename = \"{}\"{})]",
                         name,
                         if type_resolver.is_primitive(c_type) {
                             ", default"
@@ -337,26 +380,16 @@ fn make_nodes(
                             ""
                         }
                     )?;
-                    write!(
-                        out,
-                        "    pub {}_: {},\n",
-                        name,
-                        type_resolver.resolve(c_type)
-                    )?;
+                    writeln!(out, "    pub {}_: {},", name, type_resolver.resolve(c_type))?;
                 } else {
                     if type_resolver.is_primitive(c_type) {
-                        write!(out, "    #[serde(default)]\n",)?;
+                        writeln!(out, "    #[serde(default)]",)?;
                     }
-                    write!(
-                        out,
-                        "    pub {}: {},\n",
-                        name,
-                        type_resolver.resolve(c_type)
-                    )?;
+                    writeln!(out, "    pub {}: {},", name, type_resolver.resolve(c_type))?;
                 }
             }
 
-            write!(out, "}}\n")?;
+            writeln!(out, "}}")?;
         }
     }
 
@@ -364,11 +397,22 @@ fn make_nodes(
 }
 
 fn is_reserved(variable: &str) -> bool {
-    match variable {
-        "abstract" | "become" | "box" | "do" | "final" | "macro" | "override" | "priv" | "try"
-        | "typeof" | "unsized" | "virtual" | "yield" => true,
-        _ => false,
-    }
+    matches!(
+        variable,
+        "abstract"
+            | "become"
+            | "box"
+            | "do"
+            | "final"
+            | "macro"
+            | "override"
+            | "priv"
+            | "try"
+            | "typeof"
+            | "unsized"
+            | "virtual"
+            | "yield"
+    )
 }
 
 struct TypeResolver {
@@ -435,7 +479,7 @@ impl TypeResolver {
     }
 
     pub fn is_primitive(&self, ty: &str) -> bool {
-        self.primitive.contains_key(ty) || self.aliases.get(ty).map(|b| *b).unwrap_or_default()
+        self.primitive.contains_key(ty) || self.aliases.get(ty).copied().unwrap_or_default()
     }
 
     pub fn resolve(&self, c_type: &str) -> String {
@@ -457,7 +501,7 @@ impl TypeResolver {
         } else {
             if let Some(primitive) = self.aliases.get(c_type) {
                 if *primitive {
-                    return format!("{}", c_type);
+                    return c_type.to_string();
                 } else {
                     return format!("Box<{}>", c_type);
                 }
