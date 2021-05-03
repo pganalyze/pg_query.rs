@@ -1,6 +1,7 @@
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Error {
     ParseError(String),
+    NormalizeError(String),
     InvalidAst(String),
 }
 

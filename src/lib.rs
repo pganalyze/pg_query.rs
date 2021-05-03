@@ -4,4 +4,4 @@ mod error;
 mod query;
 
 pub use error::*;
-pub use query::parse;
+pub use query::*;

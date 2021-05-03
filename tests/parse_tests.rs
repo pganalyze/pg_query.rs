@@ -1,7 +1,7 @@
 use pg_query::ast::Node;
 
 #[test]
-fn it_can_generate_an_ast() {
+fn it_can_generate_a_create_index_ast() {
     let result =
         pg_query::parse("CREATE INDEX ix_test ON contacts.person (id, ssn) WHERE ssn IS NOT NULL;");
     assert!(result.is_ok());
@@ -19,6 +19,29 @@ fn it_can_generate_an_ast() {
             assert_eq!(relation.relname, Some("person".to_string()), "relname");
             let params = stmt.index_params.as_ref().expect("index params");
             assert_eq!(2, params.len(), "Params length");
+        }
+        _ => panic!("Unexpected type"),
+    }
+}
+
+#[test]
+fn it_can_generate_a_create_table_ast() {
+    let result =
+        pg_query::parse("CREATE TABLE contacts.person(id serial primary key, name text not null);");
+    assert!(result.is_ok());
+    let result = result.unwrap();
+    let el: &Node = &result[0];
+    match *el {
+        Node::CreateStmt(ref stmt) => {
+            let relation = stmt.relation.as_ref().expect("relation exists");
+            assert_eq!(
+                relation.schemaname,
+                Some("contacts".to_string()),
+                "schemaname"
+            );
+            assert_eq!(relation.relname, Some("person".to_string()), "relname");
+            let columns = stmt.table_elts.as_ref().expect("columns");
+            assert_eq!(2, columns.len(), "Columns length");
         }
         _ => panic!("Unexpected type"),
     }
