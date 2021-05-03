@@ -13,13 +13,15 @@ use std::process::{Command, Stdio};
 fn main() {
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
     let build_dir = out_dir.join("libpg_query");
+    let src_dir = PathBuf::from("./lib/libpg_query");
     println!(
         "cargo:rerun-if-changed={}",
         build_dir.join("pg_query.h").display()
     );
 
     // Copy the files over
-    let changed = copy_dir("./lib/libpg_query", &build_dir).expect("Copy failed");
+    eprintln!("Copying {} -> {}", src_dir.display(), build_dir.display());
+    let changed = copy_dir(&src_dir, &build_dir).expect("Copy failed");
 
     // Generate the AST first
     generate_ast(&build_dir, &out_dir).expect("AST generation");
@@ -98,7 +100,6 @@ fn copy_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> std::io::Result<b
                         }
                     }
                 }
-                panic!("Copy: {} to {}", path.display(), dest_path.display());
                 fs::copy(&path, &dest_path)?;
                 changed = true;
             }
