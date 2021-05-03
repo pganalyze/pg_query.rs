@@ -17,7 +17,7 @@ fn it_can_generate_an_ast() {
                 "schemaname"
             );
             assert_eq!(relation.relname, Some("person".to_string()), "relname");
-            let params = stmt.indexParams.as_ref().expect("index params");
+            let params = stmt.index_params.as_ref().expect("index params");
             assert_eq!(2, params.len(), "Params length");
         }
         _ => panic!("Unexpected type"),

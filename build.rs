@@ -1,6 +1,8 @@
 #![cfg_attr(feature = "clippy", feature(plugin))]
 #![cfg_attr(feature = "clippy", plugin(clippy))]
 
+use convert_case::{Case, Casing};
+
 use std::collections::{HashMap, HashSet};
 use std::env;
 use std::fs::{self, File};
@@ -18,7 +20,7 @@ fn main() {
     );
 
     // Copy the files over
-    let changed = copy_dir("./lib/libpg_query", &out_dir).expect("Copy failed");
+    let changed = copy_dir("./lib/libpg_query", &build_dir).expect("Copy failed");
 
     // Generate the AST first
     generate_ast(&build_dir, &out_dir).expect("AST generation");
@@ -382,10 +384,31 @@ fn make_nodes(
                     )?;
                     writeln!(out, "    pub {}_: {},", name, type_resolver.resolve(c_type))?;
                 } else {
-                    if type_resolver.is_primitive(c_type) {
-                        writeln!(out, "    #[serde(default)]",)?;
+                    // Figure out what the snake case version of the name is
+                    let cleaned = name.to_case(Case::Snake);
+                    if cleaned.eq(name) {
+                        if type_resolver.is_primitive(c_type) {
+                            writeln!(out, "    #[serde(default)]",)?;
+                        }
+                        writeln!(out, "    pub {}: {},", name, type_resolver.resolve(c_type))?;
+                    } else {
+                        writeln!(
+                            out,
+                            "    #[serde(rename = \"{}\"{})]",
+                            name,
+                            if type_resolver.is_primitive(c_type) {
+                                ", default"
+                            } else {
+                                ""
+                            }
+                        )?;
+                        writeln!(
+                            out,
+                            "    pub {}: {},",
+                            cleaned,
+                            type_resolver.resolve(c_type)
+                        )?;
                     }
-                    writeln!(out, "    pub {}: {},", name, type_resolver.resolve(c_type))?;
                 }
             }
 
