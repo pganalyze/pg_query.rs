@@ -1,9 +1,13 @@
 [package]
 name = "pg_query"
 version = "0.1.0"
-authors = ["Paul Mason <paul@paulmason.me>"]
+authors = ["Paul Mason <paul@form1.co.nz>"]
 edition = "2018"
+documentation = "https://docs.rs/pg_query.rs/"
 build = "build.rs"
+license = "MIT"
+readme = "./README.md"
+repository = "https://github.com/paupino/pg_query.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

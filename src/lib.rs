@@ -21,10 +21,11 @@
 //! let result = pg_query::parse("SELECT * FROM contacts");
 //! assert!(result.is_ok());
 //! let result = result.unwrap();
-//! let el: &Node = &result[0];
-//! assert!(matches!(*el, Node::SelectStmt(_)));
+//! assert!(matches!(*&result[0], Node::SelectStmt(_)));
 //! ```
 //!
+
+/// Generated structures representing the PostgreSQL AST.
 pub mod ast;
 mod bindings;
 mod error;
