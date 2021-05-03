@@ -98,6 +98,7 @@ fn copy_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> std::io::Result<b
                         }
                     }
                 }
+                panic!("Copy: {} to {}", path.display(), dest_path.display());
                 fs::copy(&path, &dest_path)?;
                 changed = true;
             }
