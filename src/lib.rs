@@ -25,20 +25,20 @@
 //! # Example: Parsing a query
 //!
 //! ```rust
-//! use pg_query::ast::Node;
+//! use pg_query::{Node, Nodes};
 //!
 //! let result = pg_query::parse("SELECT * FROM contacts");
 //! assert!(result.is_ok());
 //! let result = result.unwrap();
-//! assert!(matches!(*&result[0], Node::SelectStmt(_)));
+//! assert!(matches!(result[0].node, Some(Nodes::SelectStmt(_))));
 //! ```
 //!
 
-/// Generated structures representing the PostgreSQL AST.
-pub mod ast;
 mod bindings;
 mod error;
+mod protobuf;
 mod query;
 
 pub use error::*;
+pub use protobuf::*;
 pub use query::*;

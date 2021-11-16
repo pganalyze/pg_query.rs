@@ -1,9 +1,16 @@
+use thiserror::Error;
+
 /// Error structure representing the basic error scenarios for `pg_query`.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Error, Eq, PartialEq)]
 pub enum Error {
-    ParseError(String),
-    InvalidAst(String),
-    InvalidJson(String),
+    #[error("Invalid statement format: {0}")]
+    Conversion(#[from] std::ffi::NulError),
+    #[error("Error decoding result: {0}")]
+    Decode(#[from] prost::DecodeError),
+    #[error("Invalid statement: {0}")]
+    Parse(String),
+    #[error("Error parsing JSON: {0}")]
+    InvalidJson(String)
 }
 
 /// Convenient Result alias for returning `pg_query::Error`.

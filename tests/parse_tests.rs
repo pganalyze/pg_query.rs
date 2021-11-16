@@ -1,4 +1,4 @@
-use pg_query::ast::Node;
+use pg_query::{Node, Nodes};
 
 #[test]
 fn it_can_generate_a_create_index_ast() {
@@ -7,18 +7,17 @@ fn it_can_generate_a_create_index_ast() {
     assert!(result.is_ok());
     let result = result.unwrap();
     let el: &Node = &result[0];
-    match *el {
-        Node::IndexStmt(ref stmt) => {
-            assert_eq!(stmt.idxname, Some("ix_test".to_string()), "idxname");
+    match el.node {
+        Some(Nodes::IndexStmt(ref stmt)) => {
+            assert_eq!(stmt.idxname, "ix_test".to_string(), "idxname");
             let relation = stmt.relation.as_ref().expect("relation exists");
             assert_eq!(
                 relation.schemaname,
-                Some("contacts".to_string()),
+                "contacts".to_string(),
                 "schemaname"
             );
-            assert_eq!(relation.relname, Some("person".to_string()), "relname");
-            let params = stmt.index_params.as_ref().expect("index params");
-            assert_eq!(2, params.len(), "Params length");
+            assert_eq!(relation.relname, "person".to_string(), "relname");
+            assert_eq!(2, stmt.index_params.len(), "Params length");
         }
         _ => panic!("Unexpected type"),
     }
@@ -31,17 +30,16 @@ fn it_can_generate_a_create_table_ast() {
     assert!(result.is_ok());
     let result = result.unwrap();
     let el: &Node = &result[0];
-    match *el {
-        Node::CreateStmt(ref stmt) => {
+    match el.node {
+        Some(Nodes::CreateStmt(ref stmt)) => {
             let relation = stmt.relation.as_ref().expect("relation exists");
             assert_eq!(
                 relation.schemaname,
-                Some("contacts".to_string()),
+                "contacts".to_string(),
                 "schemaname"
             );
-            assert_eq!(relation.relname, Some("person".to_string()), "relname");
-            let columns = stmt.table_elts.as_ref().expect("columns");
-            assert_eq!(2, columns.len(), "Columns length");
+            assert_eq!(relation.relname, "person".to_string(), "relname");
+            assert_eq!(2, stmt.table_elts.len(), "Columns length");
         }
         _ => panic!("Unexpected type"),
     }
@@ -53,6 +51,6 @@ fn it_will_error_on_invalid_input() {
     assert!(result.is_err());
     assert_eq!(
         result.err().unwrap(),
-        pg_query::Error::ParseError("syntax error at or near \"RANDOM\"".into())
+        pg_query::Error::Parse("syntax error at or near \"RANDOM\"".into())
     );
 }
