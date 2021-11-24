@@ -1,11 +1,13 @@
 use std::ffi::{CStr, CString};
-use std::os::raw::c_char;
+use std::os::raw::{c_char, c_uint};
 
 use prost::Message;
 
-use crate::*;
+// use crate::*;
 use crate::bindings::*;
 use crate::error::*;
+use crate::parse_result::ParseResult;
+use crate::protobuf;
 
 /// Represents the resulting fingerprint containing both the raw integer form as well as the
 /// corresponding 16 character hex value.
@@ -19,17 +21,18 @@ pub struct Fingerprint {
 /// # Example
 ///
 /// ```rust
-/// use pg_query::{Node, Nodes};
+/// use pg_query::{Node, NodeEnum, NodeRef};
 ///
 /// let result = pg_query::parse("SELECT * FROM contacts");
 /// assert!(result.is_ok());
 /// let result = result.unwrap();
-/// assert!(matches!(result[0].node, Some(Nodes::SelectStmt(_))));
+/// assert_eq!(result.tables(), vec!["contacts"]);
+/// assert!(matches!(result.protobuf.nodes()[0].0, NodeRef::SelectStmt(_)));
 /// ```
-pub fn parse(statement: &str) -> Result<Vec<crate::Node>> {
+pub fn parse(statement: &str) -> Result<ParseResult> {
     let input = CString::new(statement)?;
     let result = unsafe { pg_query_parse_protobuf(input.as_ptr()) };
-    let protobuf = if !result.error.is_null() {
+    let parse_result = if !result.error.is_null() {
         let message = unsafe { CStr::from_ptr((*result.error).message) }
             .to_string_lossy()
             .to_string();
@@ -41,10 +44,39 @@ pub fn parse(statement: &str) -> Result<Vec<crate::Node>> {
                 result.parse_tree.len as usize,
             )
         };
-        ParseResult::decode(data).map_err(Error::Decode)
+        let stderr = unsafe { CStr::from_ptr(result.stderr_buffer) }
+            .to_string_lossy()
+            .to_string();
+        protobuf::ParseResult::decode(data)
+            .map_err(Error::Decode)
+            .and_then(|result| Ok(ParseResult::new(result, stderr)))
     };
     unsafe { pg_query_free_protobuf_parse_result(result) };
-    Ok(protobuf?.stmts.into_iter().filter_map(|s| s.stmt.and_then(|s| Some(*s))).collect())
+    parse_result
+}
+
+pub fn deparse(protobuf: &protobuf::ParseResult) -> Result<String> {
+    let buffer = protobuf.encode_to_vec();
+    let len = buffer.len() as c_uint;
+    let input = unsafe { CStr::from_bytes_with_nul_unchecked(&buffer) };
+    let data = input.as_ptr() as *mut c_char;
+    let protobuf = PgQueryProtobuf { data: data, len: len };
+    let result = unsafe { pg_query_deparse_protobuf(protobuf) };
+
+    let deparse_result = if !result.error.is_null() {
+        let message = unsafe { CStr::from_ptr((*result.error).message) }
+            .to_string_lossy()
+            .to_string();
+        Err(Error::Parse(message))
+    } else {
+        let query = unsafe { CStr::from_ptr(result.query) }
+            .to_string_lossy()
+            .to_string();
+        Ok(query)
+    };
+
+    unsafe { pg_query_free_deparse_result(result) };
+    deparse_result
 }
 
 /// Normalizes the given SQL statement, returning a parametized version.
