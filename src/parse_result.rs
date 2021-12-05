@@ -38,19 +38,16 @@ impl protobuf::ParseResult {
         }).flatten().collect()
     }
 
-    // Converts an immutable reference to a mutable reference.
-    pub fn find_mut(&mut self, to_find: NodeRef) -> NodeMut {
-        let s = format!("{:?}", self);
-        for s in self.stmts.iter_mut() {
-            if let Some(node) = s.stmt.as_mut() {                    // RawStmt  -> Node
-                if let Some(node) = node.node.as_mut() {             // Node     -> NodeEnum
-                    if let Some(mut_ref) = node.find_mut(&to_find) { // NodeEnum -> NodeMut
-                        return mut_ref
-                    }
+    // Returns a mutable reference to nested nodes.
+    pub unsafe fn nodes_mut(&mut self) -> Vec<(NodeMut, i32, Context)>  {
+        self.stmts.iter_mut().filter_map(|s| {
+            if let Some(node) = s.stmt.as_mut() {        // RawStmt  -> Node
+                if let Some(node) = node.node.as_mut() { // Node     -> NodeEnum
+                    return Some(node.nodes_mut())        // NodeEnum -> NodeMut
                 }
             }
-        }
-        panic!("unable to find node {:?} in {:?}", to_find, s);
+            None
+        }).flatten().collect()
     }
 }
 

@@ -415,15 +415,18 @@ impl NodeEnum {
         nodes
     }
 
-    // this shouldn't need to track depth or context, but I'm keeping them for now for debugging
-    pub fn find_mut(&mut self, to_find: &NodeRef) -> Option<NodeMut> {
-        let mut iter: Vec<(NodeMut, i32, Context)> = vec![(self.to_mut(), 0, Context::None)];
+    pub unsafe fn nodes_mut(&mut self) -> Vec<(NodeMut, i32, Context)> {
+        let mut iter = vec![(self.to_mut(), 0, Context::None)];
+        let mut nodes = Vec::new();
         while !iter.is_empty() {
             let (node, depth, context) = iter.remove(0);
-            if node.eq(to_find) { return Some(node) }
             let depth = depth + 1;
             match node {
+                //
+                // The following statement types do not modify tables
+                //
                 NodeMut::SelectStmt(s) => {
+                    let s = s.as_mut().unwrap();
                     s.target_list.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, Context::Select));
@@ -492,6 +495,7 @@ impl NodeEnum {
                     }
                 }
                 NodeMut::InsertStmt(s) => {
+                    let s = s.as_mut().unwrap();
                     if let Some(n) = s.select_stmt.as_mut() {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, Context::DML));
@@ -512,6 +516,7 @@ impl NodeEnum {
                     }
                 }
                 NodeMut::UpdateStmt(s) => {
+                    let s = s.as_mut().unwrap();
                     s.target_list.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, Context::DML));
@@ -539,6 +544,7 @@ impl NodeEnum {
                     }
                 }
                 NodeMut::DeleteStmt(s) => {
+                    let s = s.as_mut().unwrap();
                     if let Some(n) = s.where_clause.as_mut() {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, Context::DML));
@@ -561,6 +567,7 @@ impl NodeEnum {
                     });
                 }
                 NodeMut::CommonTableExpr(s) => {
+                    let s = s.as_mut().unwrap();
                     if let Some(n) = s.ctequery.as_mut() {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, context));
@@ -568,6 +575,7 @@ impl NodeEnum {
                     }
                 }
                 NodeMut::CopyStmt(s) => {
+                    let s = s.as_mut().unwrap();
                     if let Some(n) = s.query.as_mut() {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, Context::DML));
@@ -581,16 +589,19 @@ impl NodeEnum {
                 // The following statement types are DDL (changing table structure)
                 //
                 NodeMut::AlterTableStmt(s) => {
+                    let s = s.as_mut().unwrap();
                     if let Some(rel) = s.relation.as_mut() {
                         iter.push((rel.to_mut(), depth, Context::DDL));
                     }
                 }
                 NodeMut::CreateStmt(s) => {
+                    let s = s.as_mut().unwrap();
                     if let Some(rel) = s.relation.as_mut() {
                         iter.push((rel.to_mut(), depth, Context::DDL));
                     }
                 }
                 NodeMut::CreateTableAsStmt(s) => {
+                    let s = s.as_mut().unwrap();
                     if let Some(n) = s.query.as_mut() {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, Context::DDL));
@@ -603,6 +614,7 @@ impl NodeEnum {
                     }
                 }
                 NodeMut::TruncateStmt(s) => {
+                    let s = s.as_mut().unwrap();
                     s.relations.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, Context::DDL));
@@ -610,6 +622,7 @@ impl NodeEnum {
                     });
                 }
                 NodeMut::ViewStmt(s) => {
+                    let s = s.as_mut().unwrap();
                     if let Some(n) = s.query.as_mut() {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, Context::DDL));
@@ -620,21 +633,25 @@ impl NodeEnum {
                     }
                 }
                 NodeMut::IndexStmt(s) => {
+                    let s = s.as_mut().unwrap();
                     if let Some(rel) = s.relation.as_mut() {
                         iter.push((rel.to_mut(), depth, Context::DDL));
                     }
                 }
                 NodeMut::CreateTrigStmt(s) => {
+                    let s = s.as_mut().unwrap();
                     if let Some(rel) = s.relation.as_mut() {
                         iter.push((rel.to_mut(), depth, Context::DDL));
                     }
                 }
                 NodeMut::RuleStmt(s) => {
+                    let s = s.as_mut().unwrap();
                     if let Some(rel) = s.relation.as_mut() {
                         iter.push((rel.to_mut(), depth, Context::DDL));
                     }
                 }
                 NodeMut::VacuumStmt(s) => {
+                    let s = s.as_mut().unwrap();
                     for node in s.rels.iter_mut() {
                         if let Some(NodeEnum::VacuumRelation(r)) = node.node.as_mut() {
                             if let Some(rel) = r.relation.as_mut() {
@@ -644,11 +661,13 @@ impl NodeEnum {
                     }
                 }
                 NodeMut::RefreshMatViewStmt(s) => {
+                    let s = s.as_mut().unwrap();
                     if let Some(rel) = s.relation.as_mut() {
                         iter.push((rel.to_mut(), depth, Context::DDL));
                     }
                 }
                 NodeMut::GrantStmt(s) => {
+                    let s = s.as_mut().unwrap();
                     match protobuf::ObjectType::from_i32(s.objtype) {
                         Some(protobuf::ObjectType::ObjectTable) => {
                             s.objects.iter_mut().for_each(|n| {
@@ -661,6 +680,7 @@ impl NodeEnum {
                     }
                 }
                 NodeMut::LockStmt(s) => {
+                    let s = s.as_mut().unwrap();
                     s.relations.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, Context::DDL));
@@ -668,6 +688,7 @@ impl NodeEnum {
                     });
                 }
                 NodeMut::ExplainStmt(s) => {
+                    let s = s.as_mut().unwrap();
                     if let Some(n) = s.query.as_mut() {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, context));
@@ -678,6 +699,7 @@ impl NodeEnum {
                 // Subselect items
                 //
                 NodeMut::AExpr(e) => {
+                    let e = e.as_mut().unwrap();
                     if let Some(n) = e.lexpr.as_mut() {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, context));
@@ -690,6 +712,7 @@ impl NodeEnum {
                     }
                 }
                 NodeMut::BoolExpr(e) => {
+                    let e = e.as_mut().unwrap();
                     e.args.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, context));
@@ -697,6 +720,7 @@ impl NodeEnum {
                     });
                 }
                 NodeMut::CoalesceExpr(e) => {
+                    let e = e.as_mut().unwrap();
                     e.args.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, context));
@@ -704,6 +728,7 @@ impl NodeEnum {
                     });
                 }
                 NodeMut::MinMaxExpr(e) => {
+                    let e = e.as_mut().unwrap();
                     e.args.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, context));
@@ -711,6 +736,7 @@ impl NodeEnum {
                     });
                 }
                 NodeMut::ResTarget(t) => {
+                    let t = t.as_mut().unwrap();
                     if let Some(n) = t.val.as_mut() {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, context));
@@ -718,6 +744,7 @@ impl NodeEnum {
                     }
                 }
                 NodeMut::SubLink(l) => {
+                    let l = l.as_mut().unwrap();
                     if let Some(n) = l.subselect.as_mut() {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, context));
@@ -725,6 +752,7 @@ impl NodeEnum {
                     }
                 }
                 NodeMut::FuncCall(c) => {
+                    let c = c.as_mut().unwrap();
                     c.args.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, context));
@@ -732,6 +760,7 @@ impl NodeEnum {
                     });
                 }
                 NodeMut::CaseExpr(c) => {
+                    let c = c.as_mut().unwrap();
                     c.args.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, context));
@@ -744,6 +773,7 @@ impl NodeEnum {
                     }
                 }
                 NodeMut::CaseWhen(w) => {
+                    let w = w.as_mut().unwrap();
                     if let Some(n) = w.expr.as_mut() {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, context));
@@ -756,6 +786,7 @@ impl NodeEnum {
                     }
                 }
                 NodeMut::SortBy(n) => {
+                    let n = n.as_mut().unwrap();
                     if let Some(n) = n.node.as_mut() {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, context));
@@ -766,6 +797,7 @@ impl NodeEnum {
                 // from-clause items
                 //
                 NodeMut::List(l) => {
+                    let l = l.as_mut().unwrap();
                     l.items.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, context));
@@ -773,6 +805,7 @@ impl NodeEnum {
                     });
                 }
                 NodeMut::JoinExpr(e) => {
+                    let e = e.as_mut().unwrap();
                     if let Some(n) = e.larg.as_mut() {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, context));
@@ -790,6 +823,7 @@ impl NodeEnum {
                     }
                 }
                 NodeMut::RowExpr(e) => {
+                    let e = e.as_mut().unwrap();
                     e.args.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, context));
@@ -797,6 +831,7 @@ impl NodeEnum {
                     });
                 }
                 NodeMut::RangeSubselect(s) => {
+                    let s = s.as_mut().unwrap();
                     if let Some(n) = s.subquery.as_mut() {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, context));
@@ -804,6 +839,7 @@ impl NodeEnum {
                     }
                 }
                 NodeMut::RangeFunction(f) => {
+                    let f = f.as_mut().unwrap();
                     f.functions.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, context));
@@ -812,8 +848,9 @@ impl NodeEnum {
                 }
                 _ => ()
             }
+            nodes.push((node, depth, context));
         }
-        None
+        nodes
     }
 
     pub fn to_ref(&self) -> NodeRef {
@@ -1051,234 +1088,234 @@ impl NodeEnum {
 
     pub fn to_mut(&mut self) -> NodeMut {
         match self {
-            NodeEnum::Alias(n) => NodeMut::Alias(n),
-            NodeEnum::RangeVar(n) => NodeMut::RangeVar(n),
-            NodeEnum::TableFunc(n) => NodeMut::TableFunc(n),
-            NodeEnum::Expr(n) => NodeMut::Expr(n),
-            NodeEnum::Var(n) => NodeMut::Var(n),
-            NodeEnum::Param(n) => NodeMut::Param(n),
-            NodeEnum::Aggref(n) => NodeMut::Aggref(n),
-            NodeEnum::GroupingFunc(n) => NodeMut::GroupingFunc(n),
-            NodeEnum::WindowFunc(n) => NodeMut::WindowFunc(n),
-            NodeEnum::SubscriptingRef(n) => NodeMut::SubscriptingRef(n),
-            NodeEnum::FuncExpr(n) => NodeMut::FuncExpr(n),
-            NodeEnum::NamedArgExpr(n) => NodeMut::NamedArgExpr(n),
-            NodeEnum::OpExpr(n) => NodeMut::OpExpr(n),
-            NodeEnum::DistinctExpr(n) => NodeMut::DistinctExpr(n),
-            NodeEnum::NullIfExpr(n) => NodeMut::NullIfExpr(n),
-            NodeEnum::ScalarArrayOpExpr(n) => NodeMut::ScalarArrayOpExpr(n),
-            NodeEnum::BoolExpr(n) => NodeMut::BoolExpr(n),
-            NodeEnum::SubLink(n) => NodeMut::SubLink(n),
-            NodeEnum::SubPlan(n) => NodeMut::SubPlan(n),
-            NodeEnum::AlternativeSubPlan(n) => NodeMut::AlternativeSubPlan(n),
-            NodeEnum::FieldSelect(n) => NodeMut::FieldSelect(n),
-            NodeEnum::FieldStore(n) => NodeMut::FieldStore(n),
-            NodeEnum::RelabelType(n) => NodeMut::RelabelType(n),
-            NodeEnum::CoerceViaIo(n) => NodeMut::CoerceViaIo(n),
-            NodeEnum::ArrayCoerceExpr(n) => NodeMut::ArrayCoerceExpr(n),
-            NodeEnum::ConvertRowtypeExpr(n) => NodeMut::ConvertRowtypeExpr(n),
-            NodeEnum::CollateExpr(n) => NodeMut::CollateExpr(n),
-            NodeEnum::CaseExpr(n) => NodeMut::CaseExpr(n),
-            NodeEnum::CaseWhen(n) => NodeMut::CaseWhen(n),
-            NodeEnum::CaseTestExpr(n) => NodeMut::CaseTestExpr(n),
-            NodeEnum::ArrayExpr(n) => NodeMut::ArrayExpr(n),
-            NodeEnum::RowExpr(n) => NodeMut::RowExpr(n),
-            NodeEnum::RowCompareExpr(n) => NodeMut::RowCompareExpr(n),
-            NodeEnum::CoalesceExpr(n) => NodeMut::CoalesceExpr(n),
-            NodeEnum::MinMaxExpr(n) => NodeMut::MinMaxExpr(n),
-            NodeEnum::SqlvalueFunction(n) => NodeMut::SqlvalueFunction(n),
-            NodeEnum::XmlExpr(n) => NodeMut::XmlExpr(n),
-            NodeEnum::NullTest(n) => NodeMut::NullTest(n),
-            NodeEnum::BooleanTest(n) => NodeMut::BooleanTest(n),
-            NodeEnum::CoerceToDomain(n) => NodeMut::CoerceToDomain(n),
-            NodeEnum::CoerceToDomainValue(n) => NodeMut::CoerceToDomainValue(n),
-            NodeEnum::SetToDefault(n) => NodeMut::SetToDefault(n),
-            NodeEnum::CurrentOfExpr(n) => NodeMut::CurrentOfExpr(n),
-            NodeEnum::NextValueExpr(n) => NodeMut::NextValueExpr(n),
-            NodeEnum::InferenceElem(n) => NodeMut::InferenceElem(n),
-            NodeEnum::TargetEntry(n) => NodeMut::TargetEntry(n),
-            NodeEnum::RangeTblRef(n) => NodeMut::RangeTblRef(n),
-            NodeEnum::JoinExpr(n) => NodeMut::JoinExpr(n),
-            NodeEnum::FromExpr(n) => NodeMut::FromExpr(n),
-            NodeEnum::OnConflictExpr(n) => NodeMut::OnConflictExpr(n),
-            NodeEnum::IntoClause(n) => NodeMut::IntoClause(n),
-            NodeEnum::RawStmt(n) => NodeMut::RawStmt(n),
-            NodeEnum::Query(n) => NodeMut::Query(n),
-            NodeEnum::InsertStmt(n) => NodeMut::InsertStmt(n),
-            NodeEnum::DeleteStmt(n) => NodeMut::DeleteStmt(n),
-            NodeEnum::UpdateStmt(n) => NodeMut::UpdateStmt(n),
-            NodeEnum::SelectStmt(n) => NodeMut::SelectStmt(n),
-            NodeEnum::AlterTableStmt(n) => NodeMut::AlterTableStmt(n),
-            NodeEnum::AlterTableCmd(n) => NodeMut::AlterTableCmd(n),
-            NodeEnum::AlterDomainStmt(n) => NodeMut::AlterDomainStmt(n),
-            NodeEnum::SetOperationStmt(n) => NodeMut::SetOperationStmt(n),
-            NodeEnum::GrantStmt(n) => NodeMut::GrantStmt(n),
-            NodeEnum::GrantRoleStmt(n) => NodeMut::GrantRoleStmt(n),
-            NodeEnum::AlterDefaultPrivilegesStmt(n) => NodeMut::AlterDefaultPrivilegesStmt(n),
-            NodeEnum::ClosePortalStmt(n) => NodeMut::ClosePortalStmt(n),
-            NodeEnum::ClusterStmt(n) => NodeMut::ClusterStmt(n),
-            NodeEnum::CopyStmt(n) => NodeMut::CopyStmt(n),
-            NodeEnum::CreateStmt(n) => NodeMut::CreateStmt(n),
-            NodeEnum::DefineStmt(n) => NodeMut::DefineStmt(n),
-            NodeEnum::DropStmt(n) => NodeMut::DropStmt(n),
-            NodeEnum::TruncateStmt(n) => NodeMut::TruncateStmt(n),
-            NodeEnum::CommentStmt(n) => NodeMut::CommentStmt(n),
-            NodeEnum::FetchStmt(n) => NodeMut::FetchStmt(n),
-            NodeEnum::IndexStmt(n) => NodeMut::IndexStmt(n),
-            NodeEnum::CreateFunctionStmt(n) => NodeMut::CreateFunctionStmt(n),
-            NodeEnum::AlterFunctionStmt(n) => NodeMut::AlterFunctionStmt(n),
-            NodeEnum::DoStmt(n) => NodeMut::DoStmt(n),
-            NodeEnum::RenameStmt(n) => NodeMut::RenameStmt(n),
-            NodeEnum::RuleStmt(n) => NodeMut::RuleStmt(n),
-            NodeEnum::NotifyStmt(n) => NodeMut::NotifyStmt(n),
-            NodeEnum::ListenStmt(n) => NodeMut::ListenStmt(n),
-            NodeEnum::UnlistenStmt(n) => NodeMut::UnlistenStmt(n),
-            NodeEnum::TransactionStmt(n) => NodeMut::TransactionStmt(n),
-            NodeEnum::ViewStmt(n) => NodeMut::ViewStmt(n),
-            NodeEnum::LoadStmt(n) => NodeMut::LoadStmt(n),
-            NodeEnum::CreateDomainStmt(n) => NodeMut::CreateDomainStmt(n),
-            NodeEnum::CreatedbStmt(n) => NodeMut::CreatedbStmt(n),
-            NodeEnum::DropdbStmt(n) => NodeMut::DropdbStmt(n),
-            NodeEnum::VacuumStmt(n) => NodeMut::VacuumStmt(n),
-            NodeEnum::ExplainStmt(n) => NodeMut::ExplainStmt(n),
-            NodeEnum::CreateTableAsStmt(n) => NodeMut::CreateTableAsStmt(n),
-            NodeEnum::CreateSeqStmt(n) => NodeMut::CreateSeqStmt(n),
-            NodeEnum::AlterSeqStmt(n) => NodeMut::AlterSeqStmt(n),
-            NodeEnum::VariableSetStmt(n) => NodeMut::VariableSetStmt(n),
-            NodeEnum::VariableShowStmt(n) => NodeMut::VariableShowStmt(n),
-            NodeEnum::DiscardStmt(n) => NodeMut::DiscardStmt(n),
-            NodeEnum::CreateTrigStmt(n) => NodeMut::CreateTrigStmt(n),
-            NodeEnum::CreatePlangStmt(n) => NodeMut::CreatePlangStmt(n),
-            NodeEnum::CreateRoleStmt(n) => NodeMut::CreateRoleStmt(n),
-            NodeEnum::AlterRoleStmt(n) => NodeMut::AlterRoleStmt(n),
-            NodeEnum::DropRoleStmt(n) => NodeMut::DropRoleStmt(n),
-            NodeEnum::LockStmt(n) => NodeMut::LockStmt(n),
-            NodeEnum::ConstraintsSetStmt(n) => NodeMut::ConstraintsSetStmt(n),
-            NodeEnum::ReindexStmt(n) => NodeMut::ReindexStmt(n),
-            NodeEnum::CheckPointStmt(n) => NodeMut::CheckPointStmt(n),
-            NodeEnum::CreateSchemaStmt(n) => NodeMut::CreateSchemaStmt(n),
-            NodeEnum::AlterDatabaseStmt(n) => NodeMut::AlterDatabaseStmt(n),
-            NodeEnum::AlterDatabaseSetStmt(n) => NodeMut::AlterDatabaseSetStmt(n),
-            NodeEnum::AlterRoleSetStmt(n) => NodeMut::AlterRoleSetStmt(n),
-            NodeEnum::CreateConversionStmt(n) => NodeMut::CreateConversionStmt(n),
-            NodeEnum::CreateCastStmt(n) => NodeMut::CreateCastStmt(n),
-            NodeEnum::CreateOpClassStmt(n) => NodeMut::CreateOpClassStmt(n),
-            NodeEnum::CreateOpFamilyStmt(n) => NodeMut::CreateOpFamilyStmt(n),
-            NodeEnum::AlterOpFamilyStmt(n) => NodeMut::AlterOpFamilyStmt(n),
-            NodeEnum::PrepareStmt(n) => NodeMut::PrepareStmt(n),
-            NodeEnum::ExecuteStmt(n) => NodeMut::ExecuteStmt(n),
-            NodeEnum::DeallocateStmt(n) => NodeMut::DeallocateStmt(n),
-            NodeEnum::DeclareCursorStmt(n) => NodeMut::DeclareCursorStmt(n),
-            NodeEnum::CreateTableSpaceStmt(n) => NodeMut::CreateTableSpaceStmt(n),
-            NodeEnum::DropTableSpaceStmt(n) => NodeMut::DropTableSpaceStmt(n),
-            NodeEnum::AlterObjectDependsStmt(n) => NodeMut::AlterObjectDependsStmt(n),
-            NodeEnum::AlterObjectSchemaStmt(n) => NodeMut::AlterObjectSchemaStmt(n),
-            NodeEnum::AlterOwnerStmt(n) => NodeMut::AlterOwnerStmt(n),
-            NodeEnum::AlterOperatorStmt(n) => NodeMut::AlterOperatorStmt(n),
-            NodeEnum::AlterTypeStmt(n) => NodeMut::AlterTypeStmt(n),
-            NodeEnum::DropOwnedStmt(n) => NodeMut::DropOwnedStmt(n),
-            NodeEnum::ReassignOwnedStmt(n) => NodeMut::ReassignOwnedStmt(n),
-            NodeEnum::CompositeTypeStmt(n) => NodeMut::CompositeTypeStmt(n),
-            NodeEnum::CreateEnumStmt(n) => NodeMut::CreateEnumStmt(n),
-            NodeEnum::CreateRangeStmt(n) => NodeMut::CreateRangeStmt(n),
-            NodeEnum::AlterEnumStmt(n) => NodeMut::AlterEnumStmt(n),
-            NodeEnum::AlterTsdictionaryStmt(n) => NodeMut::AlterTsdictionaryStmt(n),
-            NodeEnum::AlterTsconfigurationStmt(n) => NodeMut::AlterTsconfigurationStmt(n),
-            NodeEnum::CreateFdwStmt(n) => NodeMut::CreateFdwStmt(n),
-            NodeEnum::AlterFdwStmt(n) => NodeMut::AlterFdwStmt(n),
-            NodeEnum::CreateForeignServerStmt(n) => NodeMut::CreateForeignServerStmt(n),
-            NodeEnum::AlterForeignServerStmt(n) => NodeMut::AlterForeignServerStmt(n),
-            NodeEnum::CreateUserMappingStmt(n) => NodeMut::CreateUserMappingStmt(n),
-            NodeEnum::AlterUserMappingStmt(n) => NodeMut::AlterUserMappingStmt(n),
-            NodeEnum::DropUserMappingStmt(n) => NodeMut::DropUserMappingStmt(n),
-            NodeEnum::AlterTableSpaceOptionsStmt(n) => NodeMut::AlterTableSpaceOptionsStmt(n),
-            NodeEnum::AlterTableMoveAllStmt(n) => NodeMut::AlterTableMoveAllStmt(n),
-            NodeEnum::SecLabelStmt(n) => NodeMut::SecLabelStmt(n),
-            NodeEnum::CreateForeignTableStmt(n) => NodeMut::CreateForeignTableStmt(n),
-            NodeEnum::ImportForeignSchemaStmt(n) => NodeMut::ImportForeignSchemaStmt(n),
-            NodeEnum::CreateExtensionStmt(n) => NodeMut::CreateExtensionStmt(n),
-            NodeEnum::AlterExtensionStmt(n) => NodeMut::AlterExtensionStmt(n),
-            NodeEnum::AlterExtensionContentsStmt(n) => NodeMut::AlterExtensionContentsStmt(n),
-            NodeEnum::CreateEventTrigStmt(n) => NodeMut::CreateEventTrigStmt(n),
-            NodeEnum::AlterEventTrigStmt(n) => NodeMut::AlterEventTrigStmt(n),
-            NodeEnum::RefreshMatViewStmt(n) => NodeMut::RefreshMatViewStmt(n),
-            NodeEnum::ReplicaIdentityStmt(n) => NodeMut::ReplicaIdentityStmt(n),
-            NodeEnum::AlterSystemStmt(n) => NodeMut::AlterSystemStmt(n),
-            NodeEnum::CreatePolicyStmt(n) => NodeMut::CreatePolicyStmt(n),
-            NodeEnum::AlterPolicyStmt(n) => NodeMut::AlterPolicyStmt(n),
-            NodeEnum::CreateTransformStmt(n) => NodeMut::CreateTransformStmt(n),
-            NodeEnum::CreateAmStmt(n) => NodeMut::CreateAmStmt(n),
-            NodeEnum::CreatePublicationStmt(n) => NodeMut::CreatePublicationStmt(n),
-            NodeEnum::AlterPublicationStmt(n) => NodeMut::AlterPublicationStmt(n),
-            NodeEnum::CreateSubscriptionStmt(n) => NodeMut::CreateSubscriptionStmt(n),
-            NodeEnum::AlterSubscriptionStmt(n) => NodeMut::AlterSubscriptionStmt(n),
-            NodeEnum::DropSubscriptionStmt(n) => NodeMut::DropSubscriptionStmt(n),
-            NodeEnum::CreateStatsStmt(n) => NodeMut::CreateStatsStmt(n),
-            NodeEnum::AlterCollationStmt(n) => NodeMut::AlterCollationStmt(n),
-            NodeEnum::CallStmt(n) => NodeMut::CallStmt(n),
-            NodeEnum::AlterStatsStmt(n) => NodeMut::AlterStatsStmt(n),
-            NodeEnum::AExpr(n) => NodeMut::AExpr(n),
-            NodeEnum::ColumnRef(n) => NodeMut::ColumnRef(n),
-            NodeEnum::ParamRef(n) => NodeMut::ParamRef(n),
-            NodeEnum::AConst(n) => NodeMut::AConst(n),
-            NodeEnum::FuncCall(n) => NodeMut::FuncCall(n),
-            NodeEnum::AStar(n) => NodeMut::AStar(n),
-            NodeEnum::AIndices(n) => NodeMut::AIndices(n),
-            NodeEnum::AIndirection(n) => NodeMut::AIndirection(n),
-            NodeEnum::AArrayExpr(n) => NodeMut::AArrayExpr(n),
-            NodeEnum::ResTarget(n) => NodeMut::ResTarget(n),
-            NodeEnum::MultiAssignRef(n) => NodeMut::MultiAssignRef(n),
-            NodeEnum::TypeCast(n) => NodeMut::TypeCast(n),
-            NodeEnum::CollateClause(n) => NodeMut::CollateClause(n),
-            NodeEnum::SortBy(n) => NodeMut::SortBy(n),
-            NodeEnum::WindowDef(n) => NodeMut::WindowDef(n),
-            NodeEnum::RangeSubselect(n) => NodeMut::RangeSubselect(n),
-            NodeEnum::RangeFunction(n) => NodeMut::RangeFunction(n),
-            NodeEnum::RangeTableSample(n) => NodeMut::RangeTableSample(n),
-            NodeEnum::RangeTableFunc(n) => NodeMut::RangeTableFunc(n),
-            NodeEnum::RangeTableFuncCol(n) => NodeMut::RangeTableFuncCol(n),
-            NodeEnum::TypeName(n) => NodeMut::TypeName(n),
-            NodeEnum::ColumnDef(n) => NodeMut::ColumnDef(n),
-            NodeEnum::IndexElem(n) => NodeMut::IndexElem(n),
-            NodeEnum::Constraint(n) => NodeMut::Constraint(n),
-            NodeEnum::DefElem(n) => NodeMut::DefElem(n),
-            NodeEnum::RangeTblEntry(n) => NodeMut::RangeTblEntry(n),
-            NodeEnum::RangeTblFunction(n) => NodeMut::RangeTblFunction(n),
-            NodeEnum::TableSampleClause(n) => NodeMut::TableSampleClause(n),
-            NodeEnum::WithCheckOption(n) => NodeMut::WithCheckOption(n),
-            NodeEnum::SortGroupClause(n) => NodeMut::SortGroupClause(n),
-            NodeEnum::GroupingSet(n) => NodeMut::GroupingSet(n),
-            NodeEnum::WindowClause(n) => NodeMut::WindowClause(n),
-            NodeEnum::ObjectWithArgs(n) => NodeMut::ObjectWithArgs(n),
-            NodeEnum::AccessPriv(n) => NodeMut::AccessPriv(n),
-            NodeEnum::CreateOpClassItem(n) => NodeMut::CreateOpClassItem(n),
-            NodeEnum::TableLikeClause(n) => NodeMut::TableLikeClause(n),
-            NodeEnum::FunctionParameter(n) => NodeMut::FunctionParameter(n),
-            NodeEnum::LockingClause(n) => NodeMut::LockingClause(n),
-            NodeEnum::RowMarkClause(n) => NodeMut::RowMarkClause(n),
-            NodeEnum::XmlSerialize(n) => NodeMut::XmlSerialize(n),
-            NodeEnum::WithClause(n) => NodeMut::WithClause(n),
-            NodeEnum::InferClause(n) => NodeMut::InferClause(n),
-            NodeEnum::OnConflictClause(n) => NodeMut::OnConflictClause(n),
-            NodeEnum::CommonTableExpr(n) => NodeMut::CommonTableExpr(n),
-            NodeEnum::RoleSpec(n) => NodeMut::RoleSpec(n),
-            NodeEnum::TriggerTransition(n) => NodeMut::TriggerTransition(n),
-            NodeEnum::PartitionElem(n) => NodeMut::PartitionElem(n),
-            NodeEnum::PartitionSpec(n) => NodeMut::PartitionSpec(n),
-            NodeEnum::PartitionBoundSpec(n) => NodeMut::PartitionBoundSpec(n),
-            NodeEnum::PartitionRangeDatum(n) => NodeMut::PartitionRangeDatum(n),
-            NodeEnum::PartitionCmd(n) => NodeMut::PartitionCmd(n),
-            NodeEnum::VacuumRelation(n) => NodeMut::VacuumRelation(n),
-            NodeEnum::InlineCodeBlock(n) => NodeMut::InlineCodeBlock(n),
-            NodeEnum::CallContext(n) => NodeMut::CallContext(n),
-            NodeEnum::Integer(n) => NodeMut::Integer(n),
-            NodeEnum::Float(n) => NodeMut::Float(n),
-            NodeEnum::String(n) => NodeMut::String(n),
-            NodeEnum::BitString(n) => NodeMut::BitString(n),
-            NodeEnum::Null(n) => NodeMut::Null(n),
-            NodeEnum::List(n) => NodeMut::List(n),
-            NodeEnum::IntList(n) => NodeMut::IntList(n),
-            NodeEnum::OidList(n) => NodeMut::OidList(n),
+            NodeEnum::Alias(n) => NodeMut::Alias(n as *mut _),
+            NodeEnum::RangeVar(n) => NodeMut::RangeVar(n as *mut _),
+            NodeEnum::TableFunc(n) => NodeMut::TableFunc(&mut **n as *mut _),
+            NodeEnum::Expr(n) => NodeMut::Expr(n as *mut _),
+            NodeEnum::Var(n) => NodeMut::Var(&mut **n as *mut _),
+            NodeEnum::Param(n) => NodeMut::Param(&mut **n as *mut _),
+            NodeEnum::Aggref(n) => NodeMut::Aggref(&mut **n as *mut _),
+            NodeEnum::GroupingFunc(n) => NodeMut::GroupingFunc(&mut **n as *mut _),
+            NodeEnum::WindowFunc(n) => NodeMut::WindowFunc(&mut **n as *mut _),
+            NodeEnum::SubscriptingRef(n) => NodeMut::SubscriptingRef(&mut **n as *mut _),
+            NodeEnum::FuncExpr(n) => NodeMut::FuncExpr(&mut **n as *mut _),
+            NodeEnum::NamedArgExpr(n) => NodeMut::NamedArgExpr(&mut **n as *mut _),
+            NodeEnum::OpExpr(n) => NodeMut::OpExpr(&mut **n as *mut _),
+            NodeEnum::DistinctExpr(n) => NodeMut::DistinctExpr(&mut **n as *mut _),
+            NodeEnum::NullIfExpr(n) => NodeMut::NullIfExpr(&mut **n as *mut _),
+            NodeEnum::ScalarArrayOpExpr(n) => NodeMut::ScalarArrayOpExpr(&mut **n as *mut _),
+            NodeEnum::BoolExpr(n) => NodeMut::BoolExpr(&mut **n as *mut _),
+            NodeEnum::SubLink(n) => NodeMut::SubLink(&mut **n as *mut _),
+            NodeEnum::SubPlan(n) => NodeMut::SubPlan(&mut **n as *mut _),
+            NodeEnum::AlternativeSubPlan(n) => NodeMut::AlternativeSubPlan(&mut **n as *mut _),
+            NodeEnum::FieldSelect(n) => NodeMut::FieldSelect(&mut **n as *mut _),
+            NodeEnum::FieldStore(n) => NodeMut::FieldStore(&mut **n as *mut _),
+            NodeEnum::RelabelType(n) => NodeMut::RelabelType(&mut **n as *mut _),
+            NodeEnum::CoerceViaIo(n) => NodeMut::CoerceViaIo(&mut **n as *mut _),
+            NodeEnum::ArrayCoerceExpr(n) => NodeMut::ArrayCoerceExpr(&mut **n as *mut _),
+            NodeEnum::ConvertRowtypeExpr(n) => NodeMut::ConvertRowtypeExpr(&mut **n as *mut _),
+            NodeEnum::CollateExpr(n) => NodeMut::CollateExpr(&mut **n as *mut _),
+            NodeEnum::CaseExpr(n) => NodeMut::CaseExpr(&mut **n as *mut _),
+            NodeEnum::CaseWhen(n) => NodeMut::CaseWhen(&mut **n as *mut _),
+            NodeEnum::CaseTestExpr(n) => NodeMut::CaseTestExpr(&mut **n as *mut _),
+            NodeEnum::ArrayExpr(n) => NodeMut::ArrayExpr(&mut **n as *mut _),
+            NodeEnum::RowExpr(n) => NodeMut::RowExpr(&mut **n as *mut _),
+            NodeEnum::RowCompareExpr(n) => NodeMut::RowCompareExpr(&mut **n as *mut _),
+            NodeEnum::CoalesceExpr(n) => NodeMut::CoalesceExpr(&mut **n as *mut _),
+            NodeEnum::MinMaxExpr(n) => NodeMut::MinMaxExpr(&mut **n as *mut _),
+            NodeEnum::SqlvalueFunction(n) => NodeMut::SqlvalueFunction(&mut **n as *mut _),
+            NodeEnum::XmlExpr(n) => NodeMut::XmlExpr(&mut **n as *mut _),
+            NodeEnum::NullTest(n) => NodeMut::NullTest(&mut **n as *mut _),
+            NodeEnum::BooleanTest(n) => NodeMut::BooleanTest(&mut **n as *mut _),
+            NodeEnum::CoerceToDomain(n) => NodeMut::CoerceToDomain(&mut **n as *mut _),
+            NodeEnum::CoerceToDomainValue(n) => NodeMut::CoerceToDomainValue(&mut **n as *mut _),
+            NodeEnum::SetToDefault(n) => NodeMut::SetToDefault(&mut **n as *mut _),
+            NodeEnum::CurrentOfExpr(n) => NodeMut::CurrentOfExpr(&mut **n as *mut _),
+            NodeEnum::NextValueExpr(n) => NodeMut::NextValueExpr(&mut **n as *mut _),
+            NodeEnum::InferenceElem(n) => NodeMut::InferenceElem(&mut **n as *mut _),
+            NodeEnum::TargetEntry(n) => NodeMut::TargetEntry(&mut **n as *mut _),
+            NodeEnum::RangeTblRef(n) => NodeMut::RangeTblRef(n as *mut _),
+            NodeEnum::JoinExpr(n) => NodeMut::JoinExpr(&mut **n as *mut _),
+            NodeEnum::FromExpr(n) => NodeMut::FromExpr(&mut **n as *mut _),
+            NodeEnum::OnConflictExpr(n) => NodeMut::OnConflictExpr(&mut **n as *mut _),
+            NodeEnum::IntoClause(n) => NodeMut::IntoClause(&mut **n as *mut _),
+            NodeEnum::RawStmt(n) => NodeMut::RawStmt(&mut **n as *mut _),
+            NodeEnum::Query(n) => NodeMut::Query(&mut **n as *mut _),
+            NodeEnum::InsertStmt(n) => NodeMut::InsertStmt(&mut **n as *mut _),
+            NodeEnum::DeleteStmt(n) => NodeMut::DeleteStmt(&mut **n as *mut _),
+            NodeEnum::UpdateStmt(n) => NodeMut::UpdateStmt(&mut **n as *mut _),
+            NodeEnum::SelectStmt(n) => NodeMut::SelectStmt(&mut **n as *mut _),
+            NodeEnum::AlterTableStmt(n) => NodeMut::AlterTableStmt(n as *mut _),
+            NodeEnum::AlterTableCmd(n) => NodeMut::AlterTableCmd(&mut **n as *mut _),
+            NodeEnum::AlterDomainStmt(n) => NodeMut::AlterDomainStmt(&mut **n as *mut _),
+            NodeEnum::SetOperationStmt(n) => NodeMut::SetOperationStmt(&mut **n as *mut _),
+            NodeEnum::GrantStmt(n) => NodeMut::GrantStmt(n as *mut _),
+            NodeEnum::GrantRoleStmt(n) => NodeMut::GrantRoleStmt(n as *mut _),
+            NodeEnum::AlterDefaultPrivilegesStmt(n) => NodeMut::AlterDefaultPrivilegesStmt(n as *mut _),
+            NodeEnum::ClosePortalStmt(n) => NodeMut::ClosePortalStmt(n as *mut _),
+            NodeEnum::ClusterStmt(n) => NodeMut::ClusterStmt(n as *mut _),
+            NodeEnum::CopyStmt(n) => NodeMut::CopyStmt(&mut **n as *mut _),
+            NodeEnum::CreateStmt(n) => NodeMut::CreateStmt(n as *mut _),
+            NodeEnum::DefineStmt(n) => NodeMut::DefineStmt(n as *mut _),
+            NodeEnum::DropStmt(n) => NodeMut::DropStmt(n as *mut _),
+            NodeEnum::TruncateStmt(n) => NodeMut::TruncateStmt(n as *mut _),
+            NodeEnum::CommentStmt(n) => NodeMut::CommentStmt(&mut **n as *mut _),
+            NodeEnum::FetchStmt(n) => NodeMut::FetchStmt(n as *mut _),
+            NodeEnum::IndexStmt(n) => NodeMut::IndexStmt(&mut **n as *mut _),
+            NodeEnum::CreateFunctionStmt(n) => NodeMut::CreateFunctionStmt(n as *mut _),
+            NodeEnum::AlterFunctionStmt(n) => NodeMut::AlterFunctionStmt(n as *mut _),
+            NodeEnum::DoStmt(n) => NodeMut::DoStmt(n as *mut _),
+            NodeEnum::RenameStmt(n) => NodeMut::RenameStmt(&mut **n as *mut _),
+            NodeEnum::RuleStmt(n) => NodeMut::RuleStmt(&mut **n as *mut _),
+            NodeEnum::NotifyStmt(n) => NodeMut::NotifyStmt(n as *mut _),
+            NodeEnum::ListenStmt(n) => NodeMut::ListenStmt(n as *mut _),
+            NodeEnum::UnlistenStmt(n) => NodeMut::UnlistenStmt(n as *mut _),
+            NodeEnum::TransactionStmt(n) => NodeMut::TransactionStmt(n as *mut _),
+            NodeEnum::ViewStmt(n) => NodeMut::ViewStmt(&mut **n as *mut _),
+            NodeEnum::LoadStmt(n) => NodeMut::LoadStmt(n as *mut _),
+            NodeEnum::CreateDomainStmt(n) => NodeMut::CreateDomainStmt(&mut **n as *mut _),
+            NodeEnum::CreatedbStmt(n) => NodeMut::CreatedbStmt(n as *mut _),
+            NodeEnum::DropdbStmt(n) => NodeMut::DropdbStmt(n as *mut _),
+            NodeEnum::VacuumStmt(n) => NodeMut::VacuumStmt(n as *mut _),
+            NodeEnum::ExplainStmt(n) => NodeMut::ExplainStmt(&mut **n as *mut _),
+            NodeEnum::CreateTableAsStmt(n) => NodeMut::CreateTableAsStmt(&mut **n as *mut _),
+            NodeEnum::CreateSeqStmt(n) => NodeMut::CreateSeqStmt(n as *mut _),
+            NodeEnum::AlterSeqStmt(n) => NodeMut::AlterSeqStmt(n as *mut _),
+            NodeEnum::VariableSetStmt(n) => NodeMut::VariableSetStmt(n as *mut _),
+            NodeEnum::VariableShowStmt(n) => NodeMut::VariableShowStmt(n as *mut _),
+            NodeEnum::DiscardStmt(n) => NodeMut::DiscardStmt(n as *mut _),
+            NodeEnum::CreateTrigStmt(n) => NodeMut::CreateTrigStmt(&mut **n as *mut _),
+            NodeEnum::CreatePlangStmt(n) => NodeMut::CreatePlangStmt(n as *mut _),
+            NodeEnum::CreateRoleStmt(n) => NodeMut::CreateRoleStmt(n as *mut _),
+            NodeEnum::AlterRoleStmt(n) => NodeMut::AlterRoleStmt(n as *mut _),
+            NodeEnum::DropRoleStmt(n) => NodeMut::DropRoleStmt(n as *mut _),
+            NodeEnum::LockStmt(n) => NodeMut::LockStmt(n as *mut _),
+            NodeEnum::ConstraintsSetStmt(n) => NodeMut::ConstraintsSetStmt(n as *mut _),
+            NodeEnum::ReindexStmt(n) => NodeMut::ReindexStmt(n as *mut _),
+            NodeEnum::CheckPointStmt(n) => NodeMut::CheckPointStmt(n as *mut _),
+            NodeEnum::CreateSchemaStmt(n) => NodeMut::CreateSchemaStmt(n as *mut _),
+            NodeEnum::AlterDatabaseStmt(n) => NodeMut::AlterDatabaseStmt(n as *mut _),
+            NodeEnum::AlterDatabaseSetStmt(n) => NodeMut::AlterDatabaseSetStmt(n as *mut _),
+            NodeEnum::AlterRoleSetStmt(n) => NodeMut::AlterRoleSetStmt(n as *mut _),
+            NodeEnum::CreateConversionStmt(n) => NodeMut::CreateConversionStmt(n as *mut _),
+            NodeEnum::CreateCastStmt(n) => NodeMut::CreateCastStmt(n as *mut _),
+            NodeEnum::CreateOpClassStmt(n) => NodeMut::CreateOpClassStmt(n as *mut _),
+            NodeEnum::CreateOpFamilyStmt(n) => NodeMut::CreateOpFamilyStmt(n as *mut _),
+            NodeEnum::AlterOpFamilyStmt(n) => NodeMut::AlterOpFamilyStmt(n as *mut _),
+            NodeEnum::PrepareStmt(n) => NodeMut::PrepareStmt(&mut **n as *mut _),
+            NodeEnum::ExecuteStmt(n) => NodeMut::ExecuteStmt(n as *mut _),
+            NodeEnum::DeallocateStmt(n) => NodeMut::DeallocateStmt(n as *mut _),
+            NodeEnum::DeclareCursorStmt(n) => NodeMut::DeclareCursorStmt(&mut **n as *mut _),
+            NodeEnum::CreateTableSpaceStmt(n) => NodeMut::CreateTableSpaceStmt(n as *mut _),
+            NodeEnum::DropTableSpaceStmt(n) => NodeMut::DropTableSpaceStmt(n as *mut _),
+            NodeEnum::AlterObjectDependsStmt(n) => NodeMut::AlterObjectDependsStmt(&mut **n as *mut _),
+            NodeEnum::AlterObjectSchemaStmt(n) => NodeMut::AlterObjectSchemaStmt(&mut **n as *mut _),
+            NodeEnum::AlterOwnerStmt(n) => NodeMut::AlterOwnerStmt(&mut **n as *mut _),
+            NodeEnum::AlterOperatorStmt(n) => NodeMut::AlterOperatorStmt(n as *mut _),
+            NodeEnum::AlterTypeStmt(n) => NodeMut::AlterTypeStmt(n as *mut _),
+            NodeEnum::DropOwnedStmt(n) => NodeMut::DropOwnedStmt(n as *mut _),
+            NodeEnum::ReassignOwnedStmt(n) => NodeMut::ReassignOwnedStmt(n as *mut _),
+            NodeEnum::CompositeTypeStmt(n) => NodeMut::CompositeTypeStmt(n as *mut _),
+            NodeEnum::CreateEnumStmt(n) => NodeMut::CreateEnumStmt(n as *mut _),
+            NodeEnum::CreateRangeStmt(n) => NodeMut::CreateRangeStmt(n as *mut _),
+            NodeEnum::AlterEnumStmt(n) => NodeMut::AlterEnumStmt(n as *mut _),
+            NodeEnum::AlterTsdictionaryStmt(n) => NodeMut::AlterTsdictionaryStmt(n as *mut _),
+            NodeEnum::AlterTsconfigurationStmt(n) => NodeMut::AlterTsconfigurationStmt(n as *mut _),
+            NodeEnum::CreateFdwStmt(n) => NodeMut::CreateFdwStmt(n as *mut _),
+            NodeEnum::AlterFdwStmt(n) => NodeMut::AlterFdwStmt(n as *mut _),
+            NodeEnum::CreateForeignServerStmt(n) => NodeMut::CreateForeignServerStmt(n as *mut _),
+            NodeEnum::AlterForeignServerStmt(n) => NodeMut::AlterForeignServerStmt(n as *mut _),
+            NodeEnum::CreateUserMappingStmt(n) => NodeMut::CreateUserMappingStmt(n as *mut _),
+            NodeEnum::AlterUserMappingStmt(n) => NodeMut::AlterUserMappingStmt(n as *mut _),
+            NodeEnum::DropUserMappingStmt(n) => NodeMut::DropUserMappingStmt(n as *mut _),
+            NodeEnum::AlterTableSpaceOptionsStmt(n) => NodeMut::AlterTableSpaceOptionsStmt(n as *mut _),
+            NodeEnum::AlterTableMoveAllStmt(n) => NodeMut::AlterTableMoveAllStmt(n as *mut _),
+            NodeEnum::SecLabelStmt(n) => NodeMut::SecLabelStmt(&mut **n as *mut _),
+            NodeEnum::CreateForeignTableStmt(n) => NodeMut::CreateForeignTableStmt(n as *mut _),
+            NodeEnum::ImportForeignSchemaStmt(n) => NodeMut::ImportForeignSchemaStmt(n as *mut _),
+            NodeEnum::CreateExtensionStmt(n) => NodeMut::CreateExtensionStmt(n as *mut _),
+            NodeEnum::AlterExtensionStmt(n) => NodeMut::AlterExtensionStmt(n as *mut _),
+            NodeEnum::AlterExtensionContentsStmt(n) => NodeMut::AlterExtensionContentsStmt(&mut **n as *mut _),
+            NodeEnum::CreateEventTrigStmt(n) => NodeMut::CreateEventTrigStmt(n as *mut _),
+            NodeEnum::AlterEventTrigStmt(n) => NodeMut::AlterEventTrigStmt(n as *mut _),
+            NodeEnum::RefreshMatViewStmt(n) => NodeMut::RefreshMatViewStmt(n as *mut _),
+            NodeEnum::ReplicaIdentityStmt(n) => NodeMut::ReplicaIdentityStmt(n as *mut _),
+            NodeEnum::AlterSystemStmt(n) => NodeMut::AlterSystemStmt(n as *mut _),
+            NodeEnum::CreatePolicyStmt(n) => NodeMut::CreatePolicyStmt(&mut **n as *mut _),
+            NodeEnum::AlterPolicyStmt(n) => NodeMut::AlterPolicyStmt(&mut **n as *mut _),
+            NodeEnum::CreateTransformStmt(n) => NodeMut::CreateTransformStmt(n as *mut _),
+            NodeEnum::CreateAmStmt(n) => NodeMut::CreateAmStmt(n as *mut _),
+            NodeEnum::CreatePublicationStmt(n) => NodeMut::CreatePublicationStmt(n as *mut _),
+            NodeEnum::AlterPublicationStmt(n) => NodeMut::AlterPublicationStmt(n as *mut _),
+            NodeEnum::CreateSubscriptionStmt(n) => NodeMut::CreateSubscriptionStmt(n as *mut _),
+            NodeEnum::AlterSubscriptionStmt(n) => NodeMut::AlterSubscriptionStmt(n as *mut _),
+            NodeEnum::DropSubscriptionStmt(n) => NodeMut::DropSubscriptionStmt(n as *mut _),
+            NodeEnum::CreateStatsStmt(n) => NodeMut::CreateStatsStmt(n as *mut _),
+            NodeEnum::AlterCollationStmt(n) => NodeMut::AlterCollationStmt(n as *mut _),
+            NodeEnum::CallStmt(n) => NodeMut::CallStmt(&mut **n as *mut _),
+            NodeEnum::AlterStatsStmt(n) => NodeMut::AlterStatsStmt(n as *mut _),
+            NodeEnum::AExpr(n) => NodeMut::AExpr(&mut **n as *mut _),
+            NodeEnum::ColumnRef(n) => NodeMut::ColumnRef(n as *mut _),
+            NodeEnum::ParamRef(n) => NodeMut::ParamRef(n as *mut _),
+            NodeEnum::AConst(n) => NodeMut::AConst(&mut **n as *mut _),
+            NodeEnum::FuncCall(n) => NodeMut::FuncCall(&mut **n as *mut _),
+            NodeEnum::AStar(n) => NodeMut::AStar(n as *mut _),
+            NodeEnum::AIndices(n) => NodeMut::AIndices(&mut **n as *mut _),
+            NodeEnum::AIndirection(n) => NodeMut::AIndirection(&mut **n as *mut _),
+            NodeEnum::AArrayExpr(n) => NodeMut::AArrayExpr(n as *mut _),
+            NodeEnum::ResTarget(n) => NodeMut::ResTarget(&mut **n as *mut _),
+            NodeEnum::MultiAssignRef(n) => NodeMut::MultiAssignRef(&mut **n as *mut _),
+            NodeEnum::TypeCast(n) => NodeMut::TypeCast(&mut **n as *mut _),
+            NodeEnum::CollateClause(n) => NodeMut::CollateClause(&mut **n as *mut _),
+            NodeEnum::SortBy(n) => NodeMut::SortBy(&mut **n as *mut _),
+            NodeEnum::WindowDef(n) => NodeMut::WindowDef(&mut **n as *mut _),
+            NodeEnum::RangeSubselect(n) => NodeMut::RangeSubselect(&mut **n as *mut _),
+            NodeEnum::RangeFunction(n) => NodeMut::RangeFunction(n as *mut _),
+            NodeEnum::RangeTableSample(n) => NodeMut::RangeTableSample(&mut **n as *mut _),
+            NodeEnum::RangeTableFunc(n) => NodeMut::RangeTableFunc(&mut **n as *mut _),
+            NodeEnum::RangeTableFuncCol(n) => NodeMut::RangeTableFuncCol(&mut **n as *mut _),
+            NodeEnum::TypeName(n) => NodeMut::TypeName(n as *mut _),
+            NodeEnum::ColumnDef(n) => NodeMut::ColumnDef(&mut **n as *mut _),
+            NodeEnum::IndexElem(n) => NodeMut::IndexElem(&mut **n as *mut _),
+            NodeEnum::Constraint(n) => NodeMut::Constraint(&mut **n as *mut _),
+            NodeEnum::DefElem(n) => NodeMut::DefElem(&mut **n as *mut _),
+            NodeEnum::RangeTblEntry(n) => NodeMut::RangeTblEntry(&mut **n as *mut _),
+            NodeEnum::RangeTblFunction(n) => NodeMut::RangeTblFunction(&mut **n as *mut _),
+            NodeEnum::TableSampleClause(n) => NodeMut::TableSampleClause(&mut **n as *mut _),
+            NodeEnum::WithCheckOption(n) => NodeMut::WithCheckOption(&mut **n as *mut _),
+            NodeEnum::SortGroupClause(n) => NodeMut::SortGroupClause(n as *mut _),
+            NodeEnum::GroupingSet(n) => NodeMut::GroupingSet(n as *mut _),
+            NodeEnum::WindowClause(n) => NodeMut::WindowClause(&mut **n as *mut _),
+            NodeEnum::ObjectWithArgs(n) => NodeMut::ObjectWithArgs(n as *mut _),
+            NodeEnum::AccessPriv(n) => NodeMut::AccessPriv(n as *mut _),
+            NodeEnum::CreateOpClassItem(n) => NodeMut::CreateOpClassItem(n as *mut _),
+            NodeEnum::TableLikeClause(n) => NodeMut::TableLikeClause(n as *mut _),
+            NodeEnum::FunctionParameter(n) => NodeMut::FunctionParameter(&mut **n as *mut _),
+            NodeEnum::LockingClause(n) => NodeMut::LockingClause(n as *mut _),
+            NodeEnum::RowMarkClause(n) => NodeMut::RowMarkClause(n as *mut _),
+            NodeEnum::XmlSerialize(n) => NodeMut::XmlSerialize(&mut **n as *mut _),
+            NodeEnum::WithClause(n) => NodeMut::WithClause(n as *mut _),
+            NodeEnum::InferClause(n) => NodeMut::InferClause(&mut **n as *mut _),
+            NodeEnum::OnConflictClause(n) => NodeMut::OnConflictClause(&mut **n as *mut _),
+            NodeEnum::CommonTableExpr(n) => NodeMut::CommonTableExpr(&mut **n as *mut _),
+            NodeEnum::RoleSpec(n) => NodeMut::RoleSpec(n as *mut _),
+            NodeEnum::TriggerTransition(n) => NodeMut::TriggerTransition(n as *mut _),
+            NodeEnum::PartitionElem(n) => NodeMut::PartitionElem(&mut **n as *mut _),
+            NodeEnum::PartitionSpec(n) => NodeMut::PartitionSpec(n as *mut _),
+            NodeEnum::PartitionBoundSpec(n) => NodeMut::PartitionBoundSpec(n as *mut _),
+            NodeEnum::PartitionRangeDatum(n) => NodeMut::PartitionRangeDatum(&mut **n as *mut _),
+            NodeEnum::PartitionCmd(n) => NodeMut::PartitionCmd(n as *mut _),
+            NodeEnum::VacuumRelation(n) => NodeMut::VacuumRelation(n as *mut _),
+            NodeEnum::InlineCodeBlock(n) => NodeMut::InlineCodeBlock(n as *mut _),
+            NodeEnum::CallContext(n) => NodeMut::CallContext(n as *mut _),
+            NodeEnum::Integer(n) => NodeMut::Integer(n as *mut _),
+            NodeEnum::Float(n) => NodeMut::Float(n as *mut _),
+            NodeEnum::String(n) => NodeMut::String(n as *mut _),
+            NodeEnum::BitString(n) => NodeMut::BitString(n as *mut _),
+            NodeEnum::Null(n) => NodeMut::Null(n as *mut _),
+            NodeEnum::List(n) => NodeMut::List(n as *mut _),
+            NodeEnum::IntList(n) => NodeMut::IntList(n as *mut _),
+            NodeEnum::OidList(n) => NodeMut::OidList(n as *mut _),
         }
     }
 }

@@ -1,4 +1,3 @@
-use std::cell::UnsafeCell;
 use std::cmp::Ordering;
 
 use crate::*;
@@ -12,9 +11,9 @@ enum TruncationAttr {
 }
 
 #[derive(Debug)]
-struct PossibleTruncation<'a> {
+struct PossibleTruncation {
     attr: TruncationAttr,
-    node: NodeRef<'a>,
+    node: NodeMut,
     depth: i32,
     length: i32,
 }
@@ -25,17 +24,22 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
         return Ok(output)
     }
 
+    // SAFETY: within this scope nobody expects to have exclusive access to `protobuf`'s contents, so we can have multiple shared accesses.
+    // Note that while the first iteration calls unwrap() on the raw pointers, it's possible that during the second iteration
+    // we try to use a now-empty pointer so we handle that with Error::InvalidPointer.
+    //
+    // Raw pointer documentation:
+    //
+    // https://doc.rust-lang.org/book/ch19-01-unsafe-rust.html#dereferencing-a-raw-pointer
+    // https://doc.rust-lang.org/std/primitive.pointer.html
+    // https://manishearth.github.io/blog/2015/05/17/the-problem-with-shared-mutability
     unsafe {
-        // SAFETY: within this scope nobody expects to have exclusive access to `protobuf`'s contents,
-        // so we can have multiple shared accesses. https://doc.rust-lang.org/stable/std/cell/struct.UnsafeCell.html
-        let mut protobuf = UnsafeCell::new(protobuf.clone());
-        let protobuf_ref = &*protobuf.get();
-        let protobuf_mut = &mut *protobuf.get_mut();
-
+        let mut protobuf = protobuf.clone();
         let mut truncations: Vec<PossibleTruncation> = Vec::new();
-        for (node, depth, _context) in protobuf_ref.nodes().into_iter() {
+        for (node, depth, _context) in protobuf.nodes_mut().into_iter() {
             match node {
-                NodeRef::SelectStmt(s) => {
+                NodeMut::SelectStmt(s) => {
+                    let s = s.as_mut().unwrap();
                     truncations.push(PossibleTruncation {
                         attr: TruncationAttr::TargetList, node: node, depth: depth,
                         length: target_list_len(s.target_list.clone())
@@ -47,7 +51,8 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                         });
                     }
                 }
-                NodeRef::UpdateStmt(s) => {
+                NodeMut::UpdateStmt(s) => {
+                    let s = s.as_mut().unwrap();
                     truncations.push(PossibleTruncation {
                         attr: TruncationAttr::TargetList, node: node, depth: depth,
                         length: target_list_len(s.target_list.clone())
@@ -59,7 +64,8 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                         });
                     }
                 }
-                NodeRef::DeleteStmt(s) => {
+                NodeMut::DeleteStmt(s) => {
+                    let s = s.as_mut().unwrap();
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::WhereClause, node: node, depth: depth,
@@ -67,7 +73,8 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                         });
                     }
                 }
-                NodeRef::CopyStmt(s) => {
+                NodeMut::CopyStmt(s) => {
+                    let s = s.as_mut().unwrap();
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::WhereClause, node: node, depth: depth,
@@ -75,7 +82,8 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                         });
                     }
                 }
-                NodeRef::InsertStmt(s) => {
+                NodeMut::InsertStmt(s) => {
+                    let s = s.as_mut().unwrap();
                     if s.cols.len() > 0 {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::Cols, node: node, depth: depth,
@@ -83,7 +91,8 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                         });
                     }
                 }
-                NodeRef::IndexStmt(s) => {
+                NodeMut::IndexStmt(s) => {
+                    let s = s.as_mut().unwrap();
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::WhereClause, node: node, depth: depth,
@@ -91,7 +100,8 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                         });
                     }
                 }
-                NodeRef::RuleStmt(s) => {
+                NodeMut::RuleStmt(s) => {
+                    let s = s.as_mut().unwrap();
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::WhereClause, node: node, depth: depth,
@@ -99,15 +109,17 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                         });
                     }
                 }
-                NodeRef::CommonTableExpr(c) => {
-                    if let Some(cte) = c.ctequery.as_ref() {
+                NodeMut::CommonTableExpr(s) => {
+                    let s = s.as_mut().unwrap();
+                    if let Some(cte) = s.ctequery.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::CTEQuery, node: node, depth: depth + 1,
                             length: cte.deparse().unwrap().len() as i32
                         });
                     }
                 }
-                NodeRef::InferClause(s) => {
+                NodeMut::InferClause(s) => {
+                    let s = s.as_mut().unwrap();
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::WhereClause, node: node, depth: depth,
@@ -115,7 +127,8 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                         });
                     }
                 }
-                NodeRef::OnConflictClause(s) => {
+                NodeMut::OnConflictClause(s) => {
+                    let s = s.as_mut().unwrap();
                     truncations.push(PossibleTruncation {
                         attr: TruncationAttr::TargetList, node: node, depth: depth,
                         length: target_list_len(s.target_list.clone())
@@ -139,52 +152,64 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
         });
 
         for truncation in truncations.into_iter() {
-            let node = protobuf_mut.find_mut(truncation.node);
-            match (node, truncation.attr) {
-                (NodeMut::SelectStmt(ref mut n), TruncationAttr::TargetList) => {
-                    n.target_list = vec![dummy_target()];
+            match (truncation.node, truncation.attr) {
+                (NodeMut::SelectStmt(s), TruncationAttr::TargetList) => {
+                    let s = s.as_mut().ok_or(Error::InvalidPointer)?;
+                    s.target_list = vec![dummy_target()];
                 }
-                (NodeMut::SelectStmt(ref mut n), TruncationAttr::WhereClause) => {
-                    n.where_clause = Some(dummy_column());
+                (NodeMut::SelectStmt(s), TruncationAttr::WhereClause) => {
+                    let s = s.as_mut().ok_or(Error::InvalidPointer)?;
+                    s.where_clause = Some(dummy_column());
                 }
-                (NodeMut::UpdateStmt(ref mut n), TruncationAttr::TargetList) => {
-                    n.target_list = vec![dummy_target()];
+                (NodeMut::UpdateStmt(s), TruncationAttr::TargetList) => {
+                    let s = s.as_mut().ok_or(Error::InvalidPointer)?;
+                    s.target_list = vec![dummy_target()];
                 }
-                (NodeMut::UpdateStmt(ref mut n), TruncationAttr::WhereClause) => {
-                    n.where_clause = Some(dummy_column());
+                (NodeMut::UpdateStmt(s), TruncationAttr::WhereClause) => {
+                    let s = s.as_mut().ok_or(Error::InvalidPointer)?;
+                    s.where_clause = Some(dummy_column());
                 }
-                (NodeMut::DeleteStmt(ref mut n), TruncationAttr::WhereClause) => {
-                    n.where_clause = Some(dummy_column());
+                (NodeMut::DeleteStmt(s), TruncationAttr::WhereClause) => {
+                    let s = s.as_mut().ok_or(Error::InvalidPointer)?;
+                    s.where_clause = Some(dummy_column());
                 }
-                (NodeMut::CopyStmt(ref mut n), TruncationAttr::WhereClause) => {
-                    n.where_clause = Some(dummy_column());
+                (NodeMut::CopyStmt(s), TruncationAttr::WhereClause) => {
+                    let s = s.as_mut().ok_or(Error::InvalidPointer)?;
+                    s.where_clause = Some(dummy_column());
                 }
-                (NodeMut::InsertStmt(ref mut n), TruncationAttr::Cols) => {
-                    n.cols = vec![dummy_target()];
+                (NodeMut::InsertStmt(s), TruncationAttr::Cols) => {
+                    let s = s.as_mut().ok_or(Error::InvalidPointer)?;
+                    s.cols = vec![dummy_target()];
                 }
-                (NodeMut::IndexStmt(ref mut n), TruncationAttr::WhereClause) => {
-                    n.where_clause = Some(dummy_column());
+                (NodeMut::IndexStmt(s), TruncationAttr::WhereClause) => {
+                    let s = s.as_mut().ok_or(Error::InvalidPointer)?;
+                    s.where_clause = Some(dummy_column());
                 }
-                (NodeMut::RuleStmt(ref mut n), TruncationAttr::WhereClause) => {
-                    n.where_clause = Some(dummy_column());
+                (NodeMut::RuleStmt(s), TruncationAttr::WhereClause) => {
+                    let s = s.as_mut().ok_or(Error::InvalidPointer)?;
+                    s.where_clause = Some(dummy_column());
                 }
-                (NodeMut::CommonTableExpr(ref mut n), TruncationAttr::CTEQuery) => {
-                    n.ctequery = Some(dummy_select(vec![], Some(dummy_column())))
+                (NodeMut::CommonTableExpr(s), TruncationAttr::CTEQuery) => {
+                    let s = s.as_mut().ok_or(Error::InvalidPointer)?;
+                    s.ctequery = Some(dummy_select(vec![], Some(dummy_column())))
                 }
-                (NodeMut::InferClause(ref mut n), TruncationAttr::WhereClause) => {
-                    n.where_clause = Some(dummy_column());
+                (NodeMut::InferClause(s), TruncationAttr::WhereClause) => {
+                    let s = s.as_mut().ok_or(Error::InvalidPointer)?;
+                    s.where_clause = Some(dummy_column());
                 }
-                (NodeMut::OnConflictClause(ref mut n), TruncationAttr::TargetList) => {
-                    n.target_list = vec![dummy_target()];
+                (NodeMut::OnConflictClause(s), TruncationAttr::TargetList) => {
+                    let s = s.as_mut().ok_or(Error::InvalidPointer)?;
+                    s.target_list = vec![dummy_target()];
                 }
-                (NodeMut::OnConflictClause(ref mut n), TruncationAttr::WhereClause) => {
-                    n.where_clause = Some(dummy_column());
+                (NodeMut::OnConflictClause(s), TruncationAttr::WhereClause) => {
+                    let s = s.as_mut().ok_or(Error::InvalidPointer)?;
+                    s.where_clause = Some(dummy_column());
                 }
                 _ => panic!("unimplemented truncation")
             }
-            let output = protobuf_ref.deparse()?;
+            let output = protobuf.deparse()?;
             let output = output.replace("SELECT WHERE \"…\"", "...").replace("\"…\"", "...");
-            // the unwanted AS doesn't happen in the Ruby version, and I'm not sure why it is here
+            // the unwanted AS doesn't happen in the Ruby version. I'm not sure where it's coming from
             let output = output.replace("SELECT ... AS ...", "SELECT ...");
             if output.len() <= max_length {
                 return Ok(output)
@@ -196,6 +221,20 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
     return Ok(format!("{}...", &output[0..=max_length - 4]))
 }
 
+fn target_list_len(nodes: Vec<Node>) -> i32 {
+    let fragment = dummy_select(nodes, None).deparse().unwrap();
+    fragment.len() as i32 - 7 // "SELECT "
+}
+
+fn where_clause_len(node: Box<Node>) -> i32 {
+    let fragment = dummy_select(vec![], Some(node)).deparse().unwrap();
+    fragment.len() as i32 - 13 // "SELECT WHERE "
+}
+
+fn cols_len(nodes: Vec<Node>) -> i32 {
+    let fragment = dummy_insert(nodes).deparse().unwrap();
+    fragment.len() as i32 - 31 // "INSERT INTO x () DEFAULT VALUES"
+}
 
 fn dummy_column() -> Box<Node> {
     Box::new(Node { node: Some(NodeEnum::ColumnRef(protobuf::ColumnRef {
@@ -240,19 +279,4 @@ fn dummy_insert(cols: Vec<Node>) -> Box<Node> {
         with_clause: None,
         r#override: 1,
     })))})
-}
-
-fn target_list_len(nodes: Vec<Node>) -> i32 {
-    let fragment = dummy_select(nodes, None).deparse().unwrap();
-    fragment.len() as i32 - 7 // "SELECT "
-}
-
-fn where_clause_len(node: Box<Node>) -> i32 {
-    let fragment = dummy_select(vec![], Some(node)).deparse().unwrap();
-    fragment.len() as i32 - 13 // "SELECT WHERE "
-}
-
-fn cols_len(nodes: Vec<Node>) -> i32 {
-    let fragment = dummy_insert(nodes).deparse().unwrap();
-    fragment.len() as i32 - 31 // "INSERT INTO x () DEFAULT VALUES"
 }
