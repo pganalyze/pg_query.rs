@@ -53,21 +53,19 @@ fn it_handles_problematic_cases() {
     assert_eq!(result.truncate(50).unwrap(), "SELECT ...")
 }
 
-// FailedAssertion("res_target->name != NULL", File: "src/pg_query_deparse.c", Line: 1587)
-// #[test]
-// fn it_omits_UPDATE_target_list() {
-//     let query = "UPDATE x SET a = 1, c = 2, e = 'str'";
-//     let result = parse(query).unwrap();
-//     assert_eq!(result.truncate(30).unwrap(), "UPDATE x SET ... = ...")
-// }
+#[test]
+fn it_omits_UPDATE_target_list() {
+    let query = "UPDATE x SET a = 1, c = 2, e = 'str'";
+    let result = parse(query).unwrap();
+    assert_eq!(result.truncate(30).unwrap(), "UPDATE x SET ... = ...")
+}
 
-// attempt to subtract with overflow
-// #[test]
-// fn it_omits_ON_CONFLICT_target_list() {
-//     let query = "INSERT INTO y(a) VALUES(1) ON CONFLICT DO UPDATE SET a = 123456789";
-//     let result = parse(query).unwrap();
-//     assert_eq!(result.truncate(65).unwrap(), "INSERT INTO y (a) VALUES (1) ON CONFLICT DO UPDATE SET ... = ...")
-// }
+#[test]
+fn it_omits_ON_CONFLICT_target_list() {
+    let query = "INSERT INTO y(a) VALUES(1) ON CONFLICT DO UPDATE SET a = 123456789";
+    let result = parse(query).unwrap();
+    assert_eq!(result.truncate(65).unwrap(), "INSERT INTO y (a) VALUES (1) ON CONFLICT DO UPDATE SET ... = ...")
+}
 
 #[test]
 fn it_handles_GRANT() {
