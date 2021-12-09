@@ -28,26 +28,18 @@ impl protobuf::ParseResult {
 
     // Note: this doesn't iterate over every possible node type, since we only care about a subset of nodes.
     pub fn nodes(&self) -> Vec<(NodeRef, i32, Context)> {
-        self.stmts.iter().filter_map(|s| {
-            if let Some(node) = s.stmt.as_ref() {        // RawStmt  -> Node
-                if let Some(node) = node.node.as_ref() { // Node     -> NodeEnum
-                    return Some(node.nodes())            // NodeEnum -> NodeRef
-                }
-            }
-            None
-        }).flatten().collect()
+        self.stmts.iter().filter_map(|s|
+            // RawStmt  ->  Node   ->    NodeEnum           ->              NodeRef
+            s.stmt.as_ref().and_then(|s| s.node.as_ref()).and_then(|n| Some(n.nodes()))
+        ).flatten().collect()
     }
 
     // Returns a mutable reference to nested nodes.
     pub unsafe fn nodes_mut(&mut self) -> Vec<(NodeMut, i32, Context)>  {
-        self.stmts.iter_mut().filter_map(|s| {
-            if let Some(node) = s.stmt.as_mut() {        // RawStmt  -> Node
-                if let Some(node) = node.node.as_mut() { // Node     -> NodeEnum
-                    return Some(node.nodes_mut())        // NodeEnum -> NodeMut
-                }
-            }
-            None
-        }).flatten().collect()
+        self.stmts.iter_mut().filter_map(|s|
+            // RawStmt  ->  Node   ->    NodeEnum           ->              NodeMut
+            s.stmt.as_mut().and_then(|s| s.node.as_mut()).and_then(|n| Some(n.nodes_mut()))
+        ).flatten().collect()
     }
 }
 
@@ -223,5 +215,126 @@ impl ParseResult {
 
     pub fn truncate(&self, max_length: usize) -> Result<String> {
         crate::truncate(&self.protobuf, max_length)
+    }
+
+    pub fn statement_types(&self) -> Vec<&str> {
+        self.protobuf.stmts.iter().filter_map(|s| {
+            match s.stmt.as_ref().and_then(|s| s.node.as_ref()) {
+                Some(NodeEnum::InsertStmt(..)) => Some("InsertStmt"),
+                Some(NodeEnum::DeleteStmt(..)) => Some("DeleteStmt"),
+                Some(NodeEnum::UpdateStmt(..)) => Some("UpdateStmt"),
+                Some(NodeEnum::SelectStmt(..)) => Some("SelectStmt"),
+                Some(NodeEnum::AlterTableStmt(..)) => Some("AlterTableStmt"),
+                Some(NodeEnum::AlterTableCmd(..)) => Some("AlterTableCmd"),
+                Some(NodeEnum::AlterDomainStmt(..)) => Some("AlterDomainStmt"),
+                Some(NodeEnum::SetOperationStmt(..)) => Some("SetOperationStmt"),
+                Some(NodeEnum::GrantStmt(..)) => Some("GrantStmt"),
+                Some(NodeEnum::GrantRoleStmt(..)) => Some("GrantRoleStmt"),
+                Some(NodeEnum::AlterDefaultPrivilegesStmt(..)) => Some("AlterDefaultPrivilegesStmt"),
+                Some(NodeEnum::ClosePortalStmt(..)) => Some("ClosePortalStmt"),
+                Some(NodeEnum::ClusterStmt(..)) => Some("ClusterStmt"),
+                Some(NodeEnum::CopyStmt(..)) => Some("CopyStmt"),
+                Some(NodeEnum::CreateStmt(..)) => Some("CreateStmt"),
+                Some(NodeEnum::DefineStmt(..)) => Some("DefineStmt"),
+                Some(NodeEnum::DropStmt(..)) => Some("DropStmt"),
+                Some(NodeEnum::TruncateStmt(..)) => Some("TruncateStmt"),
+                Some(NodeEnum::CommentStmt(..)) => Some("CommentStmt"),
+                Some(NodeEnum::FetchStmt(..)) => Some("FetchStmt"),
+                Some(NodeEnum::IndexStmt(..)) => Some("IndexStmt"),
+                Some(NodeEnum::CreateFunctionStmt(..)) => Some("CreateFunctionStmt"),
+                Some(NodeEnum::AlterFunctionStmt(..)) => Some("AlterFunctionStmt"),
+                Some(NodeEnum::DoStmt(..)) => Some("DoStmt"),
+                Some(NodeEnum::RenameStmt(..)) => Some("RenameStmt"),
+                Some(NodeEnum::RuleStmt(..)) => Some("RuleStmt"),
+                Some(NodeEnum::NotifyStmt(..)) => Some("NotifyStmt"),
+                Some(NodeEnum::ListenStmt(..)) => Some("ListenStmt"),
+                Some(NodeEnum::UnlistenStmt(..)) => Some("UnlistenStmt"),
+                Some(NodeEnum::TransactionStmt(..)) => Some("TransactionStmt"),
+                Some(NodeEnum::ViewStmt(..)) => Some("ViewStmt"),
+                Some(NodeEnum::LoadStmt(..)) => Some("LoadStmt"),
+                Some(NodeEnum::CreateDomainStmt(..)) => Some("CreateDomainStmt"),
+                Some(NodeEnum::CreatedbStmt(..)) => Some("CreatedbStmt"),
+                Some(NodeEnum::DropdbStmt(..)) => Some("DropdbStmt"),
+                Some(NodeEnum::VacuumStmt(..)) => Some("VacuumStmt"),
+                Some(NodeEnum::ExplainStmt(..)) => Some("ExplainStmt"),
+                Some(NodeEnum::CreateTableAsStmt(..)) => Some("CreateTableAsStmt"),
+                Some(NodeEnum::CreateSeqStmt(..)) => Some("CreateSeqStmt"),
+                Some(NodeEnum::AlterSeqStmt(..)) => Some("AlterSeqStmt"),
+                Some(NodeEnum::VariableSetStmt(..)) => Some("VariableSetStmt"),
+                Some(NodeEnum::VariableShowStmt(..)) => Some("VariableShowStmt"),
+                Some(NodeEnum::DiscardStmt(..)) => Some("DiscardStmt"),
+                Some(NodeEnum::CreateTrigStmt(..)) => Some("CreateTrigStmt"),
+                Some(NodeEnum::CreatePlangStmt(..)) => Some("CreatePlangStmt"),
+                Some(NodeEnum::CreateRoleStmt(..)) => Some("CreateRoleStmt"),
+                Some(NodeEnum::AlterRoleStmt(..)) => Some("AlterRoleStmt"),
+                Some(NodeEnum::DropRoleStmt(..)) => Some("DropRoleStmt"),
+                Some(NodeEnum::LockStmt(..)) => Some("LockStmt"),
+                Some(NodeEnum::ConstraintsSetStmt(..)) => Some("ConstraintsSetStmt"),
+                Some(NodeEnum::ReindexStmt(..)) => Some("ReindexStmt"),
+                Some(NodeEnum::CheckPointStmt(..)) => Some("CheckPointStmt"),
+                Some(NodeEnum::CreateSchemaStmt(..)) => Some("CreateSchemaStmt"),
+                Some(NodeEnum::AlterDatabaseStmt(..)) => Some("AlterDatabaseStmt"),
+                Some(NodeEnum::AlterDatabaseSetStmt(..)) => Some("AlterDatabaseSetStmt"),
+                Some(NodeEnum::AlterRoleSetStmt(..)) => Some("AlterRoleSetStmt"),
+                Some(NodeEnum::CreateConversionStmt(..)) => Some("CreateConversionStmt"),
+                Some(NodeEnum::CreateCastStmt(..)) => Some("CreateCastStmt"),
+                Some(NodeEnum::CreateOpClassStmt(..)) => Some("CreateOpClassStmt"),
+                Some(NodeEnum::CreateOpFamilyStmt(..)) => Some("CreateOpFamilyStmt"),
+                Some(NodeEnum::AlterOpFamilyStmt(..)) => Some("AlterOpFamilyStmt"),
+                Some(NodeEnum::PrepareStmt(..)) => Some("PrepareStmt"),
+                Some(NodeEnum::ExecuteStmt(..)) => Some("ExecuteStmt"),
+                Some(NodeEnum::DeallocateStmt(..)) => Some("DeallocateStmt"),
+                Some(NodeEnum::DeclareCursorStmt(..)) => Some("DeclareCursorStmt"),
+                Some(NodeEnum::CreateTableSpaceStmt(..)) => Some("CreateTableSpaceStmt"),
+                Some(NodeEnum::DropTableSpaceStmt(..)) => Some("DropTableSpaceStmt"),
+                Some(NodeEnum::AlterObjectDependsStmt(..)) => Some("AlterObjectDependsStmt"),
+                Some(NodeEnum::AlterObjectSchemaStmt(..)) => Some("AlterObjectSchemaStmt"),
+                Some(NodeEnum::AlterOwnerStmt(..)) => Some("AlterOwnerStmt"),
+                Some(NodeEnum::AlterOperatorStmt(..)) => Some("AlterOperatorStmt"),
+                Some(NodeEnum::AlterTypeStmt(..)) => Some("AlterTypeStmt"),
+                Some(NodeEnum::DropOwnedStmt(..)) => Some("DropOwnedStmt"),
+                Some(NodeEnum::ReassignOwnedStmt(..)) => Some("ReassignOwnedStmt"),
+                Some(NodeEnum::CompositeTypeStmt(..)) => Some("CompositeTypeStmt"),
+                Some(NodeEnum::CreateEnumStmt(..)) => Some("CreateEnumStmt"),
+                Some(NodeEnum::CreateRangeStmt(..)) => Some("CreateRangeStmt"),
+                Some(NodeEnum::AlterEnumStmt(..)) => Some("AlterEnumStmt"),
+                Some(NodeEnum::AlterTsdictionaryStmt(..)) => Some("AlterTsdictionaryStmt"),
+                Some(NodeEnum::AlterTsconfigurationStmt(..)) => Some("AlterTsconfigurationStmt"),
+                Some(NodeEnum::CreateFdwStmt(..)) => Some("CreateFdwStmt"),
+                Some(NodeEnum::AlterFdwStmt(..)) => Some("AlterFdwStmt"),
+                Some(NodeEnum::CreateForeignServerStmt(..)) => Some("CreateForeignServerStmt"),
+                Some(NodeEnum::AlterForeignServerStmt(..)) => Some("AlterForeignServerStmt"),
+                Some(NodeEnum::CreateUserMappingStmt(..)) => Some("CreateUserMappingStmt"),
+                Some(NodeEnum::AlterUserMappingStmt(..)) => Some("AlterUserMappingStmt"),
+                Some(NodeEnum::DropUserMappingStmt(..)) => Some("DropUserMappingStmt"),
+                Some(NodeEnum::AlterTableSpaceOptionsStmt(..)) => Some("AlterTableSpaceOptionsStmt"),
+                Some(NodeEnum::AlterTableMoveAllStmt(..)) => Some("AlterTableMoveAllStmt"),
+                Some(NodeEnum::SecLabelStmt(..)) => Some("SecLabelStmt"),
+                Some(NodeEnum::CreateForeignTableStmt(..)) => Some("CreateForeignTableStmt"),
+                Some(NodeEnum::ImportForeignSchemaStmt(..)) => Some("ImportForeignSchemaStmt"),
+                Some(NodeEnum::CreateExtensionStmt(..)) => Some("CreateExtensionStmt"),
+                Some(NodeEnum::AlterExtensionStmt(..)) => Some("AlterExtensionStmt"),
+                Some(NodeEnum::AlterExtensionContentsStmt(..)) => Some("AlterExtensionContentsStmt"),
+                Some(NodeEnum::CreateEventTrigStmt(..)) => Some("CreateEventTrigStmt"),
+                Some(NodeEnum::AlterEventTrigStmt(..)) => Some("AlterEventTrigStmt"),
+                Some(NodeEnum::RefreshMatViewStmt(..)) => Some("RefreshMatViewStmt"),
+                Some(NodeEnum::ReplicaIdentityStmt(..)) => Some("ReplicaIdentityStmt"),
+                Some(NodeEnum::AlterSystemStmt(..)) => Some("AlterSystemStmt"),
+                Some(NodeEnum::CreatePolicyStmt(..)) => Some("CreatePolicyStmt"),
+                Some(NodeEnum::AlterPolicyStmt(..)) => Some("AlterPolicyStmt"),
+                Some(NodeEnum::CreateTransformStmt(..)) => Some("CreateTransformStmt"),
+                Some(NodeEnum::CreateAmStmt(..)) => Some("CreateAmStmt"),
+                Some(NodeEnum::CreatePublicationStmt(..)) => Some("CreatePublicationStmt"),
+                Some(NodeEnum::AlterPublicationStmt(..)) => Some("AlterPublicationStmt"),
+                Some(NodeEnum::CreateSubscriptionStmt(..)) => Some("CreateSubscriptionStmt"),
+                Some(NodeEnum::AlterSubscriptionStmt(..)) => Some("AlterSubscriptionStmt"),
+                Some(NodeEnum::DropSubscriptionStmt(..)) => Some("DropSubscriptionStmt"),
+                Some(NodeEnum::CreateStatsStmt(..)) => Some("CreateStatsStmt"),
+                Some(NodeEnum::AlterCollationStmt(..)) => Some("AlterCollationStmt"),
+                Some(NodeEnum::CallStmt(..)) => Some("CallStmt"),
+                Some(NodeEnum::AlterStatsStmt(..)) => Some("AlterStatsStmt"),
+                _ => None,
+            }
+        }).collect()
     }
 }
