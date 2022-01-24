@@ -33,6 +33,7 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
     // https://doc.rust-lang.org/book/ch19-01-unsafe-rust.html#dereferencing-a-raw-pointer
     // https://doc.rust-lang.org/std/primitive.pointer.html
     // https://manishearth.github.io/blog/2015/05/17/the-problem-with-shared-mutability
+    // https://ricardomartins.cc/2016/07/11/interior-mutability-behind-the-curtain
     unsafe {
         let mut protobuf = protobuf.clone();
         let mut truncations: Vec<PossibleTruncation> = Vec::new();

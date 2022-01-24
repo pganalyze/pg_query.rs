@@ -8,10 +8,15 @@ pg_query.rs &emsp; [![Build Status]][actions] [![Latest Version]][crates.io] [![
 [Docs Badge]: https://docs.rs/pg_query/badge.svg
 [docs]: https://docs.rs/pg_query
 
-PostgreSQL parser for Rust that uses the [actual PostgreSQL server source]((https://github.com/pganalyze/libpg_query)) to parse 
-SQL queries and return the internal PostgreSQL parse tree.
+This Rust library uses the actual PostgreSQL server source to parse SQL queries and return the internal PostgreSQL parse tree.
 
-Warning! This library is in early stages of development so any APIs exposed are subject to change.
+It also allows you to normalize queries (replacing constant values with ?) and parse these normalized queries into a parse tree again.
+
+When you build this library, it builds parts of the PostgreSQL server source (see [libpg_query](https://github.com/pganalyze/libpg_query)), and then statically links it into this library.
+
+This is slightly crazy, but is the only reliable way of parsing all valid PostgreSQL queries.
+
+You can find further examples and a longer rationale for the original Ruby implementation [here](https://pganalyze.com/blog/parse-postgresql-queries-in-ruby.html). The Rust version tries to have a very similar API.
 
 ## Getting started
 
@@ -19,10 +24,12 @@ Add the following to your `Cargo.toml`
 
 ```toml
 [dependencies]
-pg_query = "0.1"
+pg_query = "0.6"
 ```
 
-## Example: Parsing a query
+## Examples
+
+### Parsing a query
 
 ```rust
 use pg_query::ast::Node;
@@ -33,6 +40,30 @@ let result = result.unwrap();
 assert!(matches!(*&result[0], Node::SelectStmt(_)));
 ```
 
+### Normalizing a query
+
+```rust
+let result = pg_query::normalize("SELECT 1 FROM x WHERE y = (SELECT 123 FROM a WHERE z = 'bla')").unwrap();
+assert_eq!(result, "SELECT $1 FROM x WHERE y = (SELECT $2 FROM a WHERE z = $3)");
+```
+
+### Fingerprinting a query
+
+```rust
+let result = pg_query::fingerprint("SELECT * FROM contacts.person WHERE id IN (1, 2, 3, 4);").unwrap();
+assert_eq!(result.hex, "643d2a3c294ab8a7");
+```
+
+### Truncating a query
+
+```rust
+let query = "INSERT INTO \"x\" (a, b, c, d, e, f) VALUES (?)";
+let result = pg_query::parse(query).unwrap();
+assert_eq!(result.truncate(32).unwrap(), "INSERT INTO x (...) VALUES (?)");
+```
+
 ## Credits
 
-A huge thank you to [Lukas Fittl](https://github.com/lfittl) for all of his amazing work creating [libpg_query](https://github.com/pganalyze/libpg_query).
+Thanks to [Paul Mason](https://github.com/paupino) for his work on [pg_parse](https://github.com/paupino/pg_parse) that this crate is based on.
+
+After version 0.6.0, Paul donated the pg_query crate to the pganalyze team. pg_parse is a lighter alternative that focuses on query parsing, while pg_query aims for feaure parity with the Ruby gem.
