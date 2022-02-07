@@ -152,12 +152,14 @@ impl ParseResult {
         }
     }
 
+    /// Returns all referenced tables in the query
     pub fn tables(&self) -> Vec<String> {
         let mut tables = HashSet::new();
         self.tables.iter().for_each(|(t, _c)| { tables.insert(t.to_string()); });
         Vec::from_iter(tables)
     }
 
+    /// Returns only tables that were selected from
     pub fn select_tables(&self) -> Vec<String> {
         self.tables.iter().filter_map(|(table, context)| {
             match context {
@@ -167,6 +169,7 @@ impl ParseResult {
         }).collect()
     }
 
+    /// Returns only tables that were modified by the query
     pub fn dml_tables(&self) -> Vec<String> {
         self.tables.iter().filter_map(|(table, context)| {
             match context {
@@ -176,6 +179,7 @@ impl ParseResult {
         }).collect()
     }
 
+    /// Returns only tables that were modified by DDL statements
     pub fn ddl_tables(&self) -> Vec<String> {
         self.tables.iter().filter_map(|(table, context)| {
             match context {
@@ -185,12 +189,14 @@ impl ParseResult {
         }).collect()
     }
 
+    /// Returns any references to tables in the query
     pub fn functions(&self) -> Vec<String> {
         let mut functions = HashSet::new();
         self.functions.iter().for_each(|(f, _c)| { functions.insert(f.to_string()); });
         Vec::from_iter(functions)
     }
 
+    /// Returns DDL functions
     pub fn ddl_functions(&self) -> Vec<String> {
         self.functions.iter().filter_map(|(function, context)| {
             match context {
@@ -200,6 +206,7 @@ impl ParseResult {
         }).collect()
     }
 
+    /// Returns functions that were called
     pub fn call_functions(&self) -> Vec<String> {
         self.functions.iter().filter_map(|(function, context)| {
             match context {
@@ -213,6 +220,15 @@ impl ParseResult {
         crate::deparse(&self.protobuf)
     }
 
+    /// Intelligently truncates queries to a max length.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// let query = "INSERT INTO \"x\" (a, b, c, d, e, f) VALUES (?)";
+    /// let result = pg_query::parse(query).unwrap();
+    /// assert_eq!(result.truncate(32).unwrap(), "INSERT INTO x (...) VALUES (?)")
+    /// ```
     pub fn truncate(&self, max_length: usize) -> Result<String> {
         crate::truncate(&self.protobuf, max_length)
     }

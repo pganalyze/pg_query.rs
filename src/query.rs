@@ -55,6 +55,28 @@ pub fn parse(statement: &str) -> Result<ParseResult> {
     parse_result
 }
 
+/// Converts a parsed tree back into a string.
+///
+/// # Example
+///
+/// ```rust
+/// use pg_query::{Node, NodeEnum, NodeRef};
+///
+/// let result = pg_query::parse("INSERT INTO other (name) SELECT name FROM contacts");
+/// let result = result.unwrap();
+/// let insert = result.protobuf.nodes()[0].0;
+/// let select = result.protobuf.nodes()[1].0;
+/// assert!(matches!(insert, NodeRef::InsertStmt(_)));
+/// assert!(matches!(select, NodeRef::SelectStmt(_)));
+///
+/// // The entire parse result can be deparsed:
+/// assert_eq!(result.deparse().unwrap(), "INSERT INTO other (name) SELECT name FROM contacts");
+/// // Or an individual node can be deparsed:
+/// assert_eq!(insert.deparse().unwrap(), "INSERT INTO other (name) SELECT name FROM contacts");
+/// assert_eq!(select.deparse().unwrap(), "SELECT name FROM contacts");
+/// ```
+///
+/// Note that this function will panic if called on a node not defined in `deparseStmt`
 pub fn deparse(protobuf: &protobuf::ParseResult) -> Result<String> {
     let buffer = protobuf.encode_to_vec();
     let len = buffer.len() as c_uint;
