@@ -18,27 +18,13 @@ fn main() {
     if env::var("PROFILE").unwrap() == "debug" {
         make.arg("DEBUG=1");
     }
-    let status = make
-        .stdin(Stdio::null())
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .status()
-        .unwrap();
+    let status = make.stdin(Stdio::null()).stdout(Stdio::inherit()).stderr(Stdio::inherit()).status().unwrap();
     assert!(status.success());
 
     // Generate bindings for Rust
-    let bindings = bindgen::Builder::default()
-        .header("./libpg_query/pg_query.h")
-        .generate()
-        .expect("Unable to generate bindings");
-    bindings
-        .write_to_file(out_dir.join("bindings.rs"))
-        .expect("Couldn't write bindings!");
+    let bindings = bindgen::Builder::default().header("./libpg_query/pg_query.h").generate().expect("Unable to generate bindings");
+    bindings.write_to_file(out_dir.join("bindings.rs")).expect("Couldn't write bindings!");
 
     // Generate the protobuf definition
-    prost_build::compile_protos(
-        &["./libpg_query/protobuf/pg_query.proto"],
-        &["./libpg_query/protobuf"],
-    ).expect("protobuf generation failed");
+    prost_build::compile_protos(&["./libpg_query/protobuf/pg_query.proto"], &["./libpg_query/protobuf"]).expect("protobuf generation failed");
 }
-

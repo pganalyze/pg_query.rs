@@ -6,9 +6,9 @@ use std::fmt;
 pub struct MultiLineString<'a>(pub &'a str);
 
 impl<'a> fmt::Debug for MultiLineString<'a> {
-  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    f.write_str(self.0)
-  }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(self.0)
+    }
 }
 
 // Modified from https://github.com/colin-kiegel/rust-pretty-assertions/issues/24#issuecomment-520613247
@@ -20,7 +20,7 @@ macro_rules! assert_debug_eq {
         } else {
             std::assert_eq!(MultiLineString(&format!("{:#?}", $left)), MultiLineString($right));
         }
-    }
+    };
 }
 
 pub fn assert_vec_matches<T: PartialEq>(a: &Vec<T>, b: &Vec<T>) {
@@ -29,15 +29,12 @@ pub fn assert_vec_matches<T: PartialEq>(a: &Vec<T>, b: &Vec<T>) {
 }
 
 macro_rules! cast {
-    ($target: expr, $pat: path) => {
-        {
-            if let $pat(a) = $target { // #1
-                a
-            } else {
-                panic!(
-                    "mismatch variant when cast to {}", 
-                    stringify!($pat)); // #2
-            }
+    ($target: expr, $pat: path) => {{
+        if let $pat(a) = $target {
+            // #1
+            a
+        } else {
+            panic!("mismatch variant when cast to {}", stringify!($pat)); // #2
         }
-    };
+    }};
 }

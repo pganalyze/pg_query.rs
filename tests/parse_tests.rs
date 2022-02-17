@@ -4,7 +4,7 @@
 #[cfg(test)]
 use itertools::sorted;
 
-use pg_query::{parse, Error, NodeEnum, NodeRef, protobuf, TriggerType};
+use pg_query::{parse, protobuf, Error, NodeEnum, NodeRef, TriggerType};
 
 #[macro_use]
 mod support;
@@ -105,7 +105,9 @@ fn it_parses_ALTER_TABLE() {
     assert_eq!(result.statement_types(), ["AlterTableStmt"]);
     let alter = cast!(result.protobuf.nodes()[0].0, NodeRef::AlterTableStmt);
     let cmd = cast!(alter.cmds[0].node.as_ref().unwrap(), NodeEnum::AlterTableCmd);
-    assert_debug_eq!(cmd, r#"AlterTableCmd {
+    assert_debug_eq!(
+        cmd,
+        r#"AlterTableCmd {
     subtype: AtAddConstraint,
     name: "",
     num: 0,
@@ -160,7 +162,8 @@ fn it_parses_ALTER_TABLE() {
     ),
     behavior: DropRestrict,
     missing_ok: false,
-}"#);
+}"#
+    );
 }
 
 #[test]
@@ -194,7 +197,9 @@ fn it_parses_COPY() {
     assert_eq!(result.tables(), ["test"]);
     assert_eq!(result.statement_types(), ["CopyStmt"]);
     let copy = cast!(result.protobuf.nodes()[0].0, NodeRef::CopyStmt);
-    assert_debug_eq!(copy, r#"CopyStmt {
+    assert_debug_eq!(
+        copy,
+        r#"CopyStmt {
     relation: Some(
         RangeVar {
             catalogname: "",
@@ -223,7 +228,8 @@ fn it_parses_COPY() {
     filename: "",
     options: [],
     where_clause: None,
-}"#);
+}"#
+    );
 }
 
 #[test]
@@ -249,10 +255,7 @@ fn it_parses_COMMIT() {
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.statement_types(), ["TransactionStmt"]);
     let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::TransactionStmt);
-    assert_eq!(
-        protobuf::TransactionStmtKind::from_i32(stmt.kind),
-        Some(protobuf::TransactionStmtKind::TransStmtCommit)
-    );
+    assert_eq!(protobuf::TransactionStmtKind::from_i32(stmt.kind), Some(protobuf::TransactionStmtKind::TransStmtCommit));
 }
 
 #[test]
@@ -297,7 +300,9 @@ fn it_parses_SELECT_INTO() {
     let val = cast!(a_const.val.as_ref().unwrap().node.as_ref().unwrap(), NodeEnum::Integer);
     assert_eq!(val.ival, 1);
     let into = stmt.into.as_ref().unwrap();
-    assert_debug_eq!(into, r#"IntoClause {
+    assert_debug_eq!(
+        into,
+        r#"IntoClause {
     rel: Some(
         RangeVar {
             catalogname: "",
@@ -316,7 +321,8 @@ fn it_parses_SELECT_INTO() {
     table_space_name: "",
     view_query: None,
     skip_data: false,
-}"#);
+}"#
+    );
 }
 
 #[test]
@@ -338,7 +344,9 @@ fn it_parses_CREATE_TABLE() {
     assert_eq!(result.statement_types(), ["CreateStmt"]);
     let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::CreateStmt);
     let column = cast!(stmt.table_elts[0].node.as_ref().unwrap(), NodeEnum::ColumnDef);
-    assert_debug_eq!(column, r#"ColumnDef {
+    assert_debug_eq!(
+        column,
+        r#"ColumnDef {
     colname: "a",
     type_name: Some(
         TypeName {
@@ -377,7 +385,8 @@ fn it_parses_CREATE_TABLE() {
     constraints: [],
     fdwoptions: [],
     location: 19,
-}"#);
+}"#
+    );
 }
 
 #[test]
@@ -416,7 +425,9 @@ fn it_parses_CREATE_INDEX() {
     assert_eq!(result.statement_types(), ["IndexStmt"]);
     let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::IndexStmt);
     assert_eq!(stmt.idxname, "ix_test".to_string());
-    assert_debug_eq!(stmt.index_params, r#"[
+    assert_debug_eq!(
+        stmt.index_params,
+        r#"[
     Node {
         node: Some(
             IndexElem(
@@ -449,7 +460,8 @@ fn it_parses_CREATE_INDEX() {
             ),
         ),
     },
-]"#);
+]"#
+    );
 }
 
 #[test]
@@ -459,7 +471,9 @@ fn it_parses_CREATE_SCHEMA() {
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.statement_types(), ["CreateSchemaStmt"]);
     let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::CreateSchemaStmt);
-    assert_debug_eq!(stmt, r#"CreateSchemaStmt {
+    assert_debug_eq!(
+        stmt,
+        r#"CreateSchemaStmt {
     schemaname: "test",
     authrole: Some(
         RoleSpec {
@@ -470,7 +484,8 @@ fn it_parses_CREATE_SCHEMA() {
     ),
     schema_elts: [],
     if_not_exists: true,
-}"#);
+}"#
+    );
 }
 
 #[test]
@@ -483,7 +498,9 @@ fn it_parses_CREATE_VIEW() {
     assert_eq!(result.select_tables(), ["mytab"]);
     assert_eq!(result.statement_types(), ["ViewStmt"]);
     let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::ViewStmt);
-    assert_debug_eq!(stmt, r#"ViewStmt {
+    assert_debug_eq!(
+        stmt,
+        r#"ViewStmt {
     view: Some(
         RangeVar {
             catalogname: "",
@@ -576,7 +593,8 @@ fn it_parses_CREATE_VIEW() {
     replace: false,
     options: [],
     with_check_option: NoCheckOption,
-}"#);
+}"#
+    );
 }
 
 #[test]
@@ -624,7 +642,9 @@ fn it_parses_DROP_SCHEMA() {
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.statement_types(), ["DropStmt"]);
     let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::DropStmt);
-    assert_debug_eq!(stmt, r#"DropStmt {
+    assert_debug_eq!(
+        stmt,
+        r#"DropStmt {
     objects: [
         Node {
             node: Some(
@@ -640,7 +660,8 @@ fn it_parses_DROP_SCHEMA() {
     behavior: DropRestrict,
     missing_ok: false,
     concurrent: false,
-}"#);
+}"#
+    );
 }
 
 #[test]
@@ -650,7 +671,9 @@ fn it_parses_DROP_VIEW() {
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.statement_types(), ["DropStmt"]);
     let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::DropStmt);
-    assert_debug_eq!(stmt, r#"DropStmt {
+    assert_debug_eq!(
+        stmt,
+        r#"DropStmt {
     objects: [
         Node {
             node: Some(
@@ -695,7 +718,8 @@ fn it_parses_DROP_VIEW() {
     behavior: DropRestrict,
     missing_ok: false,
     concurrent: false,
-}"#);
+}"#
+    );
 }
 
 #[test]
@@ -705,7 +729,9 @@ fn it_parses_DROP_INDEX() {
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.statement_types(), ["DropStmt"]);
     let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::DropStmt);
-    assert_debug_eq!(stmt, r#"DropStmt {
+    assert_debug_eq!(
+        stmt,
+        r#"DropStmt {
     objects: [
         Node {
             node: Some(
@@ -731,7 +757,8 @@ fn it_parses_DROP_INDEX() {
     behavior: DropRestrict,
     missing_ok: false,
     concurrent: true,
-}"#);
+}"#
+    );
 }
 
 #[test]
@@ -742,7 +769,9 @@ fn it_parses_DROP_RULE() {
     assert_eq!(result.ddl_tables(), ["mytable"]);
     assert_eq!(result.statement_types(), ["DropStmt"]);
     let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::DropStmt);
-    assert_debug_eq!(stmt, r#"DropStmt {
+    assert_debug_eq!(
+        stmt,
+        r#"DropStmt {
     objects: [
         Node {
             node: Some(
@@ -777,7 +806,8 @@ fn it_parses_DROP_RULE() {
     behavior: DropCascade,
     missing_ok: false,
     concurrent: false,
-}"#);
+}"#
+    );
 }
 
 #[test]
@@ -788,7 +818,9 @@ fn it_parses_DROP_TRIGGER() {
     assert_eq!(result.ddl_tables(), ["mytable"]);
     assert_eq!(result.statement_types(), ["DropStmt"]);
     let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::DropStmt);
-    assert_debug_eq!(stmt, r#"DropStmt {
+    assert_debug_eq!(
+        stmt,
+        r#"DropStmt {
     objects: [
         Node {
             node: Some(
@@ -823,7 +855,8 @@ fn it_parses_DROP_TRIGGER() {
     behavior: DropRestrict,
     missing_ok: true,
     concurrent: false,
-}"#);
+}"#
+    );
 }
 
 #[test]
@@ -834,7 +867,9 @@ fn it_parses_GRANT() {
     assert_eq!(result.ddl_tables(), ["mytable"]);
     assert_eq!(result.statement_types(), ["GrantStmt"]);
     let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::GrantStmt);
-    assert_debug_eq!(stmt, r#"GrantStmt {
+    assert_debug_eq!(
+        stmt,
+        r#"GrantStmt {
     is_grant: true,
     targtype: AclTargetObject,
     objtype: ObjectTable,
@@ -892,7 +927,8 @@ fn it_parses_GRANT() {
     ],
     grant_option: false,
     behavior: DropRestrict,
-}"#);
+}"#
+    );
 }
 
 #[test]
@@ -902,7 +938,9 @@ fn it_parses_REVOKE() {
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.statement_types(), ["GrantRoleStmt"]);
     let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::GrantRoleStmt);
-    assert_debug_eq!(stmt, r#"GrantRoleStmt {
+    assert_debug_eq!(
+        stmt,
+        r#"GrantRoleStmt {
     granted_roles: [
         Node {
             node: Some(
@@ -932,7 +970,8 @@ fn it_parses_REVOKE() {
     admin_opt: false,
     grantor: None,
     behavior: DropRestrict,
-}"#);
+}"#
+    );
 }
 
 #[test]
@@ -945,7 +984,9 @@ fn it_parses_TRUNCATE() {
     assert_eq!(ddl_tables, ["bigtable", "fattable"]);
     assert_eq!(result.statement_types(), ["TruncateStmt"]);
     let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::TruncateStmt);
-    assert_debug_eq!(stmt, r#"TruncateStmt {
+    assert_debug_eq!(
+        stmt,
+        r#"TruncateStmt {
     relations: [
         Node {
             node: Some(
@@ -980,7 +1021,8 @@ fn it_parses_TRUNCATE() {
     ],
     restart_seqs: true,
     behavior: DropRestrict,
-}"#);
+}"#
+    );
 }
 
 #[test]
@@ -1020,7 +1062,9 @@ $BODY$
     assert_eq!(result.call_functions().len(), 0);
     assert_eq!(result.statement_types(), ["CreateFunctionStmt"]);
     let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::CreateFunctionStmt);
-    assert_debug_eq!(stmt, r#"CreateFunctionStmt {
+    assert_debug_eq!(
+        stmt,
+        r#"CreateFunctionStmt {
     is_procedure: false,
     replace: true,
     funcname: [
@@ -1181,7 +1225,8 @@ $BODY$
             ),
         },
     ],
-}"#);
+}"#
+    );
 }
 
 #[test]
@@ -1252,7 +1297,7 @@ fn it_separates_CTE_names_from_table_names() {
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["table_name"]);
     assert_eq!(result.select_tables(), ["table_name"]);
-    assert_eq!(result.cte_names, ["cte_name"]);   
+    assert_eq!(result.cte_names, ["cte_name"]);
     assert_eq!(result.statement_types(), ["SelectStmt"]);
 }
 
@@ -1486,7 +1531,6 @@ fn it_finds_nested_tables_in_a_subselect_in_a_JOIN_condition() {
     assert_eq!(select_tables, tables);
     assert_eq!(result.statement_types(), ["SelectStmt"]);
 }
-
 
 #[test]
 fn it_correctly_categorizes_CTEs_after_UNION_SELECT() {
@@ -1743,7 +1787,9 @@ fn it_parses_DROP_TYPE() {
     let result = parse("DROP TYPE IF EXISTS repack.pk_something").unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.statement_types(), ["DropStmt"]);
-    assert_debug_eq!(result.protobuf.nodes()[0].0, r#"DropStmt(
+    assert_debug_eq!(
+        result.protobuf.nodes()[0].0,
+        r#"DropStmt(
     DropStmt {
         objects: [
             Node {
@@ -1787,5 +1833,6 @@ fn it_parses_DROP_TYPE() {
         missing_ok: true,
         concurrent: false,
     },
-)"#);
+)"#
+    );
 }

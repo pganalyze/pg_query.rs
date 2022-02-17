@@ -22,8 +22,5 @@ fn it_can_parse_a_simple_function() {
 fn it_will_error_on_invalid_input() {
     let result = pg_query::parse_plpgsql("CREATE RANDOM ix_test ON contacts.person;");
     assert!(result.is_err());
-    assert_eq!(
-        result.err().unwrap(),
-        pg_query::Error::Parse("syntax error at or near \"RANDOM\"".into())
-    );
+    assert_eq!(result.err().unwrap(), pg_query::Error::Parse("syntax error at or near \"RANDOM\"".into()));
 }

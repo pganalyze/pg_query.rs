@@ -3,19 +3,19 @@ use crate::*;
 pub use protobuf::node::Node as NodeEnum;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
-pub enum Context { None, Select, DML, DDL, Call }
+pub enum Context {
+    None,
+    Select,
+    DML,
+    DDL,
+    Call,
+}
 
 impl NodeEnum {
     pub fn deparse(&self) -> Result<String> {
         crate::deparse(&protobuf::ParseResult {
             version: crate::bindings::PG_VERSION_NUM as i32,
-            stmts: vec![
-                protobuf::RawStmt {
-                    stmt: Some(Box::new(Node { node: Some(self.clone()) })),
-                    stmt_location: 0,
-                    stmt_len: 0,
-                }
-            ]
+            stmts: vec![protobuf::RawStmt { stmt: Some(Box::new(Node { node: Some(self.clone()) })), stmt_location: 0, stmt_len: 0 }],
         })
     }
 
@@ -254,18 +254,16 @@ impl NodeEnum {
                         iter.push((rel.to_ref(), depth, Context::DDL));
                     }
                 }
-                NodeRef::GrantStmt(s) => {
-                    match protobuf::ObjectType::from_i32(s.objtype) {
-                        Some(protobuf::ObjectType::ObjectTable) => {
-                            s.objects.iter().for_each(|n| {
-                                if let Some(n) = n.node.as_ref() {
-                                    iter.push((n.to_ref(), depth, Context::DDL));
-                                }
-                            });
-                        }
-                        _ => ()
+                NodeRef::GrantStmt(s) => match protobuf::ObjectType::from_i32(s.objtype) {
+                    Some(protobuf::ObjectType::ObjectTable) => {
+                        s.objects.iter().for_each(|n| {
+                            if let Some(n) = n.node.as_ref() {
+                                iter.push((n.to_ref(), depth, Context::DDL));
+                            }
+                        });
                     }
-                }
+                    _ => (),
+                },
                 NodeRef::LockStmt(s) => {
                     s.relations.iter().for_each(|n| {
                         if let Some(n) = n.node.as_ref() {
@@ -408,7 +406,7 @@ impl NodeEnum {
                         }
                     });
                 }
-                _ => ()
+                _ => (),
             }
             nodes.push((node, depth, context));
         }
@@ -676,7 +674,7 @@ impl NodeEnum {
                                 }
                             });
                         }
-                        _ => ()
+                        _ => (),
                     }
                 }
                 NodeMut::LockStmt(s) => {
@@ -846,7 +844,7 @@ impl NodeEnum {
                         }
                     });
                 }
-                _ => ()
+                _ => (),
             }
             nodes.push((node, depth, context));
         }

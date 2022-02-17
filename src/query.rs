@@ -33,23 +33,12 @@ pub fn parse(statement: &str) -> Result<ParseResult> {
     let input = CString::new(statement)?;
     let result = unsafe { pg_query_parse_protobuf(input.as_ptr()) };
     let parse_result = if !result.error.is_null() {
-        let message = unsafe { CStr::from_ptr((*result.error).message) }
-            .to_string_lossy()
-            .to_string();
+        let message = unsafe { CStr::from_ptr((*result.error).message) }.to_string_lossy().to_string();
         Err(Error::Parse(message))
     } else {
-        let data = unsafe {
-            std::slice::from_raw_parts(
-                result.parse_tree.data as *const u8,
-                result.parse_tree.len as usize,
-            )
-        };
-        let stderr = unsafe { CStr::from_ptr(result.stderr_buffer) }
-            .to_string_lossy()
-            .to_string();
-        protobuf::ParseResult::decode(data)
-            .map_err(Error::Decode)
-            .and_then(|result| Ok(ParseResult::new(result, stderr)))
+        let data = unsafe { std::slice::from_raw_parts(result.parse_tree.data as *const u8, result.parse_tree.len as usize) };
+        let stderr = unsafe { CStr::from_ptr(result.stderr_buffer) }.to_string_lossy().to_string();
+        protobuf::ParseResult::decode(data).map_err(Error::Decode).and_then(|result| Ok(ParseResult::new(result, stderr)))
     };
     unsafe { pg_query_free_protobuf_parse_result(result) };
     parse_result
@@ -86,14 +75,10 @@ pub fn deparse(protobuf: &protobuf::ParseResult) -> Result<String> {
     let result = unsafe { pg_query_deparse_protobuf(protobuf) };
 
     let deparse_result = if !result.error.is_null() {
-        let message = unsafe { CStr::from_ptr((*result.error).message) }
-            .to_string_lossy()
-            .to_string();
+        let message = unsafe { CStr::from_ptr((*result.error).message) }.to_string_lossy().to_string();
         Err(Error::Parse(message))
     } else {
-        let query = unsafe { CStr::from_ptr(result.query) }
-            .to_string_lossy()
-            .to_string();
+        let query = unsafe { CStr::from_ptr(result.query) }.to_string_lossy().to_string();
         Ok(query)
     };
 
@@ -115,9 +100,7 @@ pub fn normalize(statement: &str) -> Result<String> {
     let input = CString::new(statement).unwrap();
     let result = unsafe { pg_query_normalize(input.as_ptr() as *const c_char) };
     let normalized_query = if !result.error.is_null() {
-        let message = unsafe { CStr::from_ptr((*result.error).message) }
-            .to_string_lossy()
-            .to_string();
+        let message = unsafe { CStr::from_ptr((*result.error).message) }.to_string_lossy().to_string();
         return Err(Error::Parse(message));
     } else {
         let n = unsafe { CStr::from_ptr(result.normalized_query) };
@@ -142,16 +125,11 @@ pub fn fingerprint(statement: &str) -> Result<Fingerprint> {
     let input = CString::new(statement)?;
     let result = unsafe { pg_query_fingerprint(input.as_ptr()) };
     let fingerprint = if !result.error.is_null() {
-        let message = unsafe { CStr::from_ptr((*result.error).message) }
-            .to_string_lossy()
-            .to_string();
+        let message = unsafe { CStr::from_ptr((*result.error).message) }.to_string_lossy().to_string();
         Err(Error::Parse(message))
     } else {
         let hex = unsafe { CStr::from_ptr(result.fingerprint_str) };
-        Ok(Fingerprint {
-            value: result.fingerprint,
-            hex: hex.to_string_lossy().to_string(),
-        })
+        Ok(Fingerprint { value: result.fingerprint, hex: hex.to_string_lossy().to_string() })
     };
     unsafe { pg_query_free_fingerprint_result(result) };
     fingerprint
@@ -179,14 +157,11 @@ pub fn parse_plpgsql(stmt: &str) -> Result<serde_json::Value> {
     let input = CString::new(stmt)?;
     let result = unsafe { pg_query_parse_plpgsql(input.as_ptr()) };
     let structure = if !result.error.is_null() {
-        let message = unsafe { CStr::from_ptr((*result.error).message) }
-            .to_string_lossy()
-            .to_string();
+        let message = unsafe { CStr::from_ptr((*result.error).message) }.to_string_lossy().to_string();
         Err(Error::Parse(message))
     } else {
         let raw = unsafe { CStr::from_ptr(result.plpgsql_funcs) };
-        serde_json::from_str(&raw.to_string_lossy())
-            .map_err(|e| Error::InvalidJson(e.to_string()))
+        serde_json::from_str(&raw.to_string_lossy()).map_err(|e| Error::InvalidJson(e.to_string()))
     };
     unsafe { pg_query_free_plpgsql_parse_result(result) };
     structure

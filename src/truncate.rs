@@ -21,7 +21,7 @@ struct PossibleTruncation {
 pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<String> {
     let output = protobuf.deparse()?;
     if output.len() <= max_length {
-        return Ok(output)
+        return Ok(output);
     }
 
     // SAFETY: within this scope nobody expects to have exclusive access to `protobuf`'s contents, so we can have multiple shared accesses.
@@ -42,26 +42,34 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                 NodeMut::SelectStmt(s) => {
                     let s = s.as_mut().unwrap();
                     truncations.push(PossibleTruncation {
-                        attr: TruncationAttr::TargetList, node: node, depth: depth,
-                        length: target_list_len(s.target_list.clone())
+                        attr: TruncationAttr::TargetList,
+                        node: node,
+                        depth: depth,
+                        length: target_list_len(s.target_list.clone()),
                     });
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
-                            attr: TruncationAttr::WhereClause, node: node, depth: depth,
-                            length: where_clause_len((*clause).clone())
+                            attr: TruncationAttr::WhereClause,
+                            node: node,
+                            depth: depth,
+                            length: where_clause_len((*clause).clone()),
                         });
                     }
                 }
                 NodeMut::UpdateStmt(s) => {
                     let s = s.as_mut().unwrap();
                     truncations.push(PossibleTruncation {
-                        attr: TruncationAttr::TargetList, node: node, depth: depth,
-                        length: target_list_len(s.target_list.clone())
+                        attr: TruncationAttr::TargetList,
+                        node: node,
+                        depth: depth,
+                        length: target_list_len(s.target_list.clone()),
                     });
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
-                            attr: TruncationAttr::WhereClause, node: node, depth: depth,
-                            length: where_clause_len((*clause).clone())
+                            attr: TruncationAttr::WhereClause,
+                            node: node,
+                            depth: depth,
+                            length: where_clause_len((*clause).clone()),
                         });
                     }
                 }
@@ -69,8 +77,10 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                     let s = s.as_mut().unwrap();
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
-                            attr: TruncationAttr::WhereClause, node: node, depth: depth,
-                            length: where_clause_len((*clause).clone())
+                            attr: TruncationAttr::WhereClause,
+                            node: node,
+                            depth: depth,
+                            length: where_clause_len((*clause).clone()),
                         });
                     }
                 }
@@ -78,8 +88,10 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                     let s = s.as_mut().unwrap();
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
-                            attr: TruncationAttr::WhereClause, node: node, depth: depth,
-                            length: where_clause_len((*clause).clone())
+                            attr: TruncationAttr::WhereClause,
+                            node: node,
+                            depth: depth,
+                            length: where_clause_len((*clause).clone()),
                         });
                     }
                 }
@@ -87,8 +99,10 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                     let s = s.as_mut().unwrap();
                     if s.cols.len() > 0 {
                         truncations.push(PossibleTruncation {
-                            attr: TruncationAttr::Cols, node: node, depth: depth,
-                            length: cols_len(s.cols.clone())
+                            attr: TruncationAttr::Cols,
+                            node: node,
+                            depth: depth,
+                            length: cols_len(s.cols.clone()),
                         });
                     }
                 }
@@ -96,8 +110,10 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                     let s = s.as_mut().unwrap();
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
-                            attr: TruncationAttr::WhereClause, node: node, depth: depth,
-                            length: where_clause_len((*clause).clone())
+                            attr: TruncationAttr::WhereClause,
+                            node: node,
+                            depth: depth,
+                            length: where_clause_len((*clause).clone()),
                         });
                     }
                 }
@@ -105,8 +121,10 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                     let s = s.as_mut().unwrap();
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
-                            attr: TruncationAttr::WhereClause, node: node, depth: depth,
-                            length: where_clause_len((*clause).clone())
+                            attr: TruncationAttr::WhereClause,
+                            node: node,
+                            depth: depth,
+                            length: where_clause_len((*clause).clone()),
                         });
                     }
                 }
@@ -114,8 +132,10 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                     let s = s.as_mut().unwrap();
                     if let Some(cte) = s.ctequery.as_ref() {
                         truncations.push(PossibleTruncation {
-                            attr: TruncationAttr::CTEQuery, node: node, depth: depth + 1,
-                            length: cte.deparse().unwrap().len() as i32
+                            attr: TruncationAttr::CTEQuery,
+                            node: node,
+                            depth: depth + 1,
+                            length: cte.deparse().unwrap().len() as i32,
                         });
                     }
                 }
@@ -123,33 +143,37 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                     let s = s.as_mut().unwrap();
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
-                            attr: TruncationAttr::WhereClause, node: node, depth: depth,
-                            length: where_clause_len((*clause).clone())
+                            attr: TruncationAttr::WhereClause,
+                            node: node,
+                            depth: depth,
+                            length: where_clause_len((*clause).clone()),
                         });
                     }
                 }
                 NodeMut::OnConflictClause(s) => {
                     let s = s.as_mut().unwrap();
                     truncations.push(PossibleTruncation {
-                        attr: TruncationAttr::TargetList, node: node, depth: depth,
-                        length: target_list_len(s.target_list.clone())
+                        attr: TruncationAttr::TargetList,
+                        node: node,
+                        depth: depth,
+                        length: target_list_len(s.target_list.clone()),
                     });
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
-                            attr: TruncationAttr::WhereClause, node: node, depth: depth,
-                            length: where_clause_len((*clause).clone())
+                            attr: TruncationAttr::WhereClause,
+                            node: node,
+                            depth: depth,
+                            length: where_clause_len((*clause).clone()),
                         });
                     }
                 }
-                _ => ()
+                _ => (),
             }
         }
 
-        truncations.sort_by(|a, b| {
-            match a.depth.cmp(&b.depth).reverse() {
-                Ordering::Equal => a.length.cmp(&b.length).reverse(),
-                other => other,
-            }
+        truncations.sort_by(|a, b| match a.depth.cmp(&b.depth).reverse() {
+            Ordering::Equal => a.length.cmp(&b.length).reverse(),
+            other => other,
         });
 
         for truncation in truncations.into_iter() {
@@ -206,20 +230,20 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
                     s.where_clause = Some(dummy_column());
                 }
-                _ => panic!("unimplemented truncation")
+                _ => panic!("unimplemented truncation"),
             }
             let output = protobuf.deparse()?;
             let output = output.replace("SELECT WHERE \"…\"", "...").replace("\"…\"", "...");
             // the unwanted AS doesn't happen in the Ruby version. I'm not sure where it's coming from
             let output = output.replace("SELECT ... AS ...", "SELECT ...");
             if output.len() <= max_length {
-                return Ok(output)
+                return Ok(output);
             }
         }
     }
 
     // We couldn't do a proper smart truncation, so we need a hard cut-off
-    return Ok(format!("{}...", &output[0..=max_length - 4]))
+    return Ok(format!("{}...", &output[0..=max_length - 4]));
 }
 
 fn target_list_len(nodes: Vec<Node>) -> i32 {
@@ -238,46 +262,69 @@ fn cols_len(nodes: Vec<Node>) -> i32 {
 }
 
 fn dummy_column() -> Box<Node> {
-    Box::new(Node { node: Some(NodeEnum::ColumnRef(protobuf::ColumnRef {
-        location: 0, fields: vec![
-            Node { node: Some(NodeEnum::String(protobuf::String { str: "…".to_string() }))}
-        ]
-    }))})
+    Box::new(Node {
+        node: Some(NodeEnum::ColumnRef(protobuf::ColumnRef {
+            location: 0,
+            fields: vec![Node { node: Some(NodeEnum::String(protobuf::String { str: "…".to_string() })) }],
+        })),
+    })
 }
 
 fn dummy_target() -> Node {
-    Node { node: Some(NodeEnum::ResTarget(Box::new(protobuf::ResTarget {
-        name: "…".to_string(), location: 0, indirection: vec![], val: Some(dummy_column())
-    })))}
+    Node {
+        node: Some(NodeEnum::ResTarget(Box::new(protobuf::ResTarget {
+            name: "…".to_string(),
+            location: 0,
+            indirection: vec![],
+            val: Some(dummy_column()),
+        }))),
+    }
 }
 
 fn dummy_select(target_list: Vec<Node>, where_clause: Option<Box<Node>>) -> Box<Node> {
-    Box::new(Node { node: Some(NodeEnum::SelectStmt(Box::new(protobuf::SelectStmt {
-        distinct_clause: vec![], into_clause: None, target_list: target_list, from_clause: vec![],
-        where_clause: where_clause, group_clause: vec![], having_clause: None,
-        window_clause: vec![], values_lists: vec![], sort_clause: vec![],
-        limit_offset: None, limit_count: None, limit_option: 1,
-        locking_clause: vec![], with_clause: None, op: 1,
-        all: false, larg: None, rarg: None
-    })))})
+    Box::new(Node {
+        node: Some(NodeEnum::SelectStmt(Box::new(protobuf::SelectStmt {
+            distinct_clause: vec![],
+            into_clause: None,
+            target_list: target_list,
+            from_clause: vec![],
+            where_clause: where_clause,
+            group_clause: vec![],
+            having_clause: None,
+            window_clause: vec![],
+            values_lists: vec![],
+            sort_clause: vec![],
+            limit_offset: None,
+            limit_count: None,
+            limit_option: 1,
+            locking_clause: vec![],
+            with_clause: None,
+            op: 1,
+            all: false,
+            larg: None,
+            rarg: None,
+        }))),
+    })
 }
 
 fn dummy_insert(cols: Vec<Node>) -> Box<Node> {
-    Box::new(Node { node: Some(NodeEnum::InsertStmt(Box::new(protobuf::InsertStmt {
-        relation: Some(protobuf::RangeVar {
-            catalogname: "".to_string(),
-            schemaname: "".to_string(),
-            relname: "x".to_string(),
-            inh: true,
-            relpersistence: "p".to_string(),
-            alias: None,
-            location: 0
-        }),
-        cols: cols,
-        select_stmt: None,
-        on_conflict_clause: None,
-        returning_list: vec![],
-        with_clause: None,
-        r#override: 1,
-    })))})
+    Box::new(Node {
+        node: Some(NodeEnum::InsertStmt(Box::new(protobuf::InsertStmt {
+            relation: Some(protobuf::RangeVar {
+                catalogname: "".to_string(),
+                schemaname: "".to_string(),
+                relname: "x".to_string(),
+                inh: true,
+                relpersistence: "p".to_string(),
+                alias: None,
+                location: 0,
+            }),
+            cols: cols,
+            select_stmt: None,
+            on_conflict_clause: None,
+            returning_list: vec![],
+            with_clause: None,
+            r#override: 1,
+        }))),
+    })
 }

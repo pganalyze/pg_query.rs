@@ -144,7 +144,9 @@ fn it_works() {
     let result = fingerprint("INSERT INTO test (b, a) VALUES (?, ?)").unwrap();
     assert_eq!(result.hex, "51e63b8083b48bdd");
 
-    let result = fingerprint("INSERT INTO test (a, b) VALUES (ARRAY[?, ?, ?, ?], ?::timestamptz), (ARRAY[?, ?, ?, ?], ?::timestamptz), (?, ?::timestamptz)").unwrap();
+    let result =
+        fingerprint("INSERT INTO test (a, b) VALUES (ARRAY[?, ?, ?, ?], ?::timestamptz), (ARRAY[?, ?, ?, ?], ?::timestamptz), (?, ?::timestamptz)")
+            .unwrap();
     assert_eq!(result.hex, "4dfdd5260cac5acf");
 
     let result = fingerprint("SELECT b AS x, a AS y FROM z").unwrap();
@@ -186,10 +188,13 @@ fn it_works() {
     let result = fingerprint("WITH a AS (SELECT * FROM x WHERE x.y = ? AND x.z = 1) SELECT * FROM a").unwrap();
     assert_eq!(result.hex, "6831e38bbb3dd18c");
 
-    let result = fingerprint("CREATE TABLE types (a float(2), b float(49), c NUMERIC(2, 3), d character(4), e char(5), f varchar(6), g character varying(7))").unwrap();
+    let result =
+        fingerprint("CREATE TABLE types (a float(2), b float(49), c NUMERIC(2, 3), d character(4), e char(5), f varchar(6), g character varying(7))")
+            .unwrap();
     assert_eq!(result.hex, "008d6ba4aa0f4c6e");
 
-    let result = fingerprint("CREATE VIEW view_a (a, b) AS WITH RECURSIVE view_a (a, b) AS (SELECT * FROM a(1)) SELECT \"a\", \"b\" FROM \"view_a\"").unwrap();
+    let result =
+        fingerprint("CREATE VIEW view_a (a, b) AS WITH RECURSIVE view_a (a, b) AS (SELECT * FROM a(1)) SELECT \"a\", \"b\" FROM \"view_a\"").unwrap();
     assert_eq!(result.hex, "6236405577a6cea6");
 
     let result = fingerprint("VACUUM FULL my_table").unwrap();

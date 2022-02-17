@@ -8,17 +8,14 @@ use itertools::join;
 use crate::*;
 
 macro_rules! cast {
-    ($target: expr, $pat: path) => {
-        {
-            if let $pat(a) = $target { // #1
-                a
-            } else {
-                panic!(
-                    "mismatch variant when cast to {}", 
-                    stringify!($pat)); // #2
-            }
+    ($target: expr, $pat: path) => {{
+        if let $pat(a) = $target {
+            // #1
+            a
+        } else {
+            panic!("mismatch variant when cast to {}", stringify!($pat)); // #2
         }
-    };
+    }};
 }
 
 impl protobuf::ParseResult {
@@ -28,18 +25,24 @@ impl protobuf::ParseResult {
 
     // Note: this doesn't iterate over every possible node type, since we only care about a subset of nodes.
     pub fn nodes(&self) -> Vec<(NodeRef, i32, Context)> {
-        self.stmts.iter().filter_map(|s|
+        self.stmts
+            .iter()
+            .filter_map(|s|
             // RawStmt  ->  Node   ->    NodeEnum           ->              NodeRef
-            s.stmt.as_ref().and_then(|s| s.node.as_ref()).and_then(|n| Some(n.nodes()))
-        ).flatten().collect()
+            s.stmt.as_ref().and_then(|s| s.node.as_ref()).and_then(|n| Some(n.nodes())))
+            .flatten()
+            .collect()
     }
 
     // Returns a mutable reference to nested nodes.
-    pub unsafe fn nodes_mut(&mut self) -> Vec<(NodeMut, i32, Context)>  {
-        self.stmts.iter_mut().filter_map(|s|
+    pub unsafe fn nodes_mut(&mut self) -> Vec<(NodeMut, i32, Context)> {
+        self.stmts
+            .iter_mut()
+            .filter_map(|s|
             // RawStmt  ->  Node   ->    NodeEnum           ->              NodeMut
-            s.stmt.as_mut().and_then(|s| s.node.as_mut()).and_then(|n| Some(n.nodes_mut()))
-        ).flatten().collect()
+            s.stmt.as_mut().and_then(|s| s.node.as_mut()).and_then(|n| Some(n.nodes_mut())))
+            .flatten()
+            .collect()
     }
 }
 
@@ -54,9 +57,7 @@ pub struct ParseResult {
 
 impl ParseResult {
     pub fn new(protobuf: protobuf::ParseResult, stderr: String) -> Self {
-        let warnings = stderr.lines().filter_map(|l| 
-            if l.starts_with("WARNING") { Some(l.trim().into()) } else { None }
-        ).collect();
+        let warnings = stderr.lines().filter_map(|l| if l.starts_with("WARNING") { Some(l.trim().into()) } else { None }).collect();
         let mut tables: HashSet<(String, Context)> = HashSet::new();
         let mut aliases: HashMap<String, String> = HashMap::new();
         let mut cte_names: HashSet<String> = HashSet::new();
@@ -69,19 +70,15 @@ impl ParseResult {
                 }
                 NodeRef::RangeVar(v) => {
                     // TODO: this incorrectly returns no tables: parse('with f as (select * from f limit 1) select * from f')
-                    let table = if v.schemaname.len() > 0 {
-                        format!("{}.{}", v.schemaname, v.relname)
-                    } else {
-                        v.relname.to_owned()
-                    };
-                    if cte_names.contains(&table) { continue }
+                    let table = if v.schemaname.len() > 0 { format!("{}.{}", v.schemaname, v.relname) } else { v.relname.to_owned() };
+                    if cte_names.contains(&table) {
+                        continue;
+                    }
                     tables.insert((table.to_owned(), context));
                     v.alias.as_ref().and_then(|alias| aliases.insert(alias.aliasname.to_owned(), table));
                 }
                 NodeRef::FuncCall(c) => {
-                    let funcname = join(c.funcname.iter().filter_map(|n| {
-                        n.node.as_ref().and_then(|n| Some(&cast!(n, NodeEnum::String).str))
-                    }), ".");
+                    let funcname = join(c.funcname.iter().filter_map(|n| n.node.as_ref().and_then(|n| Some(&cast!(n, NodeEnum::String).str))), ".");
                     functions.insert((funcname, Context::Call));
                 }
                 NodeRef::DropStmt(s) => {
@@ -89,9 +86,10 @@ impl ParseResult {
                         Some(protobuf::ObjectType::ObjectTable) => {
                             for o in &s.objects {
                                 if let Some(NodeEnum::List(list)) = &o.node {
-                                    let table = join(list.items.iter().filter_map(|i| {
-                                        i.node.as_ref().and_then(|n| Some(&cast!(n, NodeEnum::String).str))
-                                    }), ".");
+                                    let table = join(
+                                        list.items.iter().filter_map(|i| i.node.as_ref().and_then(|n| Some(&cast!(n, NodeEnum::String).str))),
+                                        ".",
+                                    );
                                     tables.insert((table, Context::DDL));
                                 };
                             }
@@ -100,9 +98,12 @@ impl ParseResult {
                             for o in &s.objects {
                                 if let Some(NodeEnum::List(list)) = &o.node {
                                     // Unlike ObjectTable, this ignores the last string (the rule/trigger name)
-                                    let table = join(list.items[0..list.items.len() - 1].iter().filter_map(|i| {
-                                        i.node.as_ref().and_then(|n| Some(&cast!(n, NodeEnum::String).str))
-                                    }), ".");
+                                    let table = join(
+                                        list.items[0..list.items.len() - 1]
+                                            .iter()
+                                            .filter_map(|i| i.node.as_ref().and_then(|n| Some(&cast!(n, NodeEnum::String).str))),
+                                        ".",
+                                    );
                                     tables.insert((table, Context::DDL));
                                 };
                             }
@@ -115,7 +116,7 @@ impl ParseResult {
                                 }
                             }
                         }
-                        _ => ()
+                        _ => (),
                     }
                 }
                 NodeRef::CreateFunctionStmt(s) => {
@@ -123,22 +124,20 @@ impl ParseResult {
                         functions.insert((string.str.to_string(), Context::DDL));
                     }
                 }
-                NodeRef::RenameStmt(s) => {
-                    match protobuf::ObjectType::from_i32(s.rename_type) {
-                        Some(protobuf::ObjectType::ObjectFunction) => {
-                            if let Some(object) = &s.object {
-                                if let Some(NodeEnum::ObjectWithArgs(object)) = &object.node {
-                                    if let Some(NodeEnum::String(string)) = &object.objname[0].node {
-                                        functions.insert((string.str.to_string(), Context::DDL));
-                                        functions.insert((s.newname.to_string(), Context::DDL));
-                                    }
+                NodeRef::RenameStmt(s) => match protobuf::ObjectType::from_i32(s.rename_type) {
+                    Some(protobuf::ObjectType::ObjectFunction) => {
+                        if let Some(object) = &s.object {
+                            if let Some(NodeEnum::ObjectWithArgs(object)) = &object.node {
+                                if let Some(NodeEnum::String(string)) = &object.objname[0].node {
+                                    functions.insert((string.str.to_string(), Context::DDL));
+                                    functions.insert((s.newname.to_string(), Context::DDL));
                                 }
                             }
                         }
-                        _ => ()
                     }
-                }
-                _ => ()
+                    _ => (),
+                },
+                _ => (),
             }
         }
 
@@ -155,65 +154,74 @@ impl ParseResult {
     /// Returns all referenced tables in the query
     pub fn tables(&self) -> Vec<String> {
         let mut tables = HashSet::new();
-        self.tables.iter().for_each(|(t, _c)| { tables.insert(t.to_string()); });
+        self.tables.iter().for_each(|(t, _c)| {
+            tables.insert(t.to_string());
+        });
         Vec::from_iter(tables)
     }
 
     /// Returns only tables that were selected from
     pub fn select_tables(&self) -> Vec<String> {
-        self.tables.iter().filter_map(|(table, context)| {
-            match context {
+        self.tables
+            .iter()
+            .filter_map(|(table, context)| match context {
                 Context::Select => Some(table.to_string()),
-                _ => None
-            }
-        }).collect()
+                _ => None,
+            })
+            .collect()
     }
 
     /// Returns only tables that were modified by the query
     pub fn dml_tables(&self) -> Vec<String> {
-        self.tables.iter().filter_map(|(table, context)| {
-            match context {
+        self.tables
+            .iter()
+            .filter_map(|(table, context)| match context {
                 Context::DML => Some(table.to_string()),
-                _ => None
-            }
-        }).collect()
+                _ => None,
+            })
+            .collect()
     }
 
     /// Returns only tables that were modified by DDL statements
     pub fn ddl_tables(&self) -> Vec<String> {
-        self.tables.iter().filter_map(|(table, context)| {
-            match context {
+        self.tables
+            .iter()
+            .filter_map(|(table, context)| match context {
                 Context::DDL => Some(table.to_string()),
-                _ => None
-            }
-        }).collect()
+                _ => None,
+            })
+            .collect()
     }
 
     /// Returns any references to tables in the query
     pub fn functions(&self) -> Vec<String> {
         let mut functions = HashSet::new();
-        self.functions.iter().for_each(|(f, _c)| { functions.insert(f.to_string()); });
+        self.functions.iter().for_each(|(f, _c)| {
+            functions.insert(f.to_string());
+        });
         Vec::from_iter(functions)
     }
 
     /// Returns DDL functions
     pub fn ddl_functions(&self) -> Vec<String> {
-        self.functions.iter().filter_map(|(function, context)| {
-            match context {
+        self.functions
+            .iter()
+            .filter_map(|(function, context)| match context {
                 Context::DDL => Some(function.to_string()),
-                _ => None
-            }
-        }).collect()
+                _ => None,
+            })
+            .collect()
     }
 
     /// Returns functions that were called
     pub fn call_functions(&self) -> Vec<String> {
-        self.functions.iter().filter_map(|(function, context)| {
-            match context {
+        self.functions
+            .iter()
+            .filter_map(|(function, context)| match context {
                 Context::Call => Some(function.to_string()),
-                _ => None
-            }
-        }).collect()
+                _ => None,
+            })
+            .collect()
     }
 
     pub fn deparse(&self) -> Result<String> {
@@ -234,8 +242,10 @@ impl ParseResult {
     }
 
     pub fn statement_types(&self) -> Vec<&str> {
-        self.protobuf.stmts.iter().filter_map(|s| {
-            match s.stmt.as_ref().and_then(|s| s.node.as_ref()) {
+        self.protobuf
+            .stmts
+            .iter()
+            .filter_map(|s| match s.stmt.as_ref().and_then(|s| s.node.as_ref()) {
                 Some(NodeEnum::InsertStmt(..)) => Some("InsertStmt"),
                 Some(NodeEnum::DeleteStmt(..)) => Some("DeleteStmt"),
                 Some(NodeEnum::UpdateStmt(..)) => Some("UpdateStmt"),
@@ -350,7 +360,7 @@ impl ParseResult {
                 Some(NodeEnum::CallStmt(..)) => Some("CallStmt"),
                 Some(NodeEnum::AlterStatsStmt(..)) => Some("AlterStatsStmt"),
                 _ => None,
-            }
-        }).collect()
+            })
+            .collect()
     }
 }

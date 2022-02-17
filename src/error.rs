@@ -12,7 +12,7 @@ pub enum Error {
     #[error("Error parsing JSON: {0}")]
     InvalidJson(String),
     #[error("Invalid pointer")]
-    InvalidPointer
+    InvalidPointer,
 }
 
 /// Convenient Result alias for returning `pg_query::Error`.
