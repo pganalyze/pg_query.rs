@@ -48,6 +48,26 @@
                 "typname": "UNKNOWN"
               }
             },
+            "refname": "v_name"
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "UNKNOWN"
+              }
+            },
+            "refname": "v_version"
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "UNKNOWN"
+              }
+            },
             "refname": "found"
           }
         }

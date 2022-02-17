@@ -1,8 +1,8 @@
 pg_query.rs &emsp; [![Build Status]][actions] [![Latest Version]][crates.io] [![Docs Badge]][docs]
 ===========
 
-[Build Status]: https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fpaupino%2Fpg_query%2Fbadge&label=build&logo=none
-[actions]: https://actions-badge.atrox.dev/paupino/pg_query/goto
+[Build Status]: https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fpganalyze%2Fpg_query%2Fbadge&label=build&logo=none
+[actions]: https://actions-badge.atrox.dev/pganalyze/pg_query/goto
 [Latest Version]: https://img.shields.io/crates/v/pg_query.svg
 [crates.io]: https://crates.io/crates/pg_query
 [Docs Badge]: https://docs.rs/pg_query/badge.svg
@@ -24,7 +24,7 @@ Add the following to your `Cargo.toml`
 
 ```toml
 [dependencies]
-pg_query = "0.6"
+pg_query = "0.7"
 ```
 
 ## Examples
