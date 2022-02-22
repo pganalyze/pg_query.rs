@@ -24,6 +24,7 @@ clippy = { version = "*", optional = true }
 prost-build = "*"
 serde = { version = "*", features = ["derive"] }
 serde_json = "*"
+fs_extra = "*"
 
 [dev-dependencies]
 easy-parallel = "*"
