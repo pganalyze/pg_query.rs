@@ -26,5 +26,6 @@ serde = { version = "*", features = ["derive"] }
 serde_json = "*"
 
 [dev-dependencies]
+easy-parallel = "*"
 pretty_assertions = "*"
 regex = "*"
