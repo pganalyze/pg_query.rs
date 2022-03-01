@@ -25,8 +25,6 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
     }
 
     // SAFETY: within this scope nobody expects to have exclusive access to `protobuf`'s contents, so we can have multiple shared accesses.
-    // Note that while the first iteration calls unwrap() on the raw pointers, it's possible that during the second iteration
-    // we try to use a now-empty pointer so we handle that with Error::InvalidPointer.
     //
     // Raw pointer documentation:
     //
@@ -40,130 +38,130 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
         for (node, depth, _context) in protobuf.nodes_mut().into_iter() {
             match node {
                 NodeMut::SelectStmt(s) => {
-                    let s = s.as_mut().unwrap();
+                    let s = s.as_mut().ok_or(Error::InvalidPointer)?;
                     truncations.push(PossibleTruncation {
                         attr: TruncationAttr::TargetList,
                         node: node,
                         depth: depth,
-                        length: target_list_len(s.target_list.clone()),
+                        length: target_list_len(s.target_list.clone())?,
                     });
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
                             node: node,
                             depth: depth,
-                            length: where_clause_len((*clause).clone()),
+                            length: where_clause_len((*clause).clone())?,
                         });
                     }
                 }
                 NodeMut::UpdateStmt(s) => {
-                    let s = s.as_mut().unwrap();
+                    let s = s.as_mut().ok_or(Error::InvalidPointer)?;
                     truncations.push(PossibleTruncation {
                         attr: TruncationAttr::TargetList,
                         node: node,
                         depth: depth,
-                        length: target_list_len(s.target_list.clone()),
+                        length: target_list_len(s.target_list.clone())?,
                     });
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
                             node: node,
                             depth: depth,
-                            length: where_clause_len((*clause).clone()),
+                            length: where_clause_len((*clause).clone())?,
                         });
                     }
                 }
                 NodeMut::DeleteStmt(s) => {
-                    let s = s.as_mut().unwrap();
+                    let s = s.as_mut().ok_or(Error::InvalidPointer)?;
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
                             node: node,
                             depth: depth,
-                            length: where_clause_len((*clause).clone()),
+                            length: where_clause_len((*clause).clone())?,
                         });
                     }
                 }
                 NodeMut::CopyStmt(s) => {
-                    let s = s.as_mut().unwrap();
+                    let s = s.as_mut().ok_or(Error::InvalidPointer)?;
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
                             node: node,
                             depth: depth,
-                            length: where_clause_len((*clause).clone()),
+                            length: where_clause_len((*clause).clone())?,
                         });
                     }
                 }
                 NodeMut::InsertStmt(s) => {
-                    let s = s.as_mut().unwrap();
+                    let s = s.as_mut().ok_or(Error::InvalidPointer)?;
                     if s.cols.len() > 0 {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::Cols,
                             node: node,
                             depth: depth,
-                            length: cols_len(s.cols.clone()),
+                            length: cols_len(s.cols.clone())?,
                         });
                     }
                 }
                 NodeMut::IndexStmt(s) => {
-                    let s = s.as_mut().unwrap();
+                    let s = s.as_mut().ok_or(Error::InvalidPointer)?;
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
                             node: node,
                             depth: depth,
-                            length: where_clause_len((*clause).clone()),
+                            length: where_clause_len((*clause).clone())?,
                         });
                     }
                 }
                 NodeMut::RuleStmt(s) => {
-                    let s = s.as_mut().unwrap();
+                    let s = s.as_mut().ok_or(Error::InvalidPointer)?;
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
                             node: node,
                             depth: depth,
-                            length: where_clause_len((*clause).clone()),
+                            length: where_clause_len((*clause).clone())?,
                         });
                     }
                 }
                 NodeMut::CommonTableExpr(s) => {
-                    let s = s.as_mut().unwrap();
+                    let s = s.as_mut().ok_or(Error::InvalidPointer)?;
                     if let Some(cte) = s.ctequery.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::CTEQuery,
                             node: node,
                             depth: depth + 1,
-                            length: cte.deparse().unwrap().len() as i32,
+                            length: cte.deparse()?.len() as i32,
                         });
                     }
                 }
                 NodeMut::InferClause(s) => {
-                    let s = s.as_mut().unwrap();
+                    let s = s.as_mut().ok_or(Error::InvalidPointer)?;
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
                             node: node,
                             depth: depth,
-                            length: where_clause_len((*clause).clone()),
+                            length: where_clause_len((*clause).clone())?,
                         });
                     }
                 }
                 NodeMut::OnConflictClause(s) => {
-                    let s = s.as_mut().unwrap();
+                    let s = s.as_mut().ok_or(Error::InvalidPointer)?;
                     truncations.push(PossibleTruncation {
                         attr: TruncationAttr::TargetList,
                         node: node,
                         depth: depth,
-                        length: target_list_len(s.target_list.clone()),
+                        length: target_list_len(s.target_list.clone())?,
                     });
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
                             node: node,
                             depth: depth,
-                            length: where_clause_len((*clause).clone()),
+                            length: where_clause_len((*clause).clone())?,
                         });
                     }
                 }
@@ -246,19 +244,19 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
     return Ok(format!("{}...", &output[0..=max_length - 4]));
 }
 
-fn target_list_len(nodes: Vec<Node>) -> i32 {
-    let fragment = dummy_select(nodes, None).deparse().unwrap();
-    fragment.len() as i32 - 7 // "SELECT "
+fn target_list_len(nodes: Vec<Node>) -> Result<i32> {
+    let fragment = dummy_select(nodes, None).deparse()?;
+    Ok(fragment.len() as i32 - 7) // "SELECT "
 }
 
-fn where_clause_len(node: Box<Node>) -> i32 {
-    let fragment = dummy_select(vec![], Some(node)).deparse().unwrap();
-    fragment.len() as i32 - 13 // "SELECT WHERE "
+fn where_clause_len(node: Box<Node>) -> Result<i32> {
+    let fragment = dummy_select(vec![], Some(node)).deparse()?;
+    Ok(fragment.len() as i32 - 13) // "SELECT WHERE "
 }
 
-fn cols_len(nodes: Vec<Node>) -> i32 {
-    let fragment = dummy_insert(nodes).deparse().unwrap();
-    fragment.len() as i32 - 31 // "INSERT INTO x () DEFAULT VALUES"
+fn cols_len(nodes: Vec<Node>) -> Result<i32> {
+    let fragment = dummy_insert(nodes).deparse()?;
+    Ok(fragment.len() as i32 - 31) // "INSERT INTO x () DEFAULT VALUES"
 }
 
 fn dummy_column() -> Box<Node> {
