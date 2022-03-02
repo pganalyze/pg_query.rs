@@ -73,3 +73,19 @@ fn it_handles_GRANT() {
     let result = parse(query).unwrap();
     assert_eq!(result.truncate(35).unwrap(), "GRANT select (abc, def, ghj) ON ...")
 }
+
+#[test]
+fn it_handles_functions() {
+    let query = r#"
+        WITH activity AS (
+            SELECT pid, COALESCE(a.usename, '') AS usename
+            FROM pganalyze.get_stat_activity() a
+        )
+        SELECT
+        FROM pganalyze.get_stat_progress_vacuum() v
+        JOIN activity a USING (pid)
+    "#;
+    let result = parse(query).unwrap();
+    let truncated = result.truncate(100).unwrap();
+    assert_eq!(truncated, "WITH activity AS (...) SELECT FROM pganalyze.get_stat_progress_vacuum() v JOIN activity a USING (...");
+}

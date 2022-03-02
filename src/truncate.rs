@@ -19,7 +19,7 @@ struct PossibleTruncation {
 }
 
 pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<String> {
-    let output = protobuf.deparse()?;
+    let mut output = protobuf.deparse()?;
     if output.len() <= max_length {
         return Ok(output);
     }
@@ -39,12 +39,14 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
             match node {
                 NodeMut::SelectStmt(s) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
-                    truncations.push(PossibleTruncation {
-                        attr: TruncationAttr::TargetList,
-                        node: node,
-                        depth: depth,
-                        length: target_list_len(s.target_list.clone())?,
-                    });
+                    if s.target_list.len() > 0 {
+                        truncations.push(PossibleTruncation {
+                            attr: TruncationAttr::TargetList,
+                            node: node,
+                            depth: depth,
+                            length: target_list_len(s.target_list.clone())?,
+                        });
+                    }
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
@@ -56,12 +58,14 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                 }
                 NodeMut::UpdateStmt(s) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
-                    truncations.push(PossibleTruncation {
-                        attr: TruncationAttr::TargetList,
-                        node: node,
-                        depth: depth,
-                        length: target_list_len(s.target_list.clone())?,
-                    });
+                    if s.target_list.len() > 0 {
+                        truncations.push(PossibleTruncation {
+                            attr: TruncationAttr::TargetList,
+                            node: node,
+                            depth: depth,
+                            length: target_list_len(s.target_list.clone())?,
+                        });
+                    }
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
@@ -150,12 +154,14 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                 }
                 NodeMut::OnConflictClause(s) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
-                    truncations.push(PossibleTruncation {
-                        attr: TruncationAttr::TargetList,
-                        node: node,
-                        depth: depth,
-                        length: target_list_len(s.target_list.clone())?,
-                    });
+                    if s.target_list.len() > 0 {
+                        truncations.push(PossibleTruncation {
+                            attr: TruncationAttr::TargetList,
+                            node: node,
+                            depth: depth,
+                            length: target_list_len(s.target_list.clone())?,
+                        });
+                    }
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
@@ -174,7 +180,8 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
             other => other,
         });
 
-        for truncation in truncations.into_iter() {
+        while truncations.len() > 0 {
+            let truncation = truncations.remove(0);
             match (truncation.node, truncation.attr) {
                 (NodeMut::SelectStmt(s), TruncationAttr::TargetList) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
@@ -214,7 +221,11 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                 }
                 (NodeMut::CommonTableExpr(s), TruncationAttr::CTEQuery) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
-                    s.ctequery = Some(dummy_select(vec![], Some(dummy_column())))
+                    let old = std::mem::replace(&mut s.ctequery, Some(dummy_select(vec![], Some(dummy_column()))));
+                    if let Some(s) = old {
+                        let node = s.node.ok_or(Error::InvalidPointer)?;
+                        truncations.retain(|t| t.node.to_enum().unwrap() != node);
+                    }
                 }
                 (NodeMut::InferClause(s), TruncationAttr::WhereClause) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
@@ -230,10 +241,10 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                 }
                 _ => panic!("unimplemented truncation"),
             }
-            let output = protobuf.deparse()?;
-            let output = output.replace("SELECT WHERE \"…\"", "...").replace("\"…\"", "...");
+            output = protobuf.deparse()?;
+            output = output.replace("SELECT WHERE \"…\"", "...").replace("\"…\"", "...");
             // the unwanted AS doesn't happen in the Ruby version. I'm not sure where it's coming from
-            let output = output.replace("SELECT ... AS ...", "SELECT ...");
+            output = output.replace("SELECT ... AS ...", "SELECT ...");
             if output.len() <= max_length {
                 return Ok(output);
             }
