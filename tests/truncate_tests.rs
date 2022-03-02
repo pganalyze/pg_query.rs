@@ -75,7 +75,7 @@ fn it_handles_GRANT() {
 }
 
 #[test]
-fn it_handles_functions() {
+fn it_handles_CTEs() {
     let query = r#"
         WITH activity AS (
             SELECT pid, COALESCE(a.usename, '') AS usename
