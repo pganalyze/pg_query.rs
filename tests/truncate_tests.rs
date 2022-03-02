@@ -24,7 +24,6 @@ fn it_omits_WHERE_clause() {
     assert_eq!(result.truncate(30).unwrap(), "SELECT * FROM z WHERE ...")
 }
 
-// attempt to subtract with overflow
 #[test]
 fn it_omits_INSERT_field_list() {
     let query = "INSERT INTO \"x\" (a, b, c, d, e, f) VALUES (?)";
@@ -72,4 +71,20 @@ fn it_handles_GRANT() {
     let query = "GRANT SELECT (abc, def, ghj) ON TABLE t1 TO r1";
     let result = parse(query).unwrap();
     assert_eq!(result.truncate(35).unwrap(), "GRANT select (abc, def, ghj) ON ...")
+}
+
+#[test]
+fn it_does_not_segfault_on_target_list_from_CTE_already_removed_from_possible_truncations() {
+    let query = r#"
+        WITH activity AS (
+            SELECT pid, COALESCE(a.usename, '') AS usename
+            FROM pganalyze.get_stat_activity() a
+        )
+        SELECT
+        FROM pganalyze.get_stat_progress_vacuum() v
+        JOIN activity a USING (pid)
+    "#;
+    let result = parse(query).unwrap();
+    let truncated = result.truncate(100).unwrap();
+    assert_eq!(truncated, "WITH activity AS (...) SELECT FROM pganalyze.get_stat_progress_vacuum() v JOIN activity a USING (...");
 }
