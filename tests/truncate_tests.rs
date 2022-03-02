@@ -24,7 +24,6 @@ fn it_omits_WHERE_clause() {
     assert_eq!(result.truncate(30).unwrap(), "SELECT * FROM z WHERE ...")
 }
 
-// attempt to subtract with overflow
 #[test]
 fn it_omits_INSERT_field_list() {
     let query = "INSERT INTO \"x\" (a, b, c, d, e, f) VALUES (?)";
@@ -75,7 +74,7 @@ fn it_handles_GRANT() {
 }
 
 #[test]
-fn it_handles_CTEs() {
+fn it_does_not_segfault_on_target_list_from_CTE_already_removed_from_possible_truncations() {
     let query = r#"
         WITH activity AS (
             SELECT pid, COALESCE(a.usename, '') AS usename
