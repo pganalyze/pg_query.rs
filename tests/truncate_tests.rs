@@ -28,7 +28,7 @@ fn it_omits_WHERE_clause() {
 fn it_omits_INSERT_field_list() {
     let query = "INSERT INTO \"x\" (a, b, c, d, e, f) VALUES (?)";
     let result = parse(query).unwrap();
-    assert_eq!(result.truncate(32).unwrap(), "INSERT INTO x (...) VALUES (?)")
+    assert_eq!(result.truncate(32).unwrap(), "INSERT INTO x (...) VALUES (...)")
 }
 
 #[test]

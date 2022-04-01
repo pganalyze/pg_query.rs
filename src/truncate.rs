@@ -6,6 +6,7 @@ use crate::*;
 enum TruncationAttr {
     TargetList,
     WhereClause,
+    ValuesLists,
     CTEQuery,
     Cols,
 }
@@ -53,6 +54,14 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                             node: node,
                             depth: depth,
                             length: where_clause_len((*clause).clone())?,
+                        });
+                    }
+                    if s.values_lists.len() > 0 {
+                        truncations.push(PossibleTruncation {
+                            attr: TruncationAttr::ValuesLists,
+                            node: node,
+                            depth: depth,
+                            length: select_values_lists_len(s.values_lists.clone())?,
                         });
                     }
                 }
@@ -191,6 +200,16 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
                     s.where_clause = Some(dummy_column());
                 }
+                (NodeMut::SelectStmt(s), TruncationAttr::ValuesLists) => {
+                    let s = s.as_mut().ok_or(Error::InvalidPointer)?;
+                    s.values_lists = vec![
+                        Node {
+                            node: Some(NodeEnum::List(protobuf::List {
+                                items: vec![*dummy_column()]
+                            })),
+                        }
+                    ]
+                }
                 (NodeMut::UpdateStmt(s), TruncationAttr::TargetList) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
                     s.target_list = vec![dummy_target()];
@@ -221,7 +240,7 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                 }
                 (NodeMut::CommonTableExpr(s), TruncationAttr::CTEQuery) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
-                    let old = std::mem::replace(&mut s.ctequery, Some(dummy_select(vec![], Some(dummy_column()))));
+                    let old = std::mem::replace(&mut s.ctequery, Some(dummy_select(vec![], Some(dummy_column()), vec![])));
                     if let Some(s) = old {
                         let node = s.node.ok_or(Error::InvalidPointer)?;
                         truncations.retain(|t| t.node.to_enum().unwrap() != node);
@@ -256,12 +275,17 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
 }
 
 fn target_list_len(nodes: Vec<Node>) -> Result<i32> {
-    let fragment = dummy_select(nodes, None).deparse()?;
+    let fragment = dummy_select(nodes, None, vec![]).deparse()?;
+    Ok(fragment.len() as i32 - 7) // "SELECT "
+}
+
+fn select_values_lists_len(nodes: Vec<Node>) -> Result<i32> {
+    let fragment = dummy_select(vec![], None, nodes).deparse()?;
     Ok(fragment.len() as i32 - 7) // "SELECT "
 }
 
 fn where_clause_len(node: Box<Node>) -> Result<i32> {
-    let fragment = dummy_select(vec![], Some(node)).deparse()?;
+    let fragment = dummy_select(vec![], Some(node), vec![]).deparse()?;
     Ok(fragment.len() as i32 - 13) // "SELECT WHERE "
 }
 
@@ -290,7 +314,7 @@ fn dummy_target() -> Node {
     }
 }
 
-fn dummy_select(target_list: Vec<Node>, where_clause: Option<Box<Node>>) -> Box<Node> {
+fn dummy_select(target_list: Vec<Node>, where_clause: Option<Box<Node>>, values_lists: Vec<Node>) -> Box<Node> {
     Box::new(Node {
         node: Some(NodeEnum::SelectStmt(Box::new(protobuf::SelectStmt {
             distinct_clause: vec![],
@@ -301,7 +325,7 @@ fn dummy_select(target_list: Vec<Node>, where_clause: Option<Box<Node>>) -> Box<
             group_clause: vec![],
             having_clause: None,
             window_clause: vec![],
-            values_lists: vec![],
+            values_lists: values_lists,
             sort_clause: vec![],
             limit_offset: None,
             limit_count: None,
