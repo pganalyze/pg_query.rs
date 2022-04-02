@@ -45,7 +45,7 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                             attr: TruncationAttr::TargetList,
                             node: node,
                             depth: depth,
-                            length: target_list_len(s.target_list.clone())?,
+                            length: select_target_list_len(s.target_list.clone())?,
                         });
                     }
                     if let Some(clause) = s.where_clause.as_ref() {
@@ -72,7 +72,7 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                             attr: TruncationAttr::TargetList,
                             node: node,
                             depth: depth,
-                            length: target_list_len(s.target_list.clone())?,
+                            length: update_target_list_len(s.target_list.clone())?,
                         });
                     }
                     if let Some(clause) = s.where_clause.as_ref() {
@@ -168,7 +168,7 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                             attr: TruncationAttr::TargetList,
                             node: node,
                             depth: depth,
-                            length: target_list_len(s.target_list.clone())?,
+                            length: update_target_list_len(s.target_list.clone())?,
                         });
                     }
                     if let Some(clause) = s.where_clause.as_ref() {
@@ -274,7 +274,7 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
     return Ok(format!("{}...", &output[0..=max_length - 4]));
 }
 
-fn target_list_len(nodes: Vec<Node>) -> Result<i32> {
+fn select_target_list_len(nodes: Vec<Node>) -> Result<i32> {
     let fragment = dummy_select(nodes, None, vec![]).deparse()?;
     Ok(fragment.len() as i32 - 7) // "SELECT "
 }
@@ -282,6 +282,11 @@ fn target_list_len(nodes: Vec<Node>) -> Result<i32> {
 fn select_values_lists_len(nodes: Vec<Node>) -> Result<i32> {
     let fragment = dummy_select(vec![], None, nodes).deparse()?;
     Ok(fragment.len() as i32 - 7) // "SELECT "
+}
+
+fn update_target_list_len(nodes: Vec<Node>) -> Result<i32> {
+    let fragment = dummy_update(nodes).deparse()?;
+    Ok(fragment.len() as i32 - 13) // "UPDATE x SET "
 }
 
 fn where_clause_len(node: Box<Node>) -> Result<i32> {
@@ -358,6 +363,27 @@ fn dummy_insert(cols: Vec<Node>) -> Box<Node> {
             returning_list: vec![],
             with_clause: None,
             r#override: 1,
+        }))),
+    })
+}
+
+fn dummy_update(target_list: Vec<Node>) -> Box<Node> {
+    Box::new(Node {
+        node: Some(NodeEnum::UpdateStmt(Box::new(protobuf::UpdateStmt {
+            relation: Some(protobuf::RangeVar {
+                catalogname: "".to_string(),
+                schemaname: "".to_string(),
+                relname: "x".to_string(),
+                inh: true,
+                relpersistence: "p".to_string(),
+                alias: None,
+                location: 0,
+            }),
+            from_clause: vec![],
+            target_list: target_list,
+            where_clause: None,
+            returning_list: vec![],
+            with_clause: None,
         }))),
     })
 }
