@@ -202,13 +202,7 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                 }
                 (NodeMut::SelectStmt(s), TruncationAttr::ValuesLists) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
-                    s.values_lists = vec![
-                        Node {
-                            node: Some(NodeEnum::List(protobuf::List {
-                                items: vec![*dummy_column()]
-                            })),
-                        }
-                    ]
+                    s.values_lists = vec![Node { node: Some(NodeEnum::List(protobuf::List { items: vec![*dummy_column()] })) }]
                 }
                 (NodeMut::UpdateStmt(s), TruncationAttr::TargetList) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
