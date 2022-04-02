@@ -235,7 +235,7 @@ impl ParseResult {
     /// ```rust
     /// let query = "INSERT INTO \"x\" (a, b, c, d, e, f) VALUES (?)";
     /// let result = pg_query::parse(query).unwrap();
-    /// assert_eq!(result.truncate(32).unwrap(), "INSERT INTO x (...) VALUES (?)")
+    /// assert_eq!(result.truncate(32).unwrap(), "INSERT INTO x (...) VALUES (...)")
     /// ```
     pub fn truncate(&self, max_length: usize) -> Result<String> {
         crate::truncate(&self.protobuf, max_length)
