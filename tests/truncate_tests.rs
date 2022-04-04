@@ -28,7 +28,7 @@ fn it_omits_WHERE_clause() {
 fn it_omits_INSERT_field_list() {
     let query = "INSERT INTO \"x\" (a, b, c, d, e, f) VALUES (?)";
     let result = parse(query).unwrap();
-    assert_eq!(result.truncate(32).unwrap(), "INSERT INTO x (...) VALUES (?)")
+    assert_eq!(result.truncate(32).unwrap(), "INSERT INTO x (...) VALUES (...)")
 }
 
 #[test]
@@ -64,6 +64,18 @@ fn it_omits_ON_CONFLICT_target_list() {
     let query = "INSERT INTO y(a) VALUES(1) ON CONFLICT DO UPDATE SET a = 123456789";
     let result = parse(query).unwrap();
     assert_eq!(result.truncate(65).unwrap(), "INSERT INTO y (a) VALUES (1) ON CONFLICT DO UPDATE SET ... = ...")
+}
+
+#[test]
+fn it_omits_ON_CONFLICT_target_list_2() {
+    let query = r#"
+        INSERT INTO foo (a, b, c, d) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29)
+        ON CONFLICT (id)
+        DO UPDATE SET (a, b, c, d) = (excluded.a,excluded.b,excluded.c,case when foo.d = excluded.d then excluded.d end)
+    "#;
+    let result = parse(query).unwrap();
+    let truncated = result.truncate(100).unwrap();
+    assert_eq!(truncated, "INSERT INTO foo (a, b, c, d) VALUES (...) ON CONFLICT (id) DO UPDATE SET ... = ...");
 }
 
 #[test]
