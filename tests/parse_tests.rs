@@ -418,50 +418,15 @@ fn it_fails_to_parse_CREATE_TABLE_WITH_OIDS() {
 
 #[test]
 fn it_parses_CREATE_INDEX() {
-    let result = parse("CREATE INDEX ix_test ON contacts.person (id, ssn) WHERE ssn IS NOT NULL;").unwrap();
+    let result = parse("CREATE INDEX testidx ON test USING btree (a, (lower(b) || upper(c))) WHERE pow(a, 2) > 25").unwrap();
     assert_eq!(result.warnings.len(), 0);
-    assert_eq!(result.tables(), ["contacts.person"]);
-    assert_eq!(result.ddl_tables(), ["contacts.person"]);
+    assert_eq!(result.tables(), ["test"]);
+    assert_eq!(result.ddl_tables(), ["test"]);
     assert_eq!(result.statement_types(), ["IndexStmt"]);
+    let call_functions: Vec<String> = sorted(result.call_functions()).collect();
+    assert_eq!(call_functions, ["lower", "pow", "upper"]);
     let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::IndexStmt);
-    assert_eq!(stmt.idxname, "ix_test".to_string());
-    assert_debug_eq!(
-        stmt.index_params,
-        r#"[
-    Node {
-        node: Some(
-            IndexElem(
-                IndexElem {
-                    name: "id",
-                    expr: None,
-                    indexcolname: "",
-                    collation: [],
-                    opclass: [],
-                    opclassopts: [],
-                    ordering: SortbyDefault,
-                    nulls_ordering: SortbyNullsDefault,
-                },
-            ),
-        ),
-    },
-    Node {
-        node: Some(
-            IndexElem(
-                IndexElem {
-                    name: "ssn",
-                    expr: None,
-                    indexcolname: "",
-                    collation: [],
-                    opclass: [],
-                    opclassopts: [],
-                    ordering: SortbyDefault,
-                    nulls_ordering: SortbyNullsDefault,
-                },
-            ),
-        ),
-    },
-]"#
-    );
+    assert_eq!(stmt.idxname, "testidx".to_string());
 }
 
 #[test]
