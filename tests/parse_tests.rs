@@ -465,6 +465,19 @@ fn it_parses_CREATE_INDEX() {
 }
 
 #[test]
+fn it_parses_CREATE_INDEX_expressions() {
+    let result = parse("CREATE INDEX testidx ON test USING btree (a, (b+c), (lower(d) || upper(d)))").unwrap();
+    assert_eq!(result.warnings.len(), 0);
+    assert_eq!(result.tables(), ["test"]);
+    assert_eq!(result.ddl_tables(), ["test"]);
+    assert_eq!(result.statement_types(), ["IndexStmt"]);
+    let call_functions: Vec<String> = sorted(result.call_functions()).collect();
+    assert_eq!(call_functions, ["lower", "upper"]);
+    let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::IndexStmt);
+    assert_eq!(stmt.idxname, "testidx".to_string());
+}
+
+#[test]
 fn it_parses_CREATE_SCHEMA() {
     let result = parse("CREATE SCHEMA IF NOT EXISTS test AUTHORIZATION joe").unwrap();
     assert_eq!(result.warnings.len(), 0);

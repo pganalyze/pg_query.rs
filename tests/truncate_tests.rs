@@ -100,3 +100,11 @@ fn it_does_not_segfault_on_target_list_from_CTE_already_removed_from_possible_tr
     let truncated = result.truncate(100).unwrap();
     assert_eq!(truncated, "WITH activity AS (...) SELECT FROM pganalyze.get_stat_progress_vacuum() v JOIN activity a USING (...");
 }
+
+// If we truncate the index expression in the future this would remove (lower(d) || upper(d)) first
+#[test]
+fn it_handles_CREATE_INDEX() {
+    let query = "CREATE INDEX testidx ON test USING btree ((lower(d) || upper(d)), a, (b+c))";
+    let result = parse(query).unwrap();
+    assert_eq!(result.truncate(60).unwrap(), "CREATE INDEX testidx ON test USING btree ((lower(d) || up...");
+}

@@ -229,6 +229,13 @@ impl NodeEnum {
                     if let Some(rel) = s.relation.as_ref() {
                         iter.push((rel.to_ref(), depth, Context::DDL));
                     }
+                    s.index_params.iter().for_each(|n| {
+                        if let Some(NodeEnum::IndexElem(n)) = n.node.as_ref() {
+                            if let Some(n) = n.expr.as_ref().and_then(|n| n.node.as_ref()) {
+                                iter.push((n.to_ref(), depth, Context::DDL));
+                            }
+                        }
+                    });
                 }
                 NodeRef::CreateTrigStmt(s) => {
                     if let Some(rel) = s.relation.as_ref() {
@@ -635,6 +642,13 @@ impl NodeEnum {
                     if let Some(rel) = s.relation.as_mut() {
                         iter.push((rel.to_mut(), depth, Context::DDL));
                     }
+                    s.index_params.iter_mut().for_each(|n| {
+                        if let Some(NodeEnum::IndexElem(n)) = n.node.as_mut() {
+                            if let Some(n) = n.expr.as_mut().and_then(|n| n.node.as_mut()) {
+                                iter.push((n.to_mut(), depth, Context::DDL));
+                            }
+                        }
+                    });
                 }
                 NodeMut::CreateTrigStmt(s) => {
                     let s = s.as_mut().unwrap();
