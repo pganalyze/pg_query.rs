@@ -236,6 +236,11 @@ impl NodeEnum {
                             }
                         }
                     });
+                    if let Some(n) = s.where_clause.as_ref() {
+                        if let Some(n) = n.node.as_ref() {
+                            iter.push((n.to_ref(), depth, Context::DDL));
+                        }
+                    }
                 }
                 NodeRef::CreateTrigStmt(s) => {
                     if let Some(rel) = s.relation.as_ref() {
