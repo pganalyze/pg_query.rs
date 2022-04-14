@@ -13,6 +13,8 @@ pub enum Error {
     InvalidJson(String),
     #[error("Invalid pointer")]
     InvalidPointer,
+    #[error("Error splitting: {0}")]
+    Split(String),
 }
 
 /// Convenient Result alias for returning `pg_query::Error`.
