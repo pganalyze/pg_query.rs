@@ -203,9 +203,44 @@ pub fn split_with_parser(query: &str) -> Result<Vec<&str>> {
     split_result
 }
 
+///
+/// ```rust
+/// use pg_query::protobuf::*;
+/// let sql = "SELECT update AS left /* comment */ FROM between";
+/// let result = pg_query::scan(sql).unwrap();
+/// let tokens: Vec<std::string::String> = result.tokens.iter().map(|token| {
+///     format!("{:?}", token)
+/// }).collect();
+/// assert_eq!(
+///     tokens,
+///     vec![
+///         "ScanToken { start: 0, end: 6, token: Select, keyword_kind: ReservedKeyword }",
+///         "ScanToken { start: 7, end: 13, token: Update, keyword_kind: UnreservedKeyword }",
+///         "ScanToken { start: 14, end: 16, token: As, keyword_kind: ReservedKeyword }",
+///         "ScanToken { start: 17, end: 21, token: Left, keyword_kind: TypeFuncNameKeyword }",
+///         "ScanToken { start: 22, end: 35, token: CComment, keyword_kind: NoKeyword }",
+///         "ScanToken { start: 36, end: 40, token: From, keyword_kind: ReservedKeyword }",
+///         "ScanToken { start: 41, end: 48, token: Between, keyword_kind: ColNameKeyword }"
+///     ]);
+/// ```
+pub fn scan(sql: &str) -> Result<protobuf::ScanResult> {
+    let input = CString::new(sql)?;
+    let result = unsafe { pg_query_scan(input.as_ptr()) };
+    let scan_result = if !result.error.is_null() {
+        let message = unsafe { CStr::from_ptr((*result.error).message) }.to_string_lossy().to_string();
+        Err(Error::Scan(message))
+    } else {
+        let data = unsafe { std::slice::from_raw_parts(result.pbuf.data as *const u8, result.pbuf.len as usize) };
+        protobuf::ScanResult::decode(data).map_err(Error::Decode).and_then(|result| Ok(result))
+    };
+    unsafe { pg_query_free_scan_result(result) };
+    scan_result
+}
+
+
 /// Split a potentially-malformed query into separate statements.
 /// ```rust
-/// let query = r#"select /*;*/ 1; asdf; select "2;", (select 3);"#;
+/// let query = r#"select /*;*/ 1; asdf; select "2;", (select 3); asdf"#;
 /// let statements = pg_query::split_with_scanner(query).unwrap();
 /// assert_eq!(statements, vec![
 ///     "select /*;*/ 1",

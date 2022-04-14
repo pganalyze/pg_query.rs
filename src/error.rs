@@ -13,6 +13,8 @@ pub enum Error {
     InvalidJson(String),
     #[error("Invalid pointer")]
     InvalidPointer,
+    #[error("Error scanning: {0}")]
+    Scan(String),
     #[error("Error splitting: {0}")]
     Split(String),
 }
