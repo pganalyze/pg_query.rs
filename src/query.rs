@@ -3,7 +3,6 @@ use std::os::raw::{c_char, c_uint};
 
 use prost::Message;
 
-// use crate::scan_result::ScanResult;
 use crate::bindings::*;
 use crate::error::*;
 use crate::parse_result::ParseResult;
