@@ -168,6 +168,9 @@ pub fn parse_plpgsql(stmt: &str) -> Result<serde_json::Value> {
 }
 
 /// Split a well-formed query into separate statements.
+/// 
+/// # Example
+/// 
 /// ```rust
 /// let query = r#"select /*;*/ 1; select "2;", (select 3);"#;
 /// let statements = pg_query::split_with_parser(query).unwrap();
@@ -175,6 +178,7 @@ pub fn parse_plpgsql(stmt: &str) -> Result<serde_json::Value> {
 /// ```
 ///
 /// However, `split_with_parser` will fail on malformed statements
+/// 
 /// ```rust
 /// let query = "select 1; this statement is not sql; select 2;";
 /// let result = pg_query::split_with_parser(query);
@@ -203,7 +207,10 @@ pub fn split_with_parser(query: &str) -> Result<Vec<&str>> {
     split_result
 }
 
-///
+/// Scan a sql query into a its component of tokens.
+/// 
+/// # Example
+/// 
 /// ```rust
 /// use pg_query::protobuf::*;
 /// let sql = "SELECT update AS left /* comment */ FROM between";
@@ -238,13 +245,14 @@ pub fn scan(sql: &str) -> Result<protobuf::ScanResult> {
 }
 
 
-/// Split a potentially-malformed query into separate statements.
+/// Split a potentially-malformed query into separate statements. Note that
+/// invalid tokens will be skipped
 /// ```rust
 /// let query = r#"select /*;*/ 1; asdf; select "2;", (select 3); asdf"#;
 /// let statements = pg_query::split_with_scanner(query).unwrap();
 /// assert_eq!(statements, vec![
 ///     "select /*;*/ 1",
-///     // missing: " asdf", not scanned?
+///     // skipped " asdf" since it was an invalid token
 ///     r#" select "2;", (select 3)"#,
 /// ]);
 /// ```
