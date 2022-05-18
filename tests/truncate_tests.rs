@@ -108,3 +108,20 @@ fn it_handles_CREATE_INDEX() {
     let result = parse(query).unwrap();
     assert_eq!(result.truncate(60).unwrap(), "CREATE INDEX testidx ON test USING btree ((lower(d) || up...");
 }
+
+#[test]
+fn char_truncate_works() {
+    let query = "WITH \"原チコ氏にはす腹腹腹腹腹腹腹腹腹腹腹\" AS (SELECT) SELECT w";
+    let result = parse(query).unwrap();
+    let output = "WITH \"原チコ氏にはす腹腹腹腹腹...";
+    assert_eq!(result.truncate(21).unwrap(), output);
+}
+
+#[test]
+#[should_panic(
+    expected = "byte index 22 is not a char boundary; it is inside 'は' (bytes 21..24) of `WITH \"原チコ氏にはす腹腹腹腹腹腹腹腹腹腹腹\" AS (SELECT) SELECT w`"
+)]
+fn byte_truncate_fails() {
+    let query = "WITH \"原チコ氏にはす腹腹腹腹腹腹腹腹腹腹腹\" AS (SELECT) SELECT w".to_string();
+    format!("{}", &query[0..=21]);
+}
