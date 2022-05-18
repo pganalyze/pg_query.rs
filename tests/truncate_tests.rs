@@ -113,13 +113,13 @@ fn it_handles_CREATE_INDEX() {
 fn char_truncate_works() {
     let query = "WITH \"原チコ氏にはす腹腹腹腹腹腹腹腹腹腹腹\" AS (SELECT) SELECT w";
     let result = parse(query).unwrap();
-    let output = "WITH \"原チコ氏にはす腹腹腹腹...";
-    assert_eq!(result.truncate(20).unwrap(), output);
+    let output = "WITH \"原チコ氏にはす腹腹腹腹腹...";
+    assert_eq!(result.truncate(21).unwrap(), output);
 }
 
 #[test]
-#[should_panic(expected = "assertion failed: self.is_char_boundary(new_len)")]
+#[should_panic(expected = "byte index 22 is not a char boundary; it is inside 'は' (bytes 21..24) of `WITH \"原チコ氏にはす腹腹腹腹腹腹腹腹腹腹腹\" AS (SELECT) SELECT w`")]
 fn byte_truncate_fails() {
-    let mut query = "WITH \"原チコ氏にはす腹腹腹腹腹腹腹腹腹腹腹\" AS (SELECT) SELECT w".to_string();
-    query.truncate(20);
+    let query = "WITH \"原チコ氏にはす腹腹腹腹腹腹腹腹腹腹腹\" AS (SELECT) SELECT w".to_string();
+    format!("{}", &query[0..=21]);
 }
