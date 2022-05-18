@@ -108,3 +108,18 @@ fn it_handles_CREATE_INDEX() {
     let result = parse(query).unwrap();
     assert_eq!(result.truncate(60).unwrap(), "CREATE INDEX testidx ON test USING btree ((lower(d) || up...");
 }
+
+#[test]
+fn char_truncate_works() {
+    let query = "WITH \"原チコ氏にはす腹腹腹腹腹腹腹腹腹腹腹\" AS (SELECT) SELECT w";
+    let result = parse(query).unwrap();
+    let output = "WITH \"原チコ氏にはす腹腹腹腹...";
+    assert_eq!(result.truncate(20).unwrap(), output);
+}
+
+#[test]
+#[should_panic(expected = "assertion failed: self.is_char_boundary(new_len)")]
+fn byte_truncate_fails() {
+    let mut query = "WITH \"原チコ氏にはす腹腹腹腹腹腹腹腹腹腹腹\" AS (SELECT) SELECT w".to_string();
+    query.truncate(20);
+}

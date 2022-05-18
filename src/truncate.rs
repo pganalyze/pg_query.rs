@@ -265,7 +265,15 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
     }
 
     // We couldn't do a proper smart truncation, so we need a hard cut-off
-    return Ok(format!("{}...", &output[0..=max_length - 4]));
+    return Ok(format!("{}...", truncate_str(&output, max_length - 3)));
+}
+
+// Truncates at character boundaries to prevent panics.
+fn truncate_str(string: &str, max_chars: usize) -> &str {
+    match string.char_indices().nth(max_chars) {
+        None => string,
+        Some((idx, _)) => &string[..idx],
+    }
 }
 
 fn select_target_list_len(nodes: Vec<Node>) -> Result<i32> {
