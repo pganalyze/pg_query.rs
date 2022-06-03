@@ -97,10 +97,10 @@ pub fn deparse(protobuf: &protobuf::ParseResult) -> Result<String> {
 /// ```
 pub fn normalize(statement: &str) -> Result<String> {
     let input = CString::new(statement).unwrap();
-    let result = unsafe { pg_query_normalize(input.as_ptr() as *const c_char) };
+    let result = unsafe { pg_query_normalize(input.as_ptr()) };
     let normalized_query = if !result.error.is_null() {
         let message = unsafe { CStr::from_ptr((*result.error).message) }.to_string_lossy().to_string();
-        return Err(Error::Parse(message));
+        Err(Error::Parse(message))
     } else {
         let n = unsafe { CStr::from_ptr(result.normalized_query) };
         Ok(n.to_string_lossy().to_string())
