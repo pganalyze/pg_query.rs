@@ -10,12 +10,15 @@ name: Continuous integration
 
 jobs:
   ci:
+    env:
+      RUSTFLAGS: ${{ matrix.rust == 'nightly' && '-Z sanitizer=leak' || '' }}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         rust:
           - stable
-          - beta
+          - nightly
 
     steps:
       - uses: actions/checkout@v2
