@@ -5,7 +5,7 @@
 * Adds ParseResult struct with convenience functions to get table and function references
 * Adds ability to deparse a mutated query AST back into a string
 * Adds context-aware query truncation
-* Adds Ruby test suite to ensure feature compatibility
+* Adds Ruby test suite to ensure feature parity
 * Adds ability to split multi-query strings ([#6](https://github.com/pganalyze/pg_query.rs/pull/6))
 * Fixes memory leaks in fingerprint and normalize ([#8](https://github.com/pganalyze/pg_query.rs/pull/8))
 
