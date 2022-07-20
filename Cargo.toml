@@ -19,14 +19,12 @@ serde_json = "1.0.82"
 thiserror = "1.0.31"
 
 [build-dependencies]
-bindgen = "*"
-clippy = { version = "*", optional = true }
-prost-build = "*"
-serde = { version = "*", features = ["derive"] }
-serde_json = "*"
-fs_extra = "*"
+bindgen = "0.60.1"
+clippy = { version = "0.0.302", optional = true }
+prost-build = "0.10.4"
+fs_extra = "1.2.0"
 
 [dev-dependencies]
-easy-parallel = "*"
-pretty_assertions = "*"
-regex = "*"
+easy-parallel = "3.2.0"
+pretty_assertions = "1.2.1"
+regex = "1.6.0"
