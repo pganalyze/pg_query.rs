@@ -1606,6 +1606,23 @@ fn it_finds_tables_inside_CASE_statements() {
 }
 
 #[test]
+fn it_finds_tables_inside_casts() {
+    let sql = "
+        SELECT 1
+        FROM   foo
+        WHERE  x = any(cast(array(SELECT a FROM bar) as bigint[]))
+            OR x = any(array(SELECT a FROM baz)::bigint[])
+    ";
+    let result = parse(sql).unwrap();
+    assert_eq!(result.warnings.len(), 0);
+    let tables: Vec<String> = sorted(result.tables()).collect();
+    assert_eq!(tables, ["bar", "baz", "foo"]);
+    assert_eq!(result.functions().len(), 0);
+    assert_eq!(result.call_functions().len(), 0);
+    assert_eq!(result.statement_types(), ["SelectStmt"]);
+}
+
+#[test]
 fn it_finds_functions_in_FROM_clause() {
     let sql = "SELECT * FROM my_custom_func()";
     let result = parse(sql).unwrap();

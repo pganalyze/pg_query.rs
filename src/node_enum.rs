@@ -378,6 +378,13 @@ impl NodeEnum {
                         }
                     }
                 }
+                NodeRef::TypeCast(n) => {
+                    if let Some(n) = &n.arg {
+                        if let Some(n) = n.node.as_ref() {
+                            iter.push((n.to_ref(), depth, context));
+                        }
+                    }
+                }
                 //
                 // from-clause items
                 //
