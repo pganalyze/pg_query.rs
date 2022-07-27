@@ -19,13 +19,13 @@
 //!
 //! ```toml
 //! [dependencies]
-//! pg_query = "0.1"
+//! pg_query = "0.7"
 //! ```
 //!
 //! # Example: Parsing a query
 //!
 //! ```rust
-//! use pg_query::{Node, NodeEnum, NodeRef};
+//! use pg_query::NodeRef;
 //!
 //! let result = pg_query::parse("SELECT * FROM contacts");
 //! assert!(result.is_ok());
