@@ -32,12 +32,13 @@ pg_query = "0.7"
 ### Parsing a query
 
 ```rust
-use pg_query::ast::Node;
+use pg_query::NodeRef;
 
 let result = pg_query::parse("SELECT * FROM contacts");
 assert!(result.is_ok());
 let result = result.unwrap();
-assert!(matches!(*&result[0], Node::SelectStmt(_)));
+assert_eq!(result.tables(), vec!["contacts"]);
+assert!(matches!(result.protobuf.nodes()[0].0, NodeRef::SelectStmt(_)));
 ```
 
 ### Normalizing a query
@@ -59,7 +60,7 @@ assert_eq!(result.hex, "643d2a3c294ab8a7");
 ```rust
 let query = "INSERT INTO \"x\" (a, b, c, d, e, f) VALUES (?)";
 let result = pg_query::parse(query).unwrap();
-assert_eq!(result.truncate(32).unwrap(), "INSERT INTO x (...) VALUES (?)");
+assert_eq!(result.truncate(32).unwrap(), "INSERT INTO x (...) VALUES (...)");
 ```
 
 ## Credits
