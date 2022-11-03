@@ -162,6 +162,7 @@ fn it_parses_ALTER_TABLE() {
     ),
     behavior: DropRestrict,
     missing_ok: false,
+    recurse: false,
 }"#
     );
 }
