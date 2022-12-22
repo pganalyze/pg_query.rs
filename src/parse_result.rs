@@ -78,7 +78,7 @@ impl ParseResult {
                     v.alias.as_ref().and_then(|alias| aliases.insert(alias.aliasname.to_owned(), table));
                 }
                 NodeRef::FuncCall(c) => {
-                    let funcname = join(c.funcname.iter().filter_map(|n| n.node.as_ref().and_then(|n| Some(&cast!(n, NodeEnum::String).str))), ".");
+                    let funcname = join(c.funcname.iter().filter_map(|n| n.node.as_ref().and_then(|n| Some(&cast!(n, NodeEnum::String).sval))), ".");
                     functions.insert((funcname, Context::Call));
                 }
                 NodeRef::DropStmt(s) => {
@@ -87,7 +87,7 @@ impl ParseResult {
                             for o in &s.objects {
                                 if let Some(NodeEnum::List(list)) = &o.node {
                                     let table = join(
-                                        list.items.iter().filter_map(|i| i.node.as_ref().and_then(|n| Some(&cast!(n, NodeEnum::String).str))),
+                                        list.items.iter().filter_map(|i| i.node.as_ref().and_then(|n| Some(&cast!(n, NodeEnum::String).sval))),
                                         ".",
                                     );
                                     tables.insert((table, Context::DDL));
@@ -101,7 +101,7 @@ impl ParseResult {
                                     let table = join(
                                         list.items[0..list.items.len() - 1]
                                             .iter()
-                                            .filter_map(|i| i.node.as_ref().and_then(|n| Some(&cast!(n, NodeEnum::String).str))),
+                                            .filter_map(|i| i.node.as_ref().and_then(|n| Some(&cast!(n, NodeEnum::String).sval))),
                                         ".",
                                     );
                                     tables.insert((table, Context::DDL));
@@ -112,7 +112,7 @@ impl ParseResult {
                             // Only one function can be dropped in a statement
                             if let Some(NodeEnum::ObjectWithArgs(object)) = &s.objects[0].node {
                                 if let Some(NodeEnum::String(string)) = &object.objname[0].node {
-                                    functions.insert((string.str.to_string(), Context::DDL));
+                                    functions.insert((string.sval.to_string(), Context::DDL));
                                 }
                             }
                         }
@@ -121,7 +121,7 @@ impl ParseResult {
                 }
                 NodeRef::CreateFunctionStmt(s) => {
                     if let Some(NodeEnum::String(string)) = &s.funcname[0].node {
-                        functions.insert((string.str.to_string(), Context::DDL));
+                        functions.insert((string.sval.to_string(), Context::DDL));
                     }
                 }
                 NodeRef::RenameStmt(s) => match protobuf::ObjectType::from_i32(s.rename_type) {
@@ -129,7 +129,7 @@ impl ParseResult {
                         if let Some(object) = &s.object {
                             if let Some(NodeEnum::ObjectWithArgs(object)) = &object.node {
                                 if let Some(NodeEnum::String(string)) = &object.objname[0].node {
-                                    functions.insert((string.str.to_string(), Context::DDL));
+                                    functions.insert((string.sval.to_string(), Context::DDL));
                                     functions.insert((s.newname.to_string(), Context::DDL));
                                 }
                             }
@@ -233,7 +233,7 @@ impl ParseResult {
     /// # Example
     ///
     /// ```rust
-    /// let query = "INSERT INTO \"x\" (a, b, c, d, e, f) VALUES (?)";
+    /// let query = "INSERT INTO \"x\" (a, b, c, d, e, f) VALUES ($1)";
     /// let result = pg_query::parse(query).unwrap();
     /// assert_eq!(result.truncate(32).unwrap(), "INSERT INTO x (...) VALUES (...)")
     /// ```

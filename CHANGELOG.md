@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.0     2022-12-22
+
+* Upgrade to PostgreSQL 15.1 via libpg_query 4.0.0
+
 ## 0.7.0     2022-07-19
 
 * Adds ParseResult struct with convenience functions to get table and function references

@@ -17,11 +17,11 @@ fn it_will_error_on_invalid_input() {
 
 #[test]
 fn it_works_for_multi_statement_queries() {
-    let q1 = "SET x=?; SELECT A";
-    let q2 = "SET x=?; SELECT a";
+    let q1 = "SET x=$1; SELECT A";
+    let q2 = "SET x=$1; SELECT a";
     assert_eq!(fingerprint(q1).unwrap().hex, fingerprint(q2).unwrap().hex);
 
-    let q1 = "SET x=?; SELECT A";
+    let q1 = "SET x=$1; SELECT A";
     let q2 = "SELECT a";
     assert_ne!(fingerprint(q1).unwrap().hex, fingerprint(q2).unwrap().hex);
 }
@@ -76,11 +76,11 @@ fn it_ignores_SELECT_target_list_ordering() {
     let q1 = "SELECT a, b FROM x";
     let q2 = "SELECT b, a FROM x";
     assert_eq!(fingerprint(q1).unwrap().hex, fingerprint(q2).unwrap().hex);
-    let q1 = "SELECT ?, b FROM x";
-    let q2 = "SELECT b, ? FROM x";
+    let q1 = "SELECT $1, b FROM x";
+    let q2 = "SELECT b, $1 FROM x";
     assert_eq!(fingerprint(q1).unwrap().hex, fingerprint(q2).unwrap().hex);
-    let q1 = "SELECT ?, ?, b FROM x";
-    let q2 = "SELECT ?, b, ? FROM x";
+    let q1 = "SELECT $1, $2, b FROM x";
+    let q2 = "SELECT $1, b, $2 FROM x";
     assert_eq!(fingerprint(q1).unwrap().hex, fingerprint(q2).unwrap().hex);
 
     // Testing uniqueness
@@ -94,27 +94,27 @@ fn it_ignores_SELECT_target_list_ordering() {
 
 #[test]
 fn it_ignores_INSERT_col_ordering() {
-    let q1 = "INSERT INTO test (a, b) VALUES (?, ?)";
-    let q2 = "INSERT INTO test (b, a) VALUES (?, ?)";
+    let q1 = "INSERT INTO test (a, b) VALUES ($1, $2)";
+    let q2 = "INSERT INTO test (b, a) VALUES ($1, $2)";
     assert_eq!(fingerprint(q1).unwrap().hex, fingerprint(q2).unwrap().hex);
 
     // Testing uniqueness
-    let q1 = "INSERT INTO test (a, c) VALUES (?, ?)";
-    let q2 = "INSERT INTO test (b, a) VALUES (?, ?)";
+    let q1 = "INSERT INTO test (a, c) VALUES ($1, $2)";
+    let q2 = "INSERT INTO test (b, a) VALUES ($1, $2)";
     assert_ne!(fingerprint(q1).unwrap().hex, fingerprint(q2).unwrap().hex);
-    let q1 = "INSERT INTO test (b) VALUES (?, ?)";
-    let q2 = "INSERT INTO test (b, a) VALUES (?, ?)";
+    let q1 = "INSERT INTO test (b) VALUES ($1, $2)";
+    let q2 = "INSERT INTO test (b, a) VALUES ($1, $2)";
     assert_ne!(fingerprint(q1).unwrap().hex, fingerprint(q2).unwrap().hex);
 }
 
 #[test]
 fn it_ignores_IN_list_size() {
-    let q1 = "SELECT * FROM x WHERE y IN (?, ?, ?)";
-    let q2 = "SELECT * FROM x WHERE y IN (?)";
+    let q1 = "SELECT * FROM x WHERE y IN ($1, $2, $3)";
+    let q2 = "SELECT * FROM x WHERE y IN ($1)";
     assert_eq!(fingerprint(q1).unwrap().hex, fingerprint(q2).unwrap().hex);
 
-    let q1 = "SELECT * FROM x WHERE y IN ( ?::uuid, ?::uuid, ?::uuid )";
-    let q2 = "SELECT * FROM x WHERE y IN ( ?::uuid )";
+    let q1 = "SELECT * FROM x WHERE y IN ( $1::uuid, $2::uuid, $3::uuid )";
+    let q2 = "SELECT * FROM x WHERE y IN ( $1::uuid )";
     assert_eq!(fingerprint(q1).unwrap().hex, fingerprint(q2).unwrap().hex);
 }
 
@@ -126,9 +126,6 @@ fn it_works() {
     let result = fingerprint("SELECT 2").unwrap();
     assert_eq!(result.hex, "50fde20626009aba");
 
-    let result = fingerprint("SELECT ?").unwrap();
-    assert_eq!(result.hex, "50fde20626009aba");
-
     let result = fingerprint("SELECT $1").unwrap();
     assert_eq!(result.hex, "50fde20626009aba");
 
@@ -136,38 +133,39 @@ fn it_works() {
     assert_eq!(result.hex, "3efa3b10d558d06d");
 
     let result = fingerprint("SELECT COUNT(DISTINCT id), * FROM targets WHERE something IS NOT NULL AND elsewhere::interval < now()").unwrap();
-    assert_eq!(result.hex, "4380dd02d56bbe1a");
+    assert_eq!(result.hex, "26b6553101185d22");
 
-    let result = fingerprint("INSERT INTO test (a, b) VALUES (?, ?)").unwrap();
+    let result = fingerprint("INSERT INTO test (a, b) VALUES ($1, $2)").unwrap();
     assert_eq!(result.hex, "51e63b8083b48bdd");
 
-    let result = fingerprint("INSERT INTO test (b, a) VALUES (?, ?)").unwrap();
+    let result = fingerprint("INSERT INTO test (b, a) VALUES ($1, $2)").unwrap();
     assert_eq!(result.hex, "51e63b8083b48bdd");
 
-    let result =
-        fingerprint("INSERT INTO test (a, b) VALUES (ARRAY[?, ?, ?, ?], ?::timestamptz), (ARRAY[?, ?, ?, ?], ?::timestamptz), (?, ?::timestamptz)")
-            .unwrap();
+    let result = fingerprint(
+        "INSERT INTO test (a, b) VALUES (ARRAY[$1, $2, $3, $4], $5::timestamptz), (ARRAY[$6, $7, $8, $9], $10::timestamptz), ($11, $12::timestamptz)",
+    )
+    .unwrap();
     assert_eq!(result.hex, "4dfdd5260cac5acf");
 
     let result = fingerprint("SELECT b AS x, a AS y FROM z").unwrap();
     assert_eq!(result.hex, "1a8bf5d7614de3a5");
 
-    let result = fingerprint("SELECT * FROM x WHERE y = ?").unwrap();
+    let result = fingerprint("SELECT * FROM x WHERE y = $1").unwrap();
     assert_eq!(result.hex, "4ff39426bd074231");
 
     let result = fingerprint("SELECT * FROM x WHERE y = ANY ($1)").unwrap();
     assert_eq!(result.hex, "4ff39426bd074231");
 
-    let result = fingerprint("SELECT * FROM x WHERE y IN (?)").unwrap();
+    let result = fingerprint("SELECT * FROM x WHERE y IN ($1)").unwrap();
     assert_eq!(result.hex, "4ff39426bd074231");
 
-    let result = fingerprint("SELECT * FROM x WHERE y IN (?, ?, ?)").unwrap();
+    let result = fingerprint("SELECT * FROM x WHERE y IN ($1, $2, $3)").unwrap();
     assert_eq!(result.hex, "4ff39426bd074231");
 
-    let result = fingerprint("SELECT * FROM x WHERE y IN ( ?::uuid )").unwrap();
+    let result = fingerprint("SELECT * FROM x WHERE y IN ( $1::uuid )").unwrap();
     assert_eq!(result.hex, "4ff39426bd074231");
 
-    let result = fingerprint("SELECT * FROM x WHERE y IN ( ?::uuid, ?::uuid, ?::uuid )").unwrap();
+    let result = fingerprint("SELECT * FROM x WHERE y IN ( $1::uuid, $2::uuid, $3::uuid )").unwrap();
     assert_eq!(result.hex, "4ff39426bd074231");
 
     let result = fingerprint("PREPARE a123 AS SELECT a").unwrap();
@@ -185,7 +183,7 @@ fn it_works() {
     let result = fingerprint("EXPLAIN ANALYZE SELECT a").unwrap();
     assert_eq!(result.hex, "82845c1b5c6102e5");
 
-    let result = fingerprint("WITH a AS (SELECT * FROM x WHERE x.y = ? AND x.z = 1) SELECT * FROM a").unwrap();
+    let result = fingerprint("WITH a AS (SELECT * FROM x WHERE x.y = $1 AND x.z = 1) SELECT * FROM a").unwrap();
     assert_eq!(result.hex, "6831e38bbb3dd18c");
 
     let result =
@@ -195,7 +193,7 @@ fn it_works() {
 
     let result =
         fingerprint("CREATE VIEW view_a (a, b) AS WITH RECURSIVE view_a (a, b) AS (SELECT * FROM a(1)) SELECT \"a\", \"b\" FROM \"view_a\"").unwrap();
-    assert_eq!(result.hex, "6236405577a6cea6");
+    assert_eq!(result.hex, "c6ef6b9f498feda4");
 
     let result = fingerprint("VACUUM FULL my_table").unwrap();
     assert_eq!(result.hex, "fdf2f4127644f4d8");
@@ -221,7 +219,7 @@ fn it_works() {
     let result = fingerprint("INSERT INTO films (code, title, did) VALUES ('UA502', 'Bananas', 105), ('T_601', 'Yojimbo', DEFAULT)").unwrap();
     assert_eq!(result.hex, "459fdc70778b841e");
 
-    let result = fingerprint("INSERT INTO films (code, title, did) VALUES (?, ?, ?)").unwrap();
+    let result = fingerprint("INSERT INTO films (code, title, did) VALUES ($1, $2, $3)").unwrap();
     assert_eq!(result.hex, "459fdc70778b841e");
 
     let result = fingerprint("SELECT * FROM a").unwrap();
@@ -230,13 +228,13 @@ fn it_works() {
     let result = fingerprint("SELECT * FROM a AS b").unwrap();
     assert_eq!(result.hex, "fcf44da7b597ef43");
 
-    let result = fingerprint("UPDATE users SET one_thing = $1, second_thing = $2 WHERE users.id = ?").unwrap();
+    let result = fingerprint("UPDATE users SET one_thing = $1, second_thing = $2 WHERE users.id = $1").unwrap();
     assert_eq!(result.hex, "a0ea386c1cfd1e69");
 
-    let result = fingerprint("UPDATE users SET something_else = $1 WHERE users.id = ?").unwrap();
+    let result = fingerprint("UPDATE users SET something_else = $1 WHERE users.id = $1").unwrap();
     assert_eq!(result.hex, "3172bc3e0d631d55");
 
-    let result = fingerprint("UPDATE users SET something_else = (SELECT a FROM x WHERE uid = users.id LIMIT 1) WHERE users.id = ?").unwrap();
+    let result = fingerprint("UPDATE users SET something_else = (SELECT a FROM x WHERE uid = users.id LIMIT 1) WHERE users.id = $1").unwrap();
     assert_eq!(result.hex, "f1127a8b91fbecbf");
 
     let result = fingerprint("SAVEPOINT some_id").unwrap();
@@ -252,7 +250,7 @@ fn it_works() {
     assert_eq!(result.hex, "4ca25828c835d55a");
 
     let result = fingerprint("DECLARE cursor_123 CURSOR FOR SELECT * FROM test WHERE id = 123").unwrap();
-    assert_eq!(result.hex, "0119adaeb91afad0");
+    assert_eq!(result.hex, "d2bec62d2a7ec7cb");
 
     let result = fingerprint("FETCH 1000 FROM cursor_123").unwrap();
     assert_eq!(result.hex, "37f4d2f6a957ae48");
@@ -270,13 +268,13 @@ fn it_works() {
     assert_eq!(result.hex, "fd5c248c0e642ce4");
 
     let result = fingerprint("UPDATE x SET z = now()").unwrap();
-    assert_eq!(result.hex, "78fe872f5ec28674");
+    assert_eq!(result.hex, "a222eaabaa1e7cb1");
 
     let result = fingerprint("CREATE TEMPORARY TABLE my_temp_table (test_id integer NOT NULL) ON COMMIT DROP").unwrap();
     assert_eq!(result.hex, "1407ed5c5bb00967");
 
     let result = fingerprint("CREATE TEMPORARY TABLE my_temp_table AS SELECT 1").unwrap();
-    assert_eq!(result.hex, "dd5fac57c3c4524c");
+    assert_eq!(result.hex, "695ebe73a3abc45c");
 
     let result = fingerprint("SELECT INTERVAL (0) $2").unwrap();
     assert_eq!(result.hex, "50fde20626009aba");

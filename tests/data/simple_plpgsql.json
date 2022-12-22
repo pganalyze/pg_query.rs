@@ -8,7 +8,7 @@
               "PLpgSQL_stmt_if": {
                 "cond": {
                   "PLpgSQL_expr": {
-                    "query": "SELECT v_version IS NULL"
+                    "query": "v_version IS NULL"
                   }
                 },
                 "lineno": 1,
@@ -17,7 +17,7 @@
                     "PLpgSQL_stmt_return": {
                       "expr": {
                         "PLpgSQL_expr": {
-                          "query": "SELECT v_name"
+                          "query": "v_name"
                         }
                       },
                       "lineno": 1
@@ -30,7 +30,7 @@
               "PLpgSQL_stmt_return": {
                 "expr": {
                   "PLpgSQL_expr": {
-                    "query": "SELECT v_name || '/' || v_version"
+                    "query": "v_name || '/' || v_version"
                   }
                 },
                 "lineno": 1

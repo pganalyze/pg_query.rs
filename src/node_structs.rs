@@ -36,15 +36,6 @@ impl protobuf::TableFunc {
     }
 }
 
-impl protobuf::Expr {
-    pub fn to_ref(&self) -> NodeRef {
-        NodeRef::Expr(self)
-    }
-    pub fn to_mut(&mut self) -> NodeMut {
-        NodeMut::Expr(self)
-    }
-}
-
 impl protobuf::Var {
     pub fn to_ref(&self) -> NodeRef {
         NodeRef::Var(self)
@@ -2022,15 +2013,6 @@ impl protobuf::BitString {
     }
     pub fn to_mut(&mut self) -> NodeMut {
         NodeMut::BitString(self)
-    }
-}
-
-impl protobuf::Null {
-    pub fn to_ref(&self) -> NodeRef {
-        NodeRef::Null(self)
-    }
-    pub fn to_mut(&mut self) -> NodeMut {
-        NodeMut::Null(self)
     }
 }
 
