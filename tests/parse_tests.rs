@@ -4,7 +4,11 @@
 #[cfg(test)]
 use itertools::sorted;
 
-use pg_query::{parse, protobuf, Error, NodeEnum, NodeRef, TriggerType};
+use pg_query::{
+    parse,
+    protobuf::{self, a_const::Val},
+    Error, NodeEnum, NodeRef, TriggerType,
+};
 
 #[macro_use]
 mod support;
@@ -80,8 +84,8 @@ fn it_parses_floats_with_leading_dot() {
     let select = cast!(result.protobuf.nodes()[0].0, NodeRef::SelectStmt);
     let target = cast!(select.target_list[0].node.as_ref().unwrap(), NodeEnum::ResTarget);
     let a_const = cast!(target.val.as_ref().unwrap().node.as_ref().unwrap(), NodeEnum::AConst);
-    let float = cast!(a_const.val.as_ref().unwrap().node.as_ref().unwrap(), NodeEnum::Float);
-    assert_eq!(float.str, ".1");
+    let float = cast!(a_const.val.as_ref().unwrap(), Val::Fval);
+    assert_eq!(float.fval, ".1");
     assert_eq!(a_const.location, 7);
 }
 
@@ -91,8 +95,8 @@ fn it_parses_bit_strings_hex_notation() {
     let select = cast!(result.protobuf.nodes()[0].0, NodeRef::SelectStmt);
     let target = cast!(select.target_list[0].node.as_ref().unwrap(), NodeEnum::ResTarget);
     let a_const = cast!(target.val.as_ref().unwrap().node.as_ref().unwrap(), NodeEnum::AConst);
-    let bit_string = cast!(a_const.val.as_ref().unwrap().node.as_ref().unwrap(), NodeEnum::BitString);
-    assert_eq!(bit_string.str, "xEFFF");
+    let bit_string = cast!(a_const.val.as_ref().unwrap(), Val::Bsval);
+    assert_eq!(bit_string.bsval, "xEFFF");
     assert_eq!(a_const.location, 7);
 }
 
@@ -126,12 +130,13 @@ fn it_parses_ALTER_TABLE() {
                         raw_expr: None,
                         cooked_expr: "",
                         generated_when: "",
+                        nulls_not_distinct: false,
                         keys: [
                             Node {
                                 node: Some(
                                     String(
                                         String {
-                                            str: "gid",
+                                            sval: "gid",
                                         },
                                     ),
                                 ),
@@ -151,6 +156,7 @@ fn it_parses_ALTER_TABLE() {
                         fk_matchtype: "",
                         fk_upd_action: "",
                         fk_del_action: "",
+                        fk_del_set_cols: [],
                         old_conpfeqop: [],
                         old_pktable_oid: 0,
                         skip_validation: false,
@@ -176,7 +182,7 @@ fn it_parses_SET() {
     assert_eq!(result.statement_types(), ["VariableSetStmt"]);
     let set = cast!(result.protobuf.nodes()[0].0, NodeRef::VariableSetStmt);
     let a_const = cast!(set.args[0].node.as_ref().unwrap(), NodeEnum::AConst);
-    let val = cast!(a_const.val.as_ref().unwrap().node.as_ref().unwrap(), NodeEnum::Integer);
+    let val = cast!(a_const.val.as_ref().unwrap(), Val::Ival);
     assert_eq!(val.ival, 1);
     assert_eq!(a_const.location, 22);
 }
@@ -218,7 +224,7 @@ fn it_parses_COPY() {
             node: Some(
                 String(
                     String {
-                        str: "id",
+                        sval: "id",
                     },
                 ),
             ),
@@ -298,7 +304,7 @@ fn it_parses_SELECT_INTO() {
     let select = cast!(stmt.query.as_ref().unwrap().node.as_ref().unwrap(), NodeEnum::SelectStmt);
     let target = cast!(select.target_list[0].node.as_ref().unwrap(), NodeEnum::ResTarget);
     let a_const = cast!(target.val.as_ref().unwrap().node.as_ref().unwrap(), NodeEnum::AConst);
-    let val = cast!(a_const.val.as_ref().unwrap().node.as_ref().unwrap(), NodeEnum::Integer);
+    let val = cast!(a_const.val.as_ref().unwrap(), Val::Ival);
     assert_eq!(val.ival, 1);
     let into = stmt.into.as_ref().unwrap();
     assert_debug_eq!(
@@ -356,7 +362,7 @@ fn it_parses_CREATE_TABLE() {
                     node: Some(
                         String(
                             String {
-                                str: "int4",
+                                sval: "int4",
                             },
                         ),
                     ),
@@ -371,6 +377,7 @@ fn it_parses_CREATE_TABLE() {
             location: 21,
         },
     ),
+    compression: "",
     inhcount: 0,
     is_local: true,
     is_not_null: false,
@@ -538,6 +545,7 @@ fn it_parses_CREATE_VIEW() {
                         ],
                         where_clause: None,
                         group_clause: [],
+                        group_distinct: false,
                         having_clause: None,
                         window_clause: [],
                         values_lists: [],
@@ -596,7 +604,7 @@ fn it_parses_CREATE_TRIGGER() {
     assert_eq!(result.statement_types(), ["CreateTrigStmt"]);
     let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::CreateTrigStmt);
     let func = cast!(stmt.funcname[0].node.as_ref().unwrap(), NodeEnum::String);
-    assert_eq!(func.str, "check_account_update");
+    assert_eq!(func.sval, "check_account_update");
     assert_eq!(TriggerType::from_i32(stmt.timing), Some(TriggerType::Before));
     assert_eq!(TriggerType::from_i32(stmt.events), Some(TriggerType::Update));
 }
@@ -616,7 +624,7 @@ fn it_parses_DROP_SCHEMA() {
             node: Some(
                 String(
                     String {
-                        str: "myschema",
+                        sval: "myschema",
                     },
                 ),
             ),
@@ -650,7 +658,7 @@ fn it_parses_DROP_VIEW() {
                                 node: Some(
                                     String(
                                         String {
-                                            str: "myview",
+                                            sval: "myview",
                                         },
                                     ),
                                 ),
@@ -669,7 +677,7 @@ fn it_parses_DROP_VIEW() {
                                 node: Some(
                                     String(
                                         String {
-                                            str: "myview2",
+                                            sval: "myview2",
                                         },
                                     ),
                                 ),
@@ -708,7 +716,7 @@ fn it_parses_DROP_INDEX() {
                                 node: Some(
                                     String(
                                         String {
-                                            str: "myindex",
+                                            sval: "myindex",
                                         },
                                     ),
                                 ),
@@ -748,7 +756,7 @@ fn it_parses_DROP_RULE() {
                                 node: Some(
                                     String(
                                         String {
-                                            str: "mytable",
+                                            sval: "mytable",
                                         },
                                     ),
                                 ),
@@ -757,7 +765,7 @@ fn it_parses_DROP_RULE() {
                                 node: Some(
                                     String(
                                         String {
-                                            str: "myrule",
+                                            sval: "myrule",
                                         },
                                     ),
                                 ),
@@ -797,7 +805,7 @@ fn it_parses_DROP_TRIGGER() {
                                 node: Some(
                                     String(
                                         String {
-                                            str: "mytable",
+                                            sval: "mytable",
                                         },
                                     ),
                                 ),
@@ -806,7 +814,7 @@ fn it_parses_DROP_TRIGGER() {
                                 node: Some(
                                     String(
                                         String {
-                                            str: "mytrigger",
+                                            sval: "mytrigger",
                                         },
                                     ),
                                 ),
@@ -892,6 +900,7 @@ fn it_parses_GRANT() {
         },
     ],
     grant_option: false,
+    grantor: None,
     behavior: DropRestrict,
 }"#
     );
@@ -993,7 +1002,7 @@ fn it_parses_TRUNCATE() {
 
 #[test]
 fn it_parses_WITH() {
-    let result = parse("WITH a AS (SELECT * FROM x WHERE x.y = ? AND x.z = 1) SELECT * FROM a").unwrap();
+    let result = parse("WITH a AS (SELECT * FROM x WHERE x.y = $1 AND x.z = 1) SELECT * FROM a").unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["x"]);
     assert_eq!(result.cte_names, ["a"]);
@@ -1038,7 +1047,7 @@ $BODY$
             node: Some(
                 String(
                     String {
-                        str: "thing",
+                        sval: "thing",
                     },
                 ),
             ),
@@ -1057,7 +1066,7 @@ $BODY$
                                         node: Some(
                                             String(
                                                 String {
-                                                    str: "text",
+                                                    sval: "text",
                                                 },
                                             ),
                                         ),
@@ -1072,7 +1081,7 @@ $BODY$
                                 location: 49,
                             },
                         ),
-                        mode: FuncParamIn,
+                        mode: FuncParamDefault,
                         defexpr: None,
                     },
                 ),
@@ -1086,7 +1095,7 @@ $BODY$
                     node: Some(
                         String(
                             String {
-                                str: "pg_catalog",
+                                sval: "pg_catalog",
                             },
                         ),
                     ),
@@ -1095,7 +1104,7 @@ $BODY$
                     node: Some(
                         String(
                             String {
-                                str: "int8",
+                                sval: "int8",
                             },
                         ),
                     ),
@@ -1127,7 +1136,7 @@ $BODY$
                                                     node: Some(
                                                         String(
                                                             String {
-                                                                str: "\nDECLARE\n        local_thing_id BIGINT := 0;\nBEGIN\n        SELECT thing_id INTO local_thing_id FROM thing_map\n        WHERE\n                thing_map_field = parameter_thing\n        ORDER BY 1 LIMIT 1;\n\n        IF NOT FOUND THEN\n                local_thing_id = 0;\n        END IF;\n        RETURN local_thing_id;\nEND;\n",
+                                                                sval: "\nDECLARE\n        local_thing_id BIGINT := 0;\nBEGIN\n        SELECT thing_id INTO local_thing_id FROM thing_map\n        WHERE\n                thing_map_field = parameter_thing\n        ORDER BY 1 LIMIT 1;\n\n        IF NOT FOUND THEN\n                local_thing_id = 0;\n        END IF;\n        RETURN local_thing_id;\nEND;\n",
                                                             },
                                                         ),
                                                     ),
@@ -1155,7 +1164,7 @@ $BODY$
                                 node: Some(
                                     String(
                                         String {
-                                            str: "plpgsql",
+                                            sval: "plpgsql",
                                         },
                                     ),
                                 ),
@@ -1178,7 +1187,7 @@ $BODY$
                                 node: Some(
                                     String(
                                         String {
-                                            str: "stable",
+                                            sval: "stable",
                                         },
                                     ),
                                 ),
@@ -1191,6 +1200,7 @@ $BODY$
             ),
         },
     ],
+    sql_body: None,
 }"#
     );
 }
@@ -1784,7 +1794,7 @@ fn it_parses_DROP_TYPE() {
                                     node: Some(
                                         String(
                                             String {
-                                                str: "repack",
+                                                sval: "repack",
                                             },
                                         ),
                                     ),
@@ -1793,7 +1803,7 @@ fn it_parses_DROP_TYPE() {
                                     node: Some(
                                         String(
                                             String {
-                                                str: "pk_something",
+                                                sval: "pk_something",
                                             },
                                         ),
                                     ),

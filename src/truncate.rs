@@ -305,7 +305,7 @@ fn dummy_column() -> Box<Node> {
     Box::new(Node {
         node: Some(NodeEnum::ColumnRef(protobuf::ColumnRef {
             location: 0,
-            fields: vec![Node { node: Some(NodeEnum::String(protobuf::String { str: "…".to_string() })) }],
+            fields: vec![Node { node: Some(NodeEnum::String(protobuf::String { sval: "…".to_string() })) }],
         })),
     })
 }
@@ -343,6 +343,7 @@ fn dummy_select(target_list: Vec<Node>, where_clause: Option<Box<Node>>, values_
             all: false,
             larg: None,
             rarg: None,
+            group_distinct: false,
         }))),
     })
 }

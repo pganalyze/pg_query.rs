@@ -26,7 +26,7 @@ fn it_omits_WHERE_clause() {
 
 #[test]
 fn it_omits_INSERT_field_list() {
-    let query = "INSERT INTO \"x\" (a, b, c, d, e, f) VALUES (?)";
+    let query = "INSERT INTO \"x\" (a, b, c, d, e, f) VALUES ($1)";
     let result = parse(query).unwrap();
     assert_eq!(result.truncate(32).unwrap(), "INSERT INTO x (...) VALUES (...)")
 }
@@ -47,7 +47,7 @@ fn it_falls_back_to_simple_truncation() {
 
 #[test]
 fn it_handles_problematic_cases() {
-    let query = "SELECT CASE WHEN $2.typtype = ? THEN $2.typtypmod ELSE $1.atttypmod END";
+    let query = "SELECT CASE WHEN $2.typtype = $1 THEN $2.typtypmod ELSE $1.atttypmod END";
     let result = parse(query).unwrap();
     assert_eq!(result.truncate(50).unwrap(), "SELECT ...")
 }
