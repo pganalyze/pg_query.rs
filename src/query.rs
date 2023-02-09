@@ -1,5 +1,5 @@
 use std::ffi::{CStr, CString};
-use std::os::raw::{c_char, c_uint};
+use std::os::raw::c_char;
 
 use prost::Message;
 
@@ -67,7 +67,7 @@ pub fn parse(statement: &str) -> Result<ParseResult> {
 /// Note that this function will panic if called on a node not defined in `deparseStmt`
 pub fn deparse(protobuf: &protobuf::ParseResult) -> Result<String> {
     let buffer = protobuf.encode_to_vec();
-    let len = buffer.len() as c_uint;
+    let len = buffer.len() as size_t;
     let input = unsafe { CStr::from_bytes_with_nul_unchecked(&buffer) };
     let data = input.as_ptr() as *mut c_char;
     let protobuf = PgQueryProtobuf { data: data, len: len };
