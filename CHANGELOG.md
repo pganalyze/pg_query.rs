@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-* Upgrade to PostgreSQL 15.1 via libpg_query 4.0.0
+* Upgrade to PostgreSQL 15.1 via libpg_query 4.2.0
 * Improve `ParseResult::tables()` to find tables in `cast` expressions
 
 ## 0.7.0     2022-07-19
