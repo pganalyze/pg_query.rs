@@ -79,7 +79,34 @@ fn it_normalizes_EXPLAIN() {
 }
 
 #[test]
-fn it_normalizes_DECLARE_CURSON() {
+fn it_normalizes_DECLARE_CURSOR() {
     let result = normalize("DECLARE cursor_b CURSOR FOR SELECT * FROM databases WHERE id = 23").unwrap();
     assert_eq!(result, "DECLARE cursor_b CURSOR FOR SELECT * FROM databases WHERE id = $1");
+}
+
+#[test]
+fn it_unwraps_and_normalizes_immediately_invoked_functions() {
+    let query = "
+        CREATE OR REPLACE FUNCTION pg_temp.testfunc(OUT response t, OUT sequelize_caught_exception text)
+        RETURNS RECORD AS $func_08a0ae3001ba4697bd3a1a677c6dab12$
+        BEGIN
+            INSERT INTO t (columns)
+            VALUES ('non-normalized-values-here')
+            RETURNING * INTO response;
+            EXCEPTION WHEN unique_violation THEN GET STACKED DIAGNOSTICS sequelize_caught_exception = PG_EXCEPTION_DETAIL;
+        END $func_08a0ae3001ba4697bd3a1a677c6dab12$ LANGUAGE plpgsql;
+
+        SELECT (testfunc.response).*, testfunc.sequelize_caught_exception FROM pg_temp.testfunc();
+
+        DROP FUNCTION IF EXISTS pg_temp.testfunc()
+    ";
+    let result = pg_query::unwrap_immediately_invoked_function(query).unwrap();
+    let normalized_result = pg_query::normalize(&result).unwrap();
+    assert_eq!(
+        normalized_result,
+        "INSERT INTO t (columns)
+            VALUES ($1)
+            RETURNING *"
+    );
+    pg_query::parse(&normalized_result).unwrap();
 }
