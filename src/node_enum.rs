@@ -775,6 +775,14 @@ impl NodeEnum {
                         }
                     });
                 }
+                NodeMut::NullTest(e) => {
+                    let e = e.as_mut().unwrap();
+                    if let Some(n) = e.arg.as_mut() {
+                        if let Some(n) = n.node.as_mut() {
+                            iter.push((n.to_mut(), depth, context));
+                        }
+                    }
+                }
                 NodeMut::ResTarget(t) => {
                     let t = t.as_mut().unwrap();
                     if let Some(n) = t.val.as_mut() {
@@ -828,6 +836,14 @@ impl NodeEnum {
                 NodeMut::SortBy(n) => {
                     let n = n.as_mut().unwrap();
                     if let Some(n) = n.node.as_mut() {
+                        if let Some(n) = n.node.as_mut() {
+                            iter.push((n.to_mut(), depth, context));
+                        }
+                    }
+                }
+                NodeMut::TypeCast(t) => {
+                    let t = t.as_mut().unwrap();
+                    if let Some(n) = t.arg.as_mut() {
                         if let Some(n) = n.node.as_mut() {
                             iter.push((n.to_mut(), depth, context));
                         }
