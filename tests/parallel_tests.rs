@@ -3,7 +3,7 @@ fn it_does_not_error_when_run_in_parallel() {
     use easy_parallel::Parallel;
 
     let mut queries = vec![];
-    for _ in 0..10000 {
+    for _ in 0..100 {
         queries.push(
             r#"
             SELECT * FROM "t0"
@@ -28,10 +28,12 @@ fn it_does_not_error_when_run_in_parallel() {
 
     Parallel::new()
         .each(queries, |query| {
-            let result = pg_query::parse(query).unwrap();
-            pg_query::fingerprint(query).unwrap();
-            result.truncate(10).unwrap();
-            pg_query::normalize(query).unwrap();
+            for _ in 0..100 {
+                let result = pg_query::parse(query).unwrap();
+                pg_query::fingerprint(query).unwrap();
+                result.truncate(10).unwrap();
+                pg_query::normalize(query).unwrap();
+            }
         })
         .run();
 }
