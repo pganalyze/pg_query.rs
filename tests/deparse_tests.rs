@@ -12,10 +12,10 @@ fn assert_deparse(input: &str, output: &str) {
 }
 
 fn oneline(query: &str) -> String {
-    let query = Regex::new(r"\s+").unwrap().replace_all(&query, " ");
+    let query = Regex::new(r"\s+").unwrap().replace_all(query, " ");
     let query = Regex::new(r"\( ").unwrap().replace_all(&query, "(");
     let query = Regex::new(r" \)").unwrap().replace_all(&query, ")");
-    query.trim().trim_end_matches(";").to_string()
+    query.trim().trim_end_matches(';').to_string()
 }
 
 #[test]

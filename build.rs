@@ -19,7 +19,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Configure cargo through stdout
     println!("cargo:rerun-if-changed={}", makefile_path.display()); // Includes version number
     println!("cargo:rustc-link-search=native={}", out_dir.display());
-    println!("cargo:rustc-link-lib=static={}", LIBRARY_NAME);
+    println!("cargo:rustc-link-lib=static={LIBRARY_NAME}");
 
     // Copy the relevant source files to the OUT_DIR
     let source_paths = vec![

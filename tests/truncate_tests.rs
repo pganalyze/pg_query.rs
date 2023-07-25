@@ -123,5 +123,5 @@ fn char_truncate_works() {
 )]
 fn byte_truncate_fails() {
     let query = "WITH \"原チコ氏にはす腹腹腹腹腹腹腹腹腹腹腹\" AS (SELECT) SELECT w".to_string();
-    format!("{}", &query[0..=21]);
+    query[0..=21].to_string();
 }
