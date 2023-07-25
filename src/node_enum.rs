@@ -274,7 +274,7 @@ impl NodeEnum {
                             }
                         });
                     }
-                },
+                }
                 NodeRef::LockStmt(s) => {
                     s.relations.iter().for_each(|n| {
                         if let Some(n) = n.node.as_ref() {

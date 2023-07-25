@@ -109,12 +109,7 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                 NodeMut::InsertStmt(s) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
                     if !s.cols.is_empty() {
-                        truncations.push(PossibleTruncation {
-                            attr: TruncationAttr::Cols,
-                            node,
-                            depth,
-                            length: cols_len(s.cols.clone())?,
-                        });
+                        truncations.push(PossibleTruncation { attr: TruncationAttr::Cols, node, depth, length: cols_len(s.cols.clone())? });
                     }
                 }
                 NodeMut::IndexStmt(s) => {

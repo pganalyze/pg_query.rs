@@ -91,10 +91,8 @@ impl ParseResult {
                         Some(protobuf::ObjectType::ObjectTable) => {
                             for o in &s.objects {
                                 if let Some(NodeEnum::List(list)) = &o.node {
-                                    let table = join(
-                                        list.items.iter().filter_map(|i| i.node.as_ref().map(|n| &cast!(n, NodeEnum::String).sval)),
-                                        ".",
-                                    );
+                                    let table =
+                                        join(list.items.iter().filter_map(|i| i.node.as_ref().map(|n| &cast!(n, NodeEnum::String).sval)), ".");
                                     tables.insert((table, Context::DDL));
                                 };
                             }
@@ -140,7 +138,7 @@ impl ParseResult {
                             }
                         }
                     }
-                },
+                }
                 _ => (),
             }
         }
