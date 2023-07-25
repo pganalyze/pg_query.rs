@@ -40,46 +40,46 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
             match node {
                 NodeMut::SelectStmt(s) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
-                    if s.target_list.len() > 0 {
+                    if !s.target_list.is_empty() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::TargetList,
-                            node: node,
-                            depth: depth,
+                            node,
+                            depth,
                             length: select_target_list_len(s.target_list.clone())?,
                         });
                     }
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
-                            node: node,
-                            depth: depth,
+                            node,
+                            depth,
                             length: where_clause_len((*clause).clone())?,
                         });
                     }
-                    if s.values_lists.len() > 0 {
+                    if !s.values_lists.is_empty() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::ValuesLists,
-                            node: node,
-                            depth: depth,
+                            node,
+                            depth,
                             length: select_values_lists_len(s.values_lists.clone())?,
                         });
                     }
                 }
                 NodeMut::UpdateStmt(s) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
-                    if s.target_list.len() > 0 {
+                    if !s.target_list.is_empty() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::TargetList,
-                            node: node,
-                            depth: depth,
+                            node,
+                            depth,
                             length: update_target_list_len(s.target_list.clone())?,
                         });
                     }
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
-                            node: node,
-                            depth: depth,
+                            node,
+                            depth,
                             length: where_clause_len((*clause).clone())?,
                         });
                     }
@@ -89,8 +89,8 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
-                            node: node,
-                            depth: depth,
+                            node,
+                            depth,
                             length: where_clause_len((*clause).clone())?,
                         });
                     }
@@ -100,21 +100,16 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
-                            node: node,
-                            depth: depth,
+                            node,
+                            depth,
                             length: where_clause_len((*clause).clone())?,
                         });
                     }
                 }
                 NodeMut::InsertStmt(s) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
-                    if s.cols.len() > 0 {
-                        truncations.push(PossibleTruncation {
-                            attr: TruncationAttr::Cols,
-                            node: node,
-                            depth: depth,
-                            length: cols_len(s.cols.clone())?,
-                        });
+                    if !s.cols.is_empty() {
+                        truncations.push(PossibleTruncation { attr: TruncationAttr::Cols, node, depth, length: cols_len(s.cols.clone())? });
                     }
                 }
                 NodeMut::IndexStmt(s) => {
@@ -122,8 +117,8 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
-                            node: node,
-                            depth: depth,
+                            node,
+                            depth,
                             length: where_clause_len((*clause).clone())?,
                         });
                     }
@@ -133,8 +128,8 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
-                            node: node,
-                            depth: depth,
+                            node,
+                            depth,
                             length: where_clause_len((*clause).clone())?,
                         });
                     }
@@ -144,7 +139,7 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                     if let Some(cte) = s.ctequery.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::CTEQuery,
-                            node: node,
+                            node,
                             depth: depth + 1,
                             length: cte.deparse()?.len() as i32,
                         });
@@ -155,27 +150,27 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
-                            node: node,
-                            depth: depth,
+                            node,
+                            depth,
                             length: where_clause_len((*clause).clone())?,
                         });
                     }
                 }
                 NodeMut::OnConflictClause(s) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
-                    if s.target_list.len() > 0 {
+                    if !s.target_list.is_empty() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::TargetList,
-                            node: node,
-                            depth: depth,
+                            node,
+                            depth,
                             length: update_target_list_len(s.target_list.clone())?,
                         });
                     }
                     if let Some(clause) = s.where_clause.as_ref() {
                         truncations.push(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
-                            node: node,
-                            depth: depth,
+                            node,
+                            depth,
                             length: where_clause_len((*clause).clone())?,
                         });
                     }
@@ -189,7 +184,7 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
             other => other,
         });
 
-        while truncations.len() > 0 {
+        while !truncations.is_empty() {
             let truncation = truncations.remove(0);
             match (truncation.node, truncation.attr) {
                 (NodeMut::SelectStmt(s), TruncationAttr::TargetList) => {
@@ -265,7 +260,7 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
     }
 
     // We couldn't do a proper smart truncation, so we need a hard cut-off
-    return Ok(format!("{}...", truncate_str(&output, max_length - 3)));
+    Ok(format!("{}...", truncate_str(&output, max_length - 3)))
 }
 
 // Truncates at character boundaries to prevent panics.
@@ -326,13 +321,13 @@ fn dummy_select(target_list: Vec<Node>, where_clause: Option<Box<Node>>, values_
         node: Some(NodeEnum::SelectStmt(Box::new(protobuf::SelectStmt {
             distinct_clause: vec![],
             into_clause: None,
-            target_list: target_list,
+            target_list,
             from_clause: vec![],
-            where_clause: where_clause,
+            where_clause,
             group_clause: vec![],
             having_clause: None,
             window_clause: vec![],
-            values_lists: values_lists,
+            values_lists,
             sort_clause: vec![],
             limit_offset: None,
             limit_count: None,
@@ -360,7 +355,7 @@ fn dummy_insert(cols: Vec<Node>) -> Box<Node> {
                 alias: None,
                 location: 0,
             }),
-            cols: cols,
+            cols,
             select_stmt: None,
             on_conflict_clause: None,
             returning_list: vec![],
@@ -383,7 +378,7 @@ fn dummy_update(target_list: Vec<Node>) -> Box<Node> {
                 location: 0,
             }),
             from_clause: vec![],
-            target_list: target_list,
+            target_list,
             where_clause: None,
             returning_list: vec![],
             with_clause: None,

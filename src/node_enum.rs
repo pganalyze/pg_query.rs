@@ -266,16 +266,15 @@ impl NodeEnum {
                         iter.push((rel.to_ref(), depth, Context::DDL));
                     }
                 }
-                NodeRef::GrantStmt(s) => match protobuf::ObjectType::from_i32(s.objtype) {
-                    Some(protobuf::ObjectType::ObjectTable) => {
+                NodeRef::GrantStmt(s) => {
+                    if let Some(protobuf::ObjectType::ObjectTable) = protobuf::ObjectType::from_i32(s.objtype) {
                         s.objects.iter().for_each(|n| {
                             if let Some(n) = n.node.as_ref() {
                                 iter.push((n.to_ref(), depth, Context::DDL));
                             }
                         });
                     }
-                    _ => (),
-                },
+                }
                 NodeRef::LockStmt(s) => {
                     s.relations.iter().for_each(|n| {
                         if let Some(n) = n.node.as_ref() {
@@ -432,6 +431,12 @@ impl NodeEnum {
         nodes
     }
 
+    /// Returns a mutable reference to nested nodes.
+    ///
+    /// # Safety
+    ///
+    /// The caller may have to deal with dangling pointers, and passing an
+    /// invalid tree back to libpg_query may cause it to panic.
     pub unsafe fn nodes_mut(&mut self) -> Vec<(NodeMut, i32, Context)> {
         let mut iter = vec![(self.to_mut(), 0, Context::None)];
         let mut nodes = Vec::new();
@@ -692,15 +697,12 @@ impl NodeEnum {
                 }
                 NodeMut::GrantStmt(s) => {
                     let s = s.as_mut().unwrap();
-                    match protobuf::ObjectType::from_i32(s.objtype) {
-                        Some(protobuf::ObjectType::ObjectTable) => {
-                            s.objects.iter_mut().for_each(|n| {
-                                if let Some(n) = n.node.as_mut() {
-                                    iter.push((n.to_mut(), depth, Context::DDL));
-                                }
-                            });
-                        }
-                        _ => (),
+                    if let Some(protobuf::ObjectType::ObjectTable) = protobuf::ObjectType::from_i32(s.objtype) {
+                        s.objects.iter_mut().for_each(|n| {
+                            if let Some(n) = n.node.as_mut() {
+                                iter.push((n.to_mut(), depth, Context::DDL));
+                            }
+                        });
                     }
                 }
                 NodeMut::LockStmt(s) => {

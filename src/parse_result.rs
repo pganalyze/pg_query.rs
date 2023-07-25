@@ -29,18 +29,23 @@ impl protobuf::ParseResult {
             .iter()
             .filter_map(|s|
             // RawStmt  ->  Node   ->    NodeEnum           ->              NodeRef
-            s.stmt.as_ref().and_then(|s| s.node.as_ref()).and_then(|n| Some(n.nodes())))
+            s.stmt.as_ref().and_then(|s| s.node.as_ref()).map(|n| n.nodes()))
             .flatten()
             .collect()
     }
 
-    // Returns a mutable reference to nested nodes.
+    /// Returns a mutable reference to nested nodes.
+    ///
+    /// # Safety
+    ///
+    /// The caller may have to deal with dangling pointers, and passing an
+    /// invalid tree back to libpg_query may cause it to panic.
     pub unsafe fn nodes_mut(&mut self) -> Vec<(NodeMut, i32, Context)> {
         self.stmts
             .iter_mut()
             .filter_map(|s|
             // RawStmt  ->  Node   ->    NodeEnum           ->              NodeMut
-            s.stmt.as_mut().and_then(|s| s.node.as_mut()).and_then(|n| Some(n.nodes_mut())))
+            s.stmt.as_mut().and_then(|s| s.node.as_mut()).map(|n| n.nodes_mut()))
             .flatten()
             .collect()
     }
@@ -70,7 +75,7 @@ impl ParseResult {
                 }
                 NodeRef::RangeVar(v) => {
                     // TODO: this incorrectly returns no tables: parse('with f as (select * from f limit 1) select * from f')
-                    let table = if v.schemaname.len() > 0 { format!("{}.{}", v.schemaname, v.relname) } else { v.relname.to_owned() };
+                    let table = if !v.schemaname.is_empty() { format!("{}.{}", v.schemaname, v.relname) } else { v.relname.to_owned() };
                     if cte_names.contains(&table) {
                         continue;
                     }
@@ -78,7 +83,7 @@ impl ParseResult {
                     v.alias.as_ref().and_then(|alias| aliases.insert(alias.aliasname.to_owned(), table));
                 }
                 NodeRef::FuncCall(c) => {
-                    let funcname = join(c.funcname.iter().filter_map(|n| n.node.as_ref().and_then(|n| Some(&cast!(n, NodeEnum::String).sval))), ".");
+                    let funcname = join(c.funcname.iter().filter_map(|n| n.node.as_ref().map(|n| &cast!(n, NodeEnum::String).sval)), ".");
                     functions.insert((funcname, Context::Call));
                 }
                 NodeRef::DropStmt(s) => {
@@ -86,10 +91,8 @@ impl ParseResult {
                         Some(protobuf::ObjectType::ObjectTable) => {
                             for o in &s.objects {
                                 if let Some(NodeEnum::List(list)) = &o.node {
-                                    let table = join(
-                                        list.items.iter().filter_map(|i| i.node.as_ref().and_then(|n| Some(&cast!(n, NodeEnum::String).sval))),
-                                        ".",
-                                    );
+                                    let table =
+                                        join(list.items.iter().filter_map(|i| i.node.as_ref().map(|n| &cast!(n, NodeEnum::String).sval)), ".");
                                     tables.insert((table, Context::DDL));
                                 };
                             }
@@ -101,7 +104,7 @@ impl ParseResult {
                                     let table = join(
                                         list.items[0..list.items.len() - 1]
                                             .iter()
-                                            .filter_map(|i| i.node.as_ref().and_then(|n| Some(&cast!(n, NodeEnum::String).sval))),
+                                            .filter_map(|i| i.node.as_ref().map(|n| &cast!(n, NodeEnum::String).sval)),
                                         ".",
                                     );
                                     tables.insert((table, Context::DDL));
@@ -124,8 +127,8 @@ impl ParseResult {
                         functions.insert((string.sval.to_string(), Context::DDL));
                     }
                 }
-                NodeRef::RenameStmt(s) => match protobuf::ObjectType::from_i32(s.rename_type) {
-                    Some(protobuf::ObjectType::ObjectFunction) => {
+                NodeRef::RenameStmt(s) => {
+                    if let Some(protobuf::ObjectType::ObjectFunction) = protobuf::ObjectType::from_i32(s.rename_type) {
                         if let Some(object) = &s.object {
                             if let Some(NodeEnum::ObjectWithArgs(object)) = &object.node {
                                 if let Some(NodeEnum::String(string)) = &object.objname[0].node {
@@ -135,17 +138,16 @@ impl ParseResult {
                             }
                         }
                     }
-                    _ => (),
-                },
+                }
                 _ => (),
             }
         }
 
         Self {
-            protobuf: protobuf,
-            warnings: warnings,
+            protobuf,
+            warnings,
             tables: Vec::from_iter(tables),
-            aliases: aliases,
+            aliases,
             cte_names: Vec::from_iter(cte_names),
             functions: Vec::from_iter(functions),
         }
