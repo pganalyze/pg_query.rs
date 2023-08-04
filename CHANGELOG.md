@@ -2,7 +2,7 @@
 
 ## 0.8.0    2023-07-25
 
-* Upgrade to libpg_query 4.2.2 (Postgres 13 -> 15)
+* Upgrade to libpg_query 4.2.3 (Postgres 13 -> 15)
 * Improve `ParseResult::tables()` to find tables in `cast` expressions
 
 ## 0.7.0     2022-07-19
