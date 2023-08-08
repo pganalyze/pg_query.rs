@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.8.1    2023-08-07
 
 * Upgrade to `libpg_query` 4.2.3
   - Fix builds when compiling with `glibc >=  2.38` [#203](https://github.com/pganalyze/libpg_query/pull/203)
