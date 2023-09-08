@@ -67,7 +67,7 @@ pub fn parse(statement: &str) -> Result<ParseResult> {
 /// Note that this function will panic if called on a node not defined in `deparseStmt`
 pub fn deparse(protobuf: &protobuf::ParseResult) -> Result<String> {
     let buffer = protobuf.encode_to_vec();
-    let len = buffer.len() as size_t;
+    let len = buffer.len();
     let data = buffer.as_ptr() as *const c_char as *mut c_char;
     let protobuf = PgQueryProtobuf { data, len };
     let result = unsafe { pg_query_deparse_protobuf(protobuf) };
