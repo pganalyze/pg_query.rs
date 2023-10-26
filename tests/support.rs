@@ -23,6 +23,16 @@ macro_rules! assert_debug_eq {
     };
 }
 
+macro_rules! assert_eq {
+    ($left:expr, $right:expr) => {
+        if let Ok(_diff) = std::env::var("DIFF") {
+            pretty_assertions::assert_eq!($left, $right);
+        } else {
+            std::assert_eq!($left, $right);
+        }
+    };
+}
+
 pub fn assert_vec_matches<T: PartialEq>(a: &Vec<T>, b: &Vec<T>) {
     let matching = a.iter().zip(b.iter()).filter(|&(a, b)| a == b).count();
     assert!(matching == a.len() && matching == b.len())
