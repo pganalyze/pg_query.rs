@@ -39,6 +39,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     make.env_remove("PROFILE").arg("-C").arg(&out_dir).arg("build");
 
+    if env::var("TARGET").unwrap().ends_with("-musl") {
+        make.env("CC", "musl-gcc");
+    }
+
     if env::var("PROFILE").unwrap() == "debug" {
         make.arg("DEBUG=1");
     }
