@@ -21,7 +21,7 @@ fn it_can_parse_a_simple_function() {
     let result = result.unwrap();
     let expected = include_str!("data/plpgsql_simple.json");
     let actual = serde_json::to_string_pretty(&result).unwrap();
-    assert_eq!(expected, &actual);
+    pretty_assertions::assert_eq!(expected.trim(), actual.trim());
 }
 
 #[test]
@@ -43,7 +43,7 @@ fn it_can_parse_a_query_function() {
     let result = result.unwrap();
     let expected = include_str!("data/plpgsql_query.json");
     let actual = serde_json::to_string_pretty(&result).unwrap();
-    assert_eq!(expected, actual);
+    pretty_assertions::assert_eq!(expected.trim(), actual.trim());
 }
 
 #[test]

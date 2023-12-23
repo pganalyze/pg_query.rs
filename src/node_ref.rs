@@ -240,6 +240,20 @@ pub enum NodeRef<'a> {
     MergeWhenClause(&'a protobuf::MergeWhenClause),
     PublicationObjSpec(&'a protobuf::PublicationObjSpec),
     PublicationTable(&'a protobuf::PublicationTable),
+    JsonFormat(&'a protobuf::JsonFormat),
+    JsonReturning(&'a protobuf::JsonReturning),
+    JsonValueExpr(&'a protobuf::JsonValueExpr),
+    JsonConstructorExpr(&'a protobuf::JsonConstructorExpr),
+    JsonIsPredicate(&'a protobuf::JsonIsPredicate),
+    JsonOutput(&'a protobuf::JsonOutput),
+    JsonKeyValue(&'a protobuf::JsonKeyValue),
+    JsonObjectConstructor(&'a protobuf::JsonObjectConstructor),
+    JsonArrayConstructor(&'a protobuf::JsonArrayConstructor),
+    JsonArrayQueryConstructor(&'a protobuf::JsonArrayQueryConstructor),
+    JsonAggConstructor(&'a protobuf::JsonAggConstructor),
+    JsonObjectAgg(&'a protobuf::JsonObjectAgg),
+    JsonArrayAgg(&'a protobuf::JsonArrayAgg),
+    RtepermissionInfo(&'a protobuf::RtePermissionInfo),
 }
 
 impl<'a> NodeRef<'a> {
@@ -491,6 +505,20 @@ impl<'a> NodeRef<'a> {
             NodeRef::MergeWhenClause(n) => NodeEnum::MergeWhenClause(Box::new((*n).clone())),
             NodeRef::PublicationObjSpec(n) => NodeEnum::PublicationObjSpec(Box::new((*n).clone())),
             NodeRef::PublicationTable(n) => NodeEnum::PublicationTable(Box::new((*n).clone())),
+            NodeRef::JsonFormat(n) => NodeEnum::JsonFormat((*n).clone()),
+            NodeRef::JsonReturning(n) => NodeEnum::JsonReturning((*n).clone()),
+            NodeRef::JsonValueExpr(n) => NodeEnum::JsonValueExpr(Box::new((*n).clone())),
+            NodeRef::JsonConstructorExpr(n) => NodeEnum::JsonConstructorExpr(Box::new((*n).clone())),
+            NodeRef::JsonIsPredicate(n) => NodeEnum::JsonIsPredicate(Box::new((*n).clone())),
+            NodeRef::JsonOutput(n) => NodeEnum::JsonOutput((*n).clone()),
+            NodeRef::JsonKeyValue(n) => NodeEnum::JsonKeyValue(Box::new((*n).clone())),
+            NodeRef::JsonObjectConstructor(n) => NodeEnum::JsonObjectConstructor((*n).clone()),
+            NodeRef::JsonArrayConstructor(n) => NodeEnum::JsonArrayConstructor((*n).clone()),
+            NodeRef::JsonArrayQueryConstructor(n) => NodeEnum::JsonArrayQueryConstructor(Box::new((*n).clone())),
+            NodeRef::JsonAggConstructor(n) => NodeEnum::JsonAggConstructor(Box::new((*n).clone())),
+            NodeRef::JsonObjectAgg(n) => NodeEnum::JsonObjectAgg(Box::new((*n).clone())),
+            NodeRef::JsonArrayAgg(n) => NodeEnum::JsonArrayAgg(Box::new((*n).clone())),
+            NodeRef::RtepermissionInfo(n) => NodeEnum::RtepermissionInfo((*n).clone()),
         }
     }
 }

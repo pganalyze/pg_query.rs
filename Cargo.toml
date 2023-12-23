@@ -26,5 +26,5 @@ fs_extra = "1.2.0"
 
 [dev-dependencies]
 easy-parallel = "3.2.0"
-pretty_assertions = "1.2.1"
+pretty_assertions = "1.4.0"
 regex = "1.6.0"
