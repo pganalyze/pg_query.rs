@@ -10,11 +10,9 @@ pg_query.rs &emsp; [![Build Status]][actions] [![Latest Version]][crates.io] [![
 
 This Rust library uses the actual PostgreSQL server source to parse SQL queries and return the internal PostgreSQL parse tree.
 
-It also allows you to normalize queries (replacing constant values with ?) and parse these normalized queries into a parse tree again.
+It also allows you to normalize queries (replacing constant values with $1, etc.) and parse these normalized queries into a parse tree again.
 
 When you build this library, it builds parts of the PostgreSQL server source (see [libpg_query](https://github.com/pganalyze/libpg_query)), and then statically links it into this library.
-
-This is slightly crazy, but is the only reliable way of parsing all valid PostgreSQL queries.
 
 You can find further examples and a longer rationale for the original Ruby implementation [here](https://pganalyze.com/blog/parse-postgresql-queries-in-ruby.html). The Rust version tries to have a very similar API.
 
@@ -24,7 +22,7 @@ Add the following to your `Cargo.toml`
 
 ```toml
 [dependencies]
-pg_query = "0.8"
+pg_query = "5.0"
 ```
 
 ## Examples
@@ -67,4 +65,14 @@ assert_eq!(result.truncate(32).unwrap(), "INSERT INTO x (...) VALUES (...)");
 
 Thanks to [Paul Mason](https://github.com/paupino) for his work on [pg_parse](https://github.com/paupino/pg_parse) that this crate is based on.
 
-After version 0.6.0, Paul donated the pg_query crate to the pganalyze team. pg_parse is a lighter alternative that focuses on query parsing, while pg_query aims for feaure parity with the Ruby gem.
+After version 0.6.0, Paul donated the pg_query crate to the pganalyze team. pg_parse is a lighter alternative that focuses on query parsing, while pg_query aims for feature parity with the Ruby gem.
+
+## License
+
+PostgreSQL server source code, used under the [PostgreSQL license](https://www.postgresql.org/about/licence/).<br>
+Portions Copyright (c) 1996-2023, The PostgreSQL Global Development Group<br>
+Portions Copyright (c) 1994, The Regents of the University of California
+
+All other parts are licensed under the MIT license, see LICENSE file for details.<br>
+Copyright (c) 2021 Paul Mason <paul@form1.co.nz>
+Copyright (c) 2021-2023, Duboce Labs, Inc. (pganalyze) <team@pganalyze.com>
