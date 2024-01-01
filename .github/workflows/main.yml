@@ -11,14 +11,17 @@ name: Continuous integration
 jobs:
   ci:
     env:
-      RUSTFLAGS: ${{ matrix.rust == 'nightly' && '-Z sanitizer=leak' || '' }}
-    runs-on: ubuntu-latest
+      RUSTFLAGS: ${{ matrix.rust == 'nightly' && matrix.os == 'ubuntu-latest' && '-Z sanitizer=leak' || '' }}
     strategy:
       fail-fast: false
       matrix:
         rust:
           - stable
           - nightly
+        os:
+          - ubuntu-latest
+          - windows-latest
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v2

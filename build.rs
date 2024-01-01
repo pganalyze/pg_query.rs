@@ -2,6 +2,7 @@
 #![cfg_attr(feature = "clippy", plugin(clippy))]
 
 use fs_extra::dir::CopyOptions;
+use glob::glob;
 use std::env;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
@@ -12,12 +13,11 @@ static LIBRARY_NAME: &str = "pg_query";
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let out_dir = PathBuf::from(env::var("OUT_DIR")?);
     let build_path = Path::new(".").join(SOURCE_DIRECTORY);
-    let makefile_path = build_path.join("Makefile");
     let out_header_path = out_dir.join(LIBRARY_NAME).with_extension("h");
     let out_protobuf_path = out_dir.join("protobuf");
+    let target = env::var("TARGET").unwrap();
 
     // Configure cargo through stdout
-    println!("cargo:rerun-if-changed={}", makefile_path.display()); // Includes version number
     println!("cargo:rustc-link-search=native={}", out_dir.display());
     println!("cargo:rustc-link-lib=static={LIBRARY_NAME}");
 
@@ -35,18 +35,31 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     fs_extra::copy_items(&source_paths, &out_dir, &copy_options)?;
 
     // Compile the C library.
-    let mut make = Command::new("make");
-
-    make.env_remove("PROFILE").arg("-C").arg(&out_dir).arg("build");
-
-    if env::var("PROFILE").unwrap() == "debug" {
-        make.arg("DEBUG=1");
-    }
-
-    let status = make.stdin(Stdio::null()).stdout(Stdio::inherit()).stderr(Stdio::inherit()).status()?;
-
-    if !status.success() {
-        return Err("libpg_query compilation failed".into());
+    if target.contains("msvc") {
+        // Rust on Windows may not have "make" or "nmake" installed
+        cc::Build::new()
+            .files(glob(out_dir.join("src/*.c").to_str().unwrap()).unwrap().map(|p| p.unwrap()))
+            .files(glob(out_dir.join("src/postgres/*.c").to_str().unwrap()).unwrap().map(|p| p.unwrap()))
+            .file(out_dir.join("vendor/protobuf-c/protobuf-c.c"))
+            .file(out_dir.join("vendor/xxhash/xxhash.c"))
+            .file(out_dir.join("protobuf/pg_query.pb-c.c"))
+            .include(out_dir.join("."))
+            .include(out_dir.join("./vendor"))
+            .include(out_dir.join("./src/postgres/include"))
+            .include(out_dir.join("./src/include"))
+            .include(out_dir.join("./src/postgres/include/port/win32"))
+            .include(out_dir.join("./src/postgres/include/port/win32_msvc"))
+            .compile(LIBRARY_NAME);
+    } else {
+        let mut make = Command::new("make");
+        make.env_remove("PROFILE").arg("-C").arg(&out_dir).arg("build");
+        if env::var("PROFILE").unwrap() == "debug" {
+            make.arg("DEBUG=1");
+        }
+        let status = make.stdin(Stdio::null()).stdout(Stdio::inherit()).stderr(Stdio::inherit()).status()?;
+        if !status.success() {
+            return Err("libpg_query compilation failed".into());
+        }
     }
 
     // Generate bindings for Rust

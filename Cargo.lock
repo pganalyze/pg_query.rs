@@ -393,9 +393,11 @@ name = "pg_query"
 version = "5.0.0"
 dependencies = [
  "bindgen",
+ "cc",
  "clippy",
  "easy-parallel",
  "fs_extra",
+ "glob",
  "itertools",
  "pretty_assertions",
  "prost",
