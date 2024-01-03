@@ -1,5 +1,14 @@
 # Changelog
 
+## 5.0.0    2023-12-22
+
+* Align versioning scheme with that of other pg_query libraries
+  (which is to generally aim to match the libpg_query version)
+* Upgrade to libpg_query 5.0.0
+  - Updates to the Postgres 16 parser
+  - Multiple deparser improvements
+
+
 ## 0.8.2    2023-09-11
 
 * Update bindgen to 0.66.1 to remove transitive dependency on atty and resolve build errors [#28](https://github.com/pganalyze/pg_query.rs/pull/28)

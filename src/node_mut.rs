@@ -240,6 +240,20 @@ pub enum NodeMut {
     MergeWhenClause(*mut protobuf::MergeWhenClause),
     PublicationObjSpec(*mut protobuf::PublicationObjSpec),
     PublicationTable(*mut protobuf::PublicationTable),
+    JsonFormat(*mut protobuf::JsonFormat),
+    JsonReturning(*mut protobuf::JsonReturning),
+    JsonValueExpr(*mut protobuf::JsonValueExpr),
+    JsonConstructorExpr(*mut protobuf::JsonConstructorExpr),
+    JsonIsPredicate(*mut protobuf::JsonIsPredicate),
+    JsonOutput(*mut protobuf::JsonOutput),
+    JsonKeyValue(*mut protobuf::JsonKeyValue),
+    JsonObjectConstructor(*mut protobuf::JsonObjectConstructor),
+    JsonArrayConstructor(*mut protobuf::JsonArrayConstructor),
+    JsonArrayQueryConstructor(*mut protobuf::JsonArrayQueryConstructor),
+    JsonAggConstructor(*mut protobuf::JsonAggConstructor),
+    JsonObjectAgg(*mut protobuf::JsonObjectAgg),
+    JsonArrayAgg(*mut protobuf::JsonArrayAgg),
+    RtepermissionInfo(*mut protobuf::RtePermissionInfo),
 }
 
 impl NodeMut {
@@ -492,6 +506,20 @@ impl NodeMut {
                 NodeMut::MergeWhenClause(n) => Ok(NodeEnum::MergeWhenClause(Box::new(n.as_ref().ok_or(err)?.clone()))),
                 NodeMut::PublicationObjSpec(n) => Ok(NodeEnum::PublicationObjSpec(Box::new(n.as_ref().ok_or(err)?.clone()))),
                 NodeMut::PublicationTable(n) => Ok(NodeEnum::PublicationTable(Box::new(n.as_ref().ok_or(err)?.clone()))),
+                NodeMut::JsonFormat(n) => Ok(NodeEnum::JsonFormat(n.as_ref().ok_or(err)?.clone())),
+                NodeMut::JsonReturning(n) => Ok(NodeEnum::JsonReturning(n.as_ref().ok_or(err)?.clone())),
+                NodeMut::JsonValueExpr(n) => Ok(NodeEnum::JsonValueExpr(Box::new(n.as_ref().ok_or(err)?.clone()))),
+                NodeMut::JsonConstructorExpr(n) => Ok(NodeEnum::JsonConstructorExpr(Box::new(n.as_ref().ok_or(err)?.clone()))),
+                NodeMut::JsonIsPredicate(n) => Ok(NodeEnum::JsonIsPredicate(Box::new(n.as_ref().ok_or(err)?.clone()))),
+                NodeMut::JsonOutput(n) => Ok(NodeEnum::JsonOutput(n.as_ref().ok_or(err)?.clone())),
+                NodeMut::JsonKeyValue(n) => Ok(NodeEnum::JsonKeyValue(Box::new(n.as_ref().ok_or(err)?.clone()))),
+                NodeMut::JsonObjectConstructor(n) => Ok(NodeEnum::JsonObjectConstructor(n.as_ref().ok_or(err)?.clone())),
+                NodeMut::JsonArrayConstructor(n) => Ok(NodeEnum::JsonArrayConstructor(n.as_ref().ok_or(err)?.clone())),
+                NodeMut::JsonArrayQueryConstructor(n) => Ok(NodeEnum::JsonArrayQueryConstructor(Box::new(n.as_ref().ok_or(err)?.clone()))),
+                NodeMut::JsonAggConstructor(n) => Ok(NodeEnum::JsonAggConstructor(Box::new(n.as_ref().ok_or(err)?.clone()))),
+                NodeMut::JsonObjectAgg(n) => Ok(NodeEnum::JsonObjectAgg(Box::new(n.as_ref().ok_or(err)?.clone()))),
+                NodeMut::JsonArrayAgg(n) => Ok(NodeEnum::JsonArrayAgg(Box::new(n.as_ref().ok_or(err)?.clone()))),
+                NodeMut::RtepermissionInfo(n) => Ok(NodeEnum::RtepermissionInfo(n.as_ref().ok_or(err)?.clone())),
             }
         }
     }

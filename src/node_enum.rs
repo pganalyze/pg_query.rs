@@ -1119,6 +1119,20 @@ impl NodeEnum {
             NodeEnum::MergeWhenClause(n) => NodeRef::MergeWhenClause(n),
             NodeEnum::PublicationObjSpec(n) => NodeRef::PublicationObjSpec(n),
             NodeEnum::PublicationTable(n) => NodeRef::PublicationTable(n),
+            NodeEnum::JsonFormat(n) => NodeRef::JsonFormat(n),
+            NodeEnum::JsonReturning(n) => NodeRef::JsonReturning(n),
+            NodeEnum::JsonValueExpr(n) => NodeRef::JsonValueExpr(n),
+            NodeEnum::JsonConstructorExpr(n) => NodeRef::JsonConstructorExpr(n),
+            NodeEnum::JsonIsPredicate(n) => NodeRef::JsonIsPredicate(n),
+            NodeEnum::JsonOutput(n) => NodeRef::JsonOutput(n),
+            NodeEnum::JsonKeyValue(n) => NodeRef::JsonKeyValue(n),
+            NodeEnum::JsonObjectConstructor(n) => NodeRef::JsonObjectConstructor(n),
+            NodeEnum::JsonArrayConstructor(n) => NodeRef::JsonArrayConstructor(n),
+            NodeEnum::JsonArrayQueryConstructor(n) => NodeRef::JsonArrayQueryConstructor(n),
+            NodeEnum::JsonAggConstructor(n) => NodeRef::JsonAggConstructor(n),
+            NodeEnum::JsonObjectAgg(n) => NodeRef::JsonObjectAgg(n),
+            NodeEnum::JsonArrayAgg(n) => NodeRef::JsonArrayAgg(n),
+            NodeEnum::RtepermissionInfo(n) => NodeRef::RtepermissionInfo(n),
         }
     }
 
@@ -1362,6 +1376,20 @@ impl NodeEnum {
             NodeEnum::MergeWhenClause(n) => NodeMut::MergeWhenClause(&mut **n as *mut _),
             NodeEnum::PublicationObjSpec(n) => NodeMut::PublicationObjSpec(&mut **n as *mut _),
             NodeEnum::PublicationTable(n) => NodeMut::PublicationTable(&mut **n as *mut _),
+            NodeEnum::JsonFormat(n) => NodeMut::JsonFormat(&mut *n as *mut _),
+            NodeEnum::JsonReturning(n) => NodeMut::JsonReturning(&mut *n as *mut _),
+            NodeEnum::JsonValueExpr(n) => NodeMut::JsonValueExpr(&mut **n as *mut _),
+            NodeEnum::JsonConstructorExpr(n) => NodeMut::JsonConstructorExpr(&mut **n as *mut _),
+            NodeEnum::JsonIsPredicate(n) => NodeMut::JsonIsPredicate(&mut **n as *mut _),
+            NodeEnum::JsonOutput(n) => NodeMut::JsonOutput(&mut *n as *mut _),
+            NodeEnum::JsonKeyValue(n) => NodeMut::JsonKeyValue(&mut **n as *mut _),
+            NodeEnum::JsonObjectConstructor(n) => NodeMut::JsonObjectConstructor(&mut *n as *mut _),
+            NodeEnum::JsonArrayConstructor(n) => NodeMut::JsonArrayConstructor(&mut *n as *mut _),
+            NodeEnum::JsonArrayQueryConstructor(n) => NodeMut::JsonArrayQueryConstructor(&mut **n as *mut _),
+            NodeEnum::JsonAggConstructor(n) => NodeMut::JsonAggConstructor(&mut **n as *mut _),
+            NodeEnum::JsonObjectAgg(n) => NodeMut::JsonObjectAgg(&mut **n as *mut _),
+            NodeEnum::JsonArrayAgg(n) => NodeMut::JsonArrayAgg(&mut **n as *mut _),
+            NodeEnum::RtepermissionInfo(n) => NodeMut::RtepermissionInfo(&mut *n as *mut _),
         }
     }
 }
