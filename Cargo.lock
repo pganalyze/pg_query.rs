@@ -48,7 +48,7 @@ dependencies = [
  "lazycell",
  "log",
  "peeking_take_while",
- "prettyplease",
+ "prettyplease 0.2.14",
  "proc-macro2",
  "quote",
  "regex",
@@ -135,15 +135,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d911ee15579a3f50880d8c1d59ef6e79f9533127a3bd342462f5d584f5e8c294"
 dependencies = [
  "term",
-]
-
-[[package]]
-name = "cmake"
-version = "0.1.50"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a31c789563b815f77f4250caee12365734369f942439b7defd71e18a48197130"
-dependencies = [
- "cc",
 ]
 
 [[package]]
@@ -418,6 +409,16 @@ dependencies = [
 
 [[package]]
 name = "prettyplease"
+version = "0.1.23"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e97e3215779627f01ee256d2fad52f3d95e8e1c11e9fc6fd08f7cd455d5d5c78"
+dependencies = [
+ "proc-macro2",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "prettyplease"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8832c0f9be7e3cae60727e6256cfd2cd3c3e2b6cd5dad4190ecb2fd658c9030b"
@@ -437,9 +438,8 @@ dependencies = [
 
 [[package]]
 name = "prost"
-version = "0.10.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "71adf41db68aa0daaefc69bb30bcd68ded9b9abaad5d1fbb6304c4fb390e083e"
+version = "0.11.6"
+source = "git+https://github.com/pganalyze/prost?branch=recursion-limit-macro#4f02d843d0db6b6aa9df0d52ede33aa611cca2b3"
 dependencies = [
  "bytes",
  "prost-derive",
@@ -447,31 +447,29 @@ dependencies = [
 
 [[package]]
 name = "prost-build"
-version = "0.10.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ae5a4388762d5815a9fc0dea33c56b021cdc8dde0c55e0c9ca57197254b0cab"
+version = "0.11.6"
+source = "git+https://github.com/pganalyze/prost?branch=recursion-limit-macro#4f02d843d0db6b6aa9df0d52ede33aa611cca2b3"
 dependencies = [
  "bytes",
- "cfg-if",
- "cmake",
  "heck",
  "itertools",
  "lazy_static",
  "log",
  "multimap",
  "petgraph",
+ "prettyplease 0.1.23",
  "prost",
  "prost-types",
  "regex",
+ "syn 1.0.109",
  "tempfile",
  "which",
 ]
 
 [[package]]
 name = "prost-derive"
-version = "0.10.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7b670f45da57fb8542ebdbb6105a925fe571b67f9e7ed9f47a06a84e72b4e7cc"
+version = "0.11.6"
+source = "git+https://github.com/pganalyze/prost?branch=recursion-limit-macro#4f02d843d0db6b6aa9df0d52ede33aa611cca2b3"
 dependencies = [
  "anyhow",
  "itertools",
@@ -482,9 +480,8 @@ dependencies = [
 
 [[package]]
 name = "prost-types"
-version = "0.10.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d0a014229361011dc8e69c8a1ec6c2e8d0f2af7c91e3ea3f5b2170298461e68"
+version = "0.11.6"
+source = "git+https://github.com/pganalyze/prost?branch=recursion-limit-macro#4f02d843d0db6b6aa9df0d52ede33aa611cca2b3"
 dependencies = [
  "bytes",
  "prost",

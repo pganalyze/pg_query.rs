@@ -57,7 +57,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .write_to_file(out_dir.join("bindings.rs"))?;
 
     // Generate the protobuf definition
-    prost_build::compile_protos(&[&out_protobuf_path.join(LIBRARY_NAME).with_extension("proto")], &[&out_protobuf_path])?;
+    let mut config = prost_build::Config::new();
+    config.recursion_limit("ParseResult", 1000);
+    config.compile_protos(&[&out_protobuf_path.join(LIBRARY_NAME).with_extension("proto")], &[&out_protobuf_path])?;
 
     Ok(())
 }
