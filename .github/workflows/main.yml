@@ -21,6 +21,11 @@ jobs:
         os:
           - ubuntu-latest
           - windows-latest
+        include:
+          - rust: stable-x86_64-pc-windows-gnu
+            os: windows-latest
+          - rust: stable-i686-pc-windows-msvc
+            os: windows-latest
     runs-on: ${{ matrix.os }}
 
     steps:
