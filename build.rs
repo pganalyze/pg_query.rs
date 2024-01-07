@@ -35,32 +35,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     fs_extra::copy_items(&source_paths, &out_dir, &copy_options)?;
 
     // Compile the C library.
-    if target.contains("msvc") {
-        // Rust on Windows may not have "make" or "nmake" installed
-        cc::Build::new()
-            .files(glob(out_dir.join("src/*.c").to_str().unwrap()).unwrap().map(|p| p.unwrap()))
-            .files(glob(out_dir.join("src/postgres/*.c").to_str().unwrap()).unwrap().map(|p| p.unwrap()))
-            .file(out_dir.join("vendor/protobuf-c/protobuf-c.c"))
-            .file(out_dir.join("vendor/xxhash/xxhash.c"))
-            .file(out_dir.join("protobuf/pg_query.pb-c.c"))
-            .include(out_dir.join("."))
-            .include(out_dir.join("./vendor"))
-            .include(out_dir.join("./src/postgres/include"))
-            .include(out_dir.join("./src/include"))
-            .include(out_dir.join("./src/postgres/include/port/win32"))
-            .include(out_dir.join("./src/postgres/include/port/win32_msvc"))
-            .compile(LIBRARY_NAME);
-    } else {
-        let mut make = Command::new("make");
-        make.env_remove("PROFILE").arg("-C").arg(&out_dir).arg("build");
-        if env::var("PROFILE").unwrap() == "debug" {
-            make.arg("DEBUG=1");
-        }
-        let status = make.stdin(Stdio::null()).stdout(Stdio::inherit()).stderr(Stdio::inherit()).status()?;
-        if !status.success() {
-            return Err("libpg_query compilation failed".into());
+    let mut build = cc::Build::new();
+    build
+        .files(glob(out_dir.join("src/*.c").to_str().unwrap()).unwrap().map(|p| p.unwrap()))
+        .files(glob(out_dir.join("src/postgres/*.c").to_str().unwrap()).unwrap().map(|p| p.unwrap()))
+        .file(out_dir.join("vendor/protobuf-c/protobuf-c.c"))
+        .file(out_dir.join("vendor/xxhash/xxhash.c"))
+        .file(out_dir.join("protobuf/pg_query.pb-c.c"))
+        .include(out_dir.join("."))
+        .include(out_dir.join("./vendor"))
+        .include(out_dir.join("./src/postgres/include"))
+        .include(out_dir.join("./src/include"))
+        .warnings(false); // Avoid unnecessary warnings, as they are already considered as part of libpg_query development
+    if env::var("PROFILE").unwrap() == "debug" || env::var("DEBUG").unwrap() == "1" {
+        build.define("USE_ASSERT_CHECKING", None);
+    }
+    if target.contains("windows") {
+        build.include(out_dir.join("./src/postgres/include/port/win32"));
+        if target.contains("msvc") {
+            build.include(out_dir.join("./src/postgres/include/port/win32_msvc"));
         }
     }
+    build.compile(LIBRARY_NAME);
 
     // Generate bindings for Rust
     bindgen::Builder::default()
