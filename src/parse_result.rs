@@ -142,20 +142,21 @@ impl ParseResult {
                     }
                 },
                 NodeRef::ColumnRef(c) => {
-                    let f: Vec<&String> = c
+                    if !has_filter_columns {
+                        continue;
+                    }
+                    let f: Vec<String> = c
                         .fields
                         .iter()
-                        .filter_map(|n| {
-                            n.node.as_ref().and_then(|n| if let NodeEnum::AStar(_) = n { None } else { Some(&cast!(n, NodeEnum::String).sval) })
+                        .filter_map(|n| match n.node.as_ref() {
+                            Some(NodeEnum::String(s)) => Some(s.sval.to_string()),
+                            _ => None,
                         })
                         .rev()
                         .collect();
-                    if f.len() == 0 || !has_filter_columns {
-                        continue;
+                    if f.len() > 0 {
+                        filter_columns.insert((f.get(1).cloned(), f[0].to_string()));
                     }
-                    let column = f[0];
-                    let table = f.get(1).map(|t| t.to_string());
-                    filter_columns.insert((table, column.to_string()));
                 }
                 _ => (),
             }
