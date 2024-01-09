@@ -140,7 +140,7 @@ impl ParseResult {
                             }
                         }
                     }
-                },
+                }
                 NodeRef::ColumnRef(c) => {
                     if !has_filter_columns {
                         continue;

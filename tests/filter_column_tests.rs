@@ -45,10 +45,7 @@ fn it_recognizes_null_tests() {
 fn it_finds_coalesce_argument_names() {
     let result = parse("SELECT * FROM x WHERE x.y = COALESCE(z.a, z.b)").unwrap();
     let filter_columns: Vec<(Option<String>, String)> = sorted(result.filter_columns).collect();
-    assert_eq!(
-        filter_columns,
-        [(Some("x".into()), "y".into()), (Some("z".into()), "a".into()), (Some("z".into()), "b".into())]
-    );
+    assert_eq!(filter_columns, [(Some("x".into()), "y".into()), (Some("z".into()), "a".into()), (Some("z".into()), "b".into())]);
 }
 
 #[test]
