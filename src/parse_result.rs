@@ -24,7 +24,7 @@ impl protobuf::ParseResult {
     }
 
     // Note: this doesn't iterate over every possible node type, since we only care about a subset of nodes.
-    pub fn nodes(&self) -> Vec<(NodeRef, i32, Context)> {
+    pub fn nodes(&self) -> Vec<(NodeRef, i32, Context, bool)> {
         self.stmts
             .iter()
             .filter_map(|s|
@@ -58,6 +58,7 @@ pub struct ParseResult {
     pub aliases: HashMap<String, String>,
     pub cte_names: Vec<String>,
     functions: Vec<(String, Context)>,
+    pub filter_columns: Vec<(Option<String>, String)>,
 }
 
 impl ParseResult {
@@ -67,8 +68,9 @@ impl ParseResult {
         let mut aliases: HashMap<String, String> = HashMap::new();
         let mut cte_names: HashSet<String> = HashSet::new();
         let mut functions: HashSet<(String, Context)> = HashSet::new();
+        let mut filter_columns: HashSet<(Option<String>, String)> = HashSet::new();
 
-        for (node, _depth, context) in protobuf.nodes().into_iter() {
+        for (node, _depth, context, has_filter_columns) in protobuf.nodes().into_iter() {
             match node {
                 NodeRef::CommonTableExpr(s) => {
                     cte_names.insert(s.ctename.to_owned());
@@ -139,6 +141,23 @@ impl ParseResult {
                         }
                     }
                 }
+                NodeRef::ColumnRef(c) => {
+                    if !has_filter_columns {
+                        continue;
+                    }
+                    let f: Vec<String> = c
+                        .fields
+                        .iter()
+                        .filter_map(|n| match n.node.as_ref() {
+                            Some(NodeEnum::String(s)) => Some(s.sval.to_string()),
+                            _ => None,
+                        })
+                        .rev()
+                        .collect();
+                    if f.len() > 0 {
+                        filter_columns.insert((f.get(1).cloned(), f[0].to_string()));
+                    }
+                }
                 _ => (),
             }
         }
@@ -150,6 +169,7 @@ impl ParseResult {
             aliases,
             cte_names: Vec::from_iter(cte_names),
             functions: Vec::from_iter(functions),
+            filter_columns: Vec::from_iter(filter_columns),
         }
     }
 
