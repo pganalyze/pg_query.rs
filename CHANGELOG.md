@@ -1,5 +1,16 @@
 # Changelog
 
+## 5.1.0    2024-01-09
+
+* Update to libpg_query 16-5.1.0
+  - Add support for running on Windows
+  - Add support for compiling on 32-bit systems
+* Always build C library using "cc" crate
+* Add `filter_columns` for getting columns that a query filters by
+  - This returns the table name (if present) and column name for every
+    column that's referenced in a JOIN or WHERE clause.
+
+
 ## 5.0.0    2023-12-22
 
 * Align versioning scheme with that of other pg_query libraries
