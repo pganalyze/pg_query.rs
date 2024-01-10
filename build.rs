@@ -5,7 +5,6 @@ use fs_extra::dir::CopyOptions;
 use glob::glob;
 use std::env;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
 
 static SOURCE_DIRECTORY: &str = "libpg_query";
 static LIBRARY_NAME: &str = "pg_query";

@@ -1,6 +1,5 @@
 #[macro_use]
 mod support;
-use support::*;
 
 #[test]
 fn it_can_parse_a_simple_function() {
