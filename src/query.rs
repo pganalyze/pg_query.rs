@@ -5,7 +5,7 @@ use prost::Message;
 
 use crate::bindings::*;
 use crate::error::*;
-pub use crate::parse_result::ParseResult;
+use crate::parse_result::ParseResult;
 use crate::protobuf;
 
 /// Represents the resulting fingerprint containing both the raw integer form as well as the

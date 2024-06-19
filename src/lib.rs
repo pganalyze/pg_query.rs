@@ -52,7 +52,7 @@ pub use error::*;
 pub use node_enum::*;
 pub use node_mut::*;
 pub use node_ref::*;
-pub use node_structs::*;
+pub use parse_result::*;
 pub use query::*;
 pub use truncate::*;
 
