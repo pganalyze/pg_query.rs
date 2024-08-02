@@ -13,7 +13,7 @@ repository = "https://github.com/pganalyze/pg_query.rs"
 
 [dependencies]
 itertools = "0.10.3"
-prost = "0.10.4"
+prost = "0.13.0"
 serde = { version = "1.0.139", features = ["derive"] }
 serde_json = "1.0.82"
 thiserror = "1.0.31"
@@ -21,10 +21,13 @@ thiserror = "1.0.31"
 [build-dependencies]
 bindgen = "0.66.1"
 clippy = { version = "0.0.302", optional = true }
+prost = "0.13.0"
 prost-build = "0.10.4"
+prost-types = "0.13.0"
 fs_extra = "1.2.0"
 cc = "1.0.83"
 glob = "0.3.1"
+heck = "0.4"
 
 [dev-dependencies]
 easy-parallel = "3.2.0"

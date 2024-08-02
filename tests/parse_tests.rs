@@ -73,6 +73,7 @@ fn it_parses_real_queries() {
 fn it_parses_empty_queries() {
     let result = parse("-- nothing").unwrap();
     assert_eq!(result.protobuf.nodes().len(), 0);
+    assert_eq!(result.protobuf.iter().collect::<Vec<_>>().len(), 0);
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.statement_types().len(), 0);
@@ -81,12 +82,26 @@ fn it_parses_empty_queries() {
 #[test]
 fn it_parses_floats_with_leading_dot() {
     let result = parse("SELECT .1").unwrap();
-    let select = cast!(result.protobuf.nodes()[0].0, NodeRef::SelectStmt);
-    let target = cast!(select.target_list[0].node.as_ref().unwrap(), NodeEnum::ResTarget);
-    let a_const = cast!(target.val.as_ref().unwrap().node.as_ref().unwrap(), NodeEnum::AConst);
-    let float = cast!(a_const.val.as_ref().unwrap(), Val::Fval);
-    assert_eq!(float.fval, ".1");
-    assert_eq!(a_const.location, 7);
+    {
+        let select = cast!(result.protobuf.nodes()[0].0, NodeRef::SelectStmt);
+        let target = cast!(select.target_list[0].node.as_ref().unwrap(), NodeEnum::ResTarget);
+        let a_const = cast!(target.val.as_ref().unwrap().node.as_ref().unwrap(), NodeEnum::AConst);
+        let float = cast!(a_const.val.as_ref().unwrap(), Val::Fval);
+        assert_eq!(float.fval, ".1");
+        assert_eq!(a_const.location, 7);
+    }
+
+    {
+        let all_nodes = result.protobuf.iter().collect::<Vec<_>>();
+        assert_eq!(all_nodes.len(), 4);
+        println!("{:?}", all_nodes);
+        let _select = cast!(all_nodes[1], NodeRef::SelectStmt);
+        let _target = cast!(all_nodes[2], NodeRef::ResTarget);
+        let a_const = cast!(all_nodes[3], NodeRef::AConst);
+        let float = cast!(a_const.val.as_ref().unwrap(), Val::Fval);
+        assert_eq!(float.fval, ".1");
+        assert_eq!(a_const.location, 7);
+    }
 }
 
 #[test]
@@ -1008,6 +1023,28 @@ fn it_parses_WITH() {
     assert_eq!(result.tables(), ["x"]);
     assert_eq!(result.cte_names, ["a"]);
     assert_eq!(result.statement_types(), ["SelectStmt"]);
+}
+
+#[test]
+fn it_parses_INSERT_SELECT() {
+    let result = parse("INSERT INTO a SELECT x FROM b").unwrap();
+    assert_eq!(sorted(result.tables()).collect::<Vec<_>>(), ["a", "b"]);
+    let all_nodes = result.protobuf.iter().collect::<Vec<_>>();
+    assert_eq!(all_nodes.len(), 7);
+}
+
+#[test]
+fn get_params() {
+    let result = parse(
+        "WITH a AS (SELECT x FROM b WHERE y = $1 AND z = (SELECT u FROM c WHERE w = $2)) INSERT INTO d (e, f) SELECT $3, x FROM a WHERE x > $4",
+    )
+    .unwrap();
+    let params: Vec<_> = sorted(result.protobuf.iter().filter_map(|node| match node {
+        NodeRef::ParamRef(x) => Some(x.number),
+        _ => None,
+    }))
+    .collect();
+    assert_eq!(params, [1, 2, 3, 4]);
 }
 
 #[test]
