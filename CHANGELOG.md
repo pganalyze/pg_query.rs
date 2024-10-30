@@ -1,5 +1,9 @@
 # Changelog
 
+## 5.1.1    2024-10-30
+
+* Make `ParseResult` struct public and implement `Debug`
+
 ## 5.1.0    2024-01-09
 
 * Update to libpg_query 16-5.1.0

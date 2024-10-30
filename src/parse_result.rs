@@ -51,6 +51,8 @@ impl protobuf::ParseResult {
     }
 }
 
+/// Result from calling [parse]
+#[derive(Debug)]
 pub struct ParseResult {
     pub protobuf: protobuf::ParseResult,
     pub warnings: Vec<String>,
@@ -215,7 +217,7 @@ impl ParseResult {
             .collect()
     }
 
-    /// Returns any references to tables in the query
+    /// Returns all function references
     pub fn functions(&self) -> Vec<String> {
         let mut functions = HashSet::new();
         self.functions.iter().for_each(|(f, _c)| {
@@ -246,6 +248,7 @@ impl ParseResult {
             .collect()
     }
 
+    /// Converts the parsed query back into a SQL string
     pub fn deparse(&self) -> Result<String> {
         crate::deparse(&self.protobuf)
     }
@@ -263,6 +266,7 @@ impl ParseResult {
         crate::truncate(&self.protobuf, max_length)
     }
 
+    /// Returns all statement types in the query
     pub fn statement_types(&self) -> Vec<&str> {
         self.protobuf
             .stmts
