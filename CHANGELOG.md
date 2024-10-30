@@ -1,6 +1,6 @@
 # Changelog
 
-## 5.1.1    2024-10-17
+## 5.1.1    2024-10-30
 
 * Make `ParseResult` struct public and implement `Debug`
 
