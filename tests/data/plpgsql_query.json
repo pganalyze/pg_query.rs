@@ -48,7 +48,7 @@
           "PLpgSQL_var": {
             "datatype": {
               "PLpgSQL_type": {
-                "typname": "UNKNOWN"
+                "typname": "pg_catalog.int4"
               }
             },
             "refname": "input"
@@ -58,7 +58,7 @@
           "PLpgSQL_var": {
             "datatype": {
               "PLpgSQL_type": {
-                "typname": "UNKNOWN"
+                "typname": "pg_catalog.\"boolean\""
               }
             },
             "refname": "found"

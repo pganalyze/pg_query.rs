@@ -178,7 +178,7 @@ fn it_works() {
     assert_eq!(result.hex, "d8a65a814fbc5f95");
 
     let result = fingerprint("DEALLOCATE ALL").unwrap();
-    assert_eq!(result.hex, "d8a65a814fbc5f95");
+    assert_eq!(result.hex, "2debfb8745df64a7");
 
     let result = fingerprint("EXPLAIN ANALYZE SELECT a").unwrap();
     assert_eq!(result.hex, "82845c1b5c6102e5");
