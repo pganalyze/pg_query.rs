@@ -48,7 +48,7 @@
           "PLpgSQL_var": {
             "datatype": {
               "PLpgSQL_type": {
-                "typname": "UNKNOWN"
+                "typname": "pg_catalog.\"varchar\""
               }
             },
             "refname": "v_name"
@@ -58,7 +58,7 @@
           "PLpgSQL_var": {
             "datatype": {
               "PLpgSQL_type": {
-                "typname": "UNKNOWN"
+                "typname": "pg_catalog.\"varchar\""
               }
             },
             "refname": "v_version"
@@ -68,7 +68,7 @@
           "PLpgSQL_var": {
             "datatype": {
               "PLpgSQL_type": {
-                "typname": "UNKNOWN"
+                "typname": "pg_catalog.\"boolean\""
               }
             },
             "refname": "found"
