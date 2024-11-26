@@ -390,7 +390,7 @@ dependencies = [
 
 [[package]]
 name = "pg_query"
-version = "5.1.1"
+version = "6.0.0"
 dependencies = [
  "bindgen",
  "cc",
