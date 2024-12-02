@@ -29,6 +29,9 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+      - name: Install protobuf-compiler
+        run: sudo apt-get install -y protobuf-compiler
+
       - uses: actions/checkout@v4
         with:
           submodules: recursive
@@ -68,6 +71,9 @@ jobs:
     name: Check file formatting and style
     runs-on: ubuntu-latest
     steps:
+      - name: Install protobuf-compiler
+        run: sudo apt-get install -y protobuf-compiler
+
       - uses: actions/checkout@v4
         with:
           submodules: recursive
