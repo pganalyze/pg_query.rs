@@ -25,6 +25,7 @@ impl NodeEnum {
         while !iter.is_empty() {
             let (node, depth, context, has_filter_columns) = iter.remove(0);
             let depth = depth + 1;
+
             match node {
                 //
                 // The following statement types do not modify tables
