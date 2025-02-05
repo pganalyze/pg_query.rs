@@ -56,10 +56,10 @@ impl protobuf::ParseResult {
 pub struct ParseResult {
     pub protobuf: protobuf::ParseResult,
     pub warnings: Vec<String>,
-    tables: Vec<(String, Context)>,
+    pub tables: Vec<(String, Context)>,
     pub aliases: HashMap<String, String>,
     pub cte_names: Vec<String>,
-    functions: Vec<(String, Context)>,
+    pub functions: Vec<(String, Context)>,
     pub filter_columns: Vec<(Option<String>, String)>,
 }
 
