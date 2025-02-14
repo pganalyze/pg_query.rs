@@ -82,6 +82,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "brunch"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "016d950e43311624fa0b3e1bfe340f49f1913d21d76165f883ede0cfee569b62"
+dependencies = [
+ "dactyl",
+ "unicode-width",
+]
+
+[[package]]
 name = "byteorder"
 version = "1.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -160,6 +170,12 @@ checksum = "5a22b2d63d4d1dc0b7f1b6b2747dd0088008a9be28b6ddf0b1e7d335e3037294"
 dependencies = [
  "cfg-if",
 ]
+
+[[package]]
+name = "dactyl"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8a4d2c8b71b31d345e76c2532f9c9a99eae384ec1f47a6eb6347e35b5645aae4"
 
 [[package]]
 name = "diff"
@@ -393,6 +409,7 @@ name = "pg_query"
 version = "6.0.0"
 dependencies = [
  "bindgen",
+ "brunch",
  "cc",
  "clippy",
  "easy-parallel",
@@ -701,6 +718,12 @@ name = "unicode-ident"
 version = "1.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "301abaae475aa91687eb82514b328ab47a211a533026cb25fc3e519b86adfc3c"
+
+[[package]]
+name = "unicode-width"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1fc81956842c57dac11422a97c3b8195a1ff727f06e85c84ed2e8aa277c9a0fd"
 
 [[package]]
 name = "wasi"

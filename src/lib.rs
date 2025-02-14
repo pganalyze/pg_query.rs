@@ -38,7 +38,7 @@
 //! ```
 //!
 
-mod bindings;
+pub mod bindings;
 mod error;
 mod node_enum;
 mod node_mut;
