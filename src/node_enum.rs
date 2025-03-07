@@ -231,6 +231,8 @@ impl NodeEnum {
                     }
                     s.index_params.iter().for_each(|n| {
                         if let Some(NodeEnum::IndexElem(n)) = n.node.as_ref() {
+                            iter.push((n.to_ref(), depth, Context::DDL, false));
+
                             if let Some(n) = n.expr.as_ref().and_then(|n| n.node.as_ref()) {
                                 iter.push((n.to_ref(), depth, Context::DDL, false));
                             }
