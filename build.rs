@@ -64,6 +64,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map_err(|_| "Unable to generate bindings")?
         .write_to_file(out_dir.join("bindings.rs"))?;
 
+    // Set the PROTOC environment variable so prost-build uses the correct binary
+    let protoc_path = protoc_bin_vendored::protoc_bin_path()?;
+    std::env::set_var("PROTOC", protoc_path);
+
     // Generate the protobuf definition
     prost_build::compile_protos(&[&out_protobuf_path.join(LIBRARY_NAME).with_extension("proto")], &[&out_protobuf_path])?;
 
