@@ -10,6 +10,9 @@ static SOURCE_DIRECTORY: &str = "libpg_query";
 static LIBRARY_NAME: &str = "pg_query";
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // return if proto file changes
+    println!("cargo:rerun-if-changed=libpg_query/protobuf/pg_query.proto");
+
     let out_dir = PathBuf::from(env::var("OUT_DIR")?);
     let build_path = Path::new(".").join(SOURCE_DIRECTORY);
     let out_header_path = out_dir.join(LIBRARY_NAME).with_extension("h");
@@ -64,12 +67,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map_err(|_| "Unable to generate bindings")?
         .write_to_file(out_dir.join("bindings.rs"))?;
 
-    // Set the PROTOC environment variable so prost-build uses the correct binary
-    let protoc_path = protoc_bin_vendored::protoc_bin_path()?;
-    std::env::set_var("PROTOC", protoc_path);
+    if env::var("REGENERATE_PROTOBUF").is_ok() || env::var("PROTOC").is_ok() {
+        println!("generating protobuf bindings");
+        // HACK: Set OUT_DIR to src/ so that the generated protobuf file is copied to src/protobuf.rs
+        let src_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR")?).join("src");
+        env::set_var("OUT_DIR", &src_dir);
 
-    // Generate the protobuf definition
-    prost_build::compile_protos(&[&out_protobuf_path.join(LIBRARY_NAME).with_extension("proto")], &[&out_protobuf_path])?;
+        prost_build::compile_protos(&[&out_protobuf_path.join(LIBRARY_NAME).with_extension("proto")], &[&out_protobuf_path])?;
+
+        std::fs::rename(src_dir.join("pg_query.rs"), src_dir.join("protobuf.rs"))?;
+
+        // Reset OUT_DIR to the original value
+        env::set_var("OUT_DIR", &out_dir);
+    } else {
+        println!("skipping protobuf generation");
+    }
 
     Ok(())
 }

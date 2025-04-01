@@ -22,7 +22,6 @@ thiserror = "1.0.31"
 bindgen = "0.66.1"
 clippy = { version = "0.0.302", optional = true }
 prost-build = "0.13.5"
-protoc-bin-vendored = "3.1.0"
 fs_extra = "1.2.0"
 cc = "1.0.83"
 glob = "0.3.1"
