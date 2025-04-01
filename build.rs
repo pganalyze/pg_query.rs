@@ -5,6 +5,7 @@ use fs_extra::dir::CopyOptions;
 use glob::glob;
 use std::env;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 static SOURCE_DIRECTORY: &str = "libpg_query";
 static LIBRARY_NAME: &str = "pg_query";
@@ -67,7 +68,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map_err(|_| "Unable to generate bindings")?
         .write_to_file(out_dir.join("bindings.rs"))?;
 
-    if env::var("REGENERATE_PROTOBUF").is_ok() || env::var("PROTOC").is_ok() {
+    let protoc_exists = Command::new("protoc").arg("--version").status().is_ok();
+    if env::var("REGENERATE_PROTOBUF").is_ok() || protoc_exists {
         println!("generating protobuf bindings");
         // HACK: Set OUT_DIR to src/ so that the generated protobuf file is copied to src/protobuf.rs
         let src_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR")?).join("src");
