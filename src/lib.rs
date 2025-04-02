@@ -45,6 +45,7 @@ mod node_mut;
 mod node_ref;
 mod node_structs;
 mod parse_result;
+#[rustfmt::skip]
 pub mod protobuf;
 mod query;
 mod truncate;
