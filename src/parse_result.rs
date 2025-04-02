@@ -91,8 +91,8 @@ impl ParseResult {
                     functions.insert((funcname, Context::Call));
                 }
                 NodeRef::DropStmt(s) => {
-                    match protobuf::ObjectType::from_i32(s.remove_type) {
-                        Some(protobuf::ObjectType::ObjectTable) => {
+                    match protobuf::ObjectType::try_from(s.remove_type) {
+                        Ok(protobuf::ObjectType::ObjectTable) => {
                             for o in &s.objects {
                                 if let Some(NodeEnum::List(list)) = &o.node {
                                     let table =
@@ -101,7 +101,7 @@ impl ParseResult {
                                 };
                             }
                         }
-                        Some(protobuf::ObjectType::ObjectRule) | Some(protobuf::ObjectType::ObjectTrigger) => {
+                        Ok(protobuf::ObjectType::ObjectRule) | Ok(protobuf::ObjectType::ObjectTrigger) => {
                             for o in &s.objects {
                                 if let Some(NodeEnum::List(list)) = &o.node {
                                     // Unlike ObjectTable, this ignores the last string (the rule/trigger name)
@@ -115,7 +115,7 @@ impl ParseResult {
                                 };
                             }
                         }
-                        Some(protobuf::ObjectType::ObjectFunction) => {
+                        Ok(protobuf::ObjectType::ObjectFunction) => {
                             // Only one function can be dropped in a statement
                             if let Some(NodeEnum::ObjectWithArgs(object)) = &s.objects[0].node {
                                 if let Some(NodeEnum::String(string)) = &object.objname[0].node {
@@ -132,7 +132,7 @@ impl ParseResult {
                     }
                 }
                 NodeRef::RenameStmt(s) => {
-                    if let Some(protobuf::ObjectType::ObjectFunction) = protobuf::ObjectType::from_i32(s.rename_type) {
+                    if let Ok(protobuf::ObjectType::ObjectFunction) = protobuf::ObjectType::try_from(s.rename_type) {
                         if let Some(object) = &s.object {
                             if let Some(NodeEnum::ObjectWithArgs(object)) = &object.node {
                                 if let Some(NodeEnum::String(string)) = &object.objname[0].node {

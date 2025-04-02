@@ -44,7 +44,9 @@ pub mod node {
         #[prost(message, tag = "9")]
         WindowFunc(::prost::alloc::boxed::Box<super::WindowFunc>),
         #[prost(message, tag = "10")]
-        WindowFuncRunCondition(::prost::alloc::boxed::Box<super::WindowFuncRunCondition>),
+        WindowFuncRunCondition(
+            ::prost::alloc::boxed::Box<super::WindowFuncRunCondition>,
+        ),
         #[prost(message, tag = "11")]
         MergeSupportFunc(::prost::alloc::boxed::Box<super::MergeSupportFunc>),
         #[prost(message, tag = "12")]
@@ -278,7 +280,9 @@ pub mod node {
         #[prost(message, tag = "126")]
         JsonArrayConstructor(super::JsonArrayConstructor),
         #[prost(message, tag = "127")]
-        JsonArrayQueryConstructor(::prost::alloc::boxed::Box<super::JsonArrayQueryConstructor>),
+        JsonArrayQueryConstructor(
+            ::prost::alloc::boxed::Box<super::JsonArrayQueryConstructor>,
+        ),
         #[prost(message, tag = "128")]
         JsonAggConstructor(::prost::alloc::boxed::Box<super::JsonAggConstructor>),
         #[prost(message, tag = "129")]
@@ -348,7 +352,9 @@ pub mod node {
         #[prost(message, tag = "161")]
         AlterExtensionStmt(super::AlterExtensionStmt),
         #[prost(message, tag = "162")]
-        AlterExtensionContentsStmt(::prost::alloc::boxed::Box<super::AlterExtensionContentsStmt>),
+        AlterExtensionContentsStmt(
+            ::prost::alloc::boxed::Box<super::AlterExtensionContentsStmt>,
+        ),
         #[prost(message, tag = "163")]
         CreateFdwStmt(super::CreateFdwStmt),
         #[prost(message, tag = "164")]
@@ -444,7 +450,9 @@ pub mod node {
         #[prost(message, tag = "209")]
         RenameStmt(::prost::alloc::boxed::Box<super::RenameStmt>),
         #[prost(message, tag = "210")]
-        AlterObjectDependsStmt(::prost::alloc::boxed::Box<super::AlterObjectDependsStmt>),
+        AlterObjectDependsStmt(
+            ::prost::alloc::boxed::Box<super::AlterObjectDependsStmt>,
+        ),
         #[prost(message, tag = "211")]
         AlterObjectSchemaStmt(::prost::alloc::boxed::Box<super::AlterObjectSchemaStmt>),
         #[prost(message, tag = "212")]
@@ -2156,7 +2164,9 @@ pub struct RangeTblEntry {
     #[prost(uint32, tag = "8")]
     pub perminfoindex: u32,
     #[prost(message, optional, boxed, tag = "9")]
-    pub tablesample: ::core::option::Option<::prost::alloc::boxed::Box<TableSampleClause>>,
+    pub tablesample: ::core::option::Option<
+        ::prost::alloc::boxed::Box<TableSampleClause>,
+    >,
     #[prost(message, optional, boxed, tag = "10")]
     pub subquery: ::core::option::Option<::prost::alloc::boxed::Box<Query>>,
     #[prost(bool, tag = "11")]
@@ -2627,7 +2637,9 @@ pub struct JsonAggConstructor {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct JsonObjectAgg {
     #[prost(message, optional, boxed, tag = "1")]
-    pub constructor: ::core::option::Option<::prost::alloc::boxed::Box<JsonAggConstructor>>,
+    pub constructor: ::core::option::Option<
+        ::prost::alloc::boxed::Box<JsonAggConstructor>,
+    >,
     #[prost(message, optional, boxed, tag = "2")]
     pub arg: ::core::option::Option<::prost::alloc::boxed::Box<JsonKeyValue>>,
     #[prost(bool, tag = "3")]
@@ -2638,7 +2650,9 @@ pub struct JsonObjectAgg {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct JsonArrayAgg {
     #[prost(message, optional, boxed, tag = "1")]
-    pub constructor: ::core::option::Option<::prost::alloc::boxed::Box<JsonAggConstructor>>,
+    pub constructor: ::core::option::Option<
+        ::prost::alloc::boxed::Box<JsonAggConstructor>,
+    >,
     #[prost(message, optional, boxed, tag = "2")]
     pub arg: ::core::option::Option<::prost::alloc::boxed::Box<JsonValueExpr>>,
     #[prost(bool, tag = "3")]
@@ -2662,7 +2676,9 @@ pub struct InsertStmt {
     #[prost(message, optional, boxed, tag = "3")]
     pub select_stmt: ::core::option::Option<::prost::alloc::boxed::Box<Node>>,
     #[prost(message, optional, boxed, tag = "4")]
-    pub on_conflict_clause: ::core::option::Option<::prost::alloc::boxed::Box<OnConflictClause>>,
+    pub on_conflict_clause: ::core::option::Option<
+        ::prost::alloc::boxed::Box<OnConflictClause>,
+    >,
     #[prost(message, repeated, tag = "5")]
     pub returning_list: ::prost::alloc::vec::Vec<Node>,
     #[prost(message, optional, tag = "6")]
@@ -5710,9 +5726,13 @@ impl AlterTsConfigType {
         match self {
             Self::AlterTsconfigTypeUndefined => "ALTER_TSCONFIG_TYPE_UNDEFINED",
             Self::AlterTsconfigAddMapping => "ALTER_TSCONFIG_ADD_MAPPING",
-            Self::AlterTsconfigAlterMappingForToken => "ALTER_TSCONFIG_ALTER_MAPPING_FOR_TOKEN",
+            Self::AlterTsconfigAlterMappingForToken => {
+                "ALTER_TSCONFIG_ALTER_MAPPING_FOR_TOKEN"
+            }
             Self::AlterTsconfigReplaceDict => "ALTER_TSCONFIG_REPLACE_DICT",
-            Self::AlterTsconfigReplaceDictForToken => "ALTER_TSCONFIG_REPLACE_DICT_FOR_TOKEN",
+            Self::AlterTsconfigReplaceDictForToken => {
+                "ALTER_TSCONFIG_REPLACE_DICT_FOR_TOKEN"
+            }
             Self::AlterTsconfigDropMapping => "ALTER_TSCONFIG_DROP_MAPPING",
         }
     }
@@ -5721,9 +5741,13 @@ impl AlterTsConfigType {
         match value {
             "ALTER_TSCONFIG_TYPE_UNDEFINED" => Some(Self::AlterTsconfigTypeUndefined),
             "ALTER_TSCONFIG_ADD_MAPPING" => Some(Self::AlterTsconfigAddMapping),
-            "ALTER_TSCONFIG_ALTER_MAPPING_FOR_TOKEN" => Some(Self::AlterTsconfigAlterMappingForToken),
+            "ALTER_TSCONFIG_ALTER_MAPPING_FOR_TOKEN" => {
+                Some(Self::AlterTsconfigAlterMappingForToken)
+            }
             "ALTER_TSCONFIG_REPLACE_DICT" => Some(Self::AlterTsconfigReplaceDict),
-            "ALTER_TSCONFIG_REPLACE_DICT_FOR_TOKEN" => Some(Self::AlterTsconfigReplaceDictForToken),
+            "ALTER_TSCONFIG_REPLACE_DICT_FOR_TOKEN" => {
+                Some(Self::AlterTsconfigReplaceDictForToken)
+            }
             "ALTER_TSCONFIG_DROP_MAPPING" => Some(Self::AlterTsconfigDropMapping),
             _ => None,
         }
@@ -5748,7 +5772,9 @@ impl PublicationObjSpecType {
             Self::Undefined => "PUBLICATION_OBJ_SPEC_TYPE_UNDEFINED",
             Self::PublicationobjTable => "PUBLICATIONOBJ_TABLE",
             Self::PublicationobjTablesInSchema => "PUBLICATIONOBJ_TABLES_IN_SCHEMA",
-            Self::PublicationobjTablesInCurSchema => "PUBLICATIONOBJ_TABLES_IN_CUR_SCHEMA",
+            Self::PublicationobjTablesInCurSchema => {
+                "PUBLICATIONOBJ_TABLES_IN_CUR_SCHEMA"
+            }
             Self::PublicationobjContinuation => "PUBLICATIONOBJ_CONTINUATION",
         }
     }
@@ -5758,7 +5784,9 @@ impl PublicationObjSpecType {
             "PUBLICATION_OBJ_SPEC_TYPE_UNDEFINED" => Some(Self::Undefined),
             "PUBLICATIONOBJ_TABLE" => Some(Self::PublicationobjTable),
             "PUBLICATIONOBJ_TABLES_IN_SCHEMA" => Some(Self::PublicationobjTablesInSchema),
-            "PUBLICATIONOBJ_TABLES_IN_CUR_SCHEMA" => Some(Self::PublicationobjTablesInCurSchema),
+            "PUBLICATIONOBJ_TABLES_IN_CUR_SCHEMA" => {
+                Some(Self::PublicationobjTablesInCurSchema)
+            }
             "PUBLICATIONOBJ_CONTINUATION" => Some(Self::PublicationobjContinuation),
             _ => None,
         }
@@ -5821,7 +5849,9 @@ impl AlterSubscriptionType {
             Self::AlterSubscriptionConnection => "ALTER_SUBSCRIPTION_CONNECTION",
             Self::AlterSubscriptionSetPublication => "ALTER_SUBSCRIPTION_SET_PUBLICATION",
             Self::AlterSubscriptionAddPublication => "ALTER_SUBSCRIPTION_ADD_PUBLICATION",
-            Self::AlterSubscriptionDropPublication => "ALTER_SUBSCRIPTION_DROP_PUBLICATION",
+            Self::AlterSubscriptionDropPublication => {
+                "ALTER_SUBSCRIPTION_DROP_PUBLICATION"
+            }
             Self::AlterSubscriptionRefresh => "ALTER_SUBSCRIPTION_REFRESH",
             Self::AlterSubscriptionEnabled => "ALTER_SUBSCRIPTION_ENABLED",
             Self::AlterSubscriptionSkip => "ALTER_SUBSCRIPTION_SKIP",
@@ -5833,9 +5863,15 @@ impl AlterSubscriptionType {
             "ALTER_SUBSCRIPTION_TYPE_UNDEFINED" => Some(Self::Undefined),
             "ALTER_SUBSCRIPTION_OPTIONS" => Some(Self::AlterSubscriptionOptions),
             "ALTER_SUBSCRIPTION_CONNECTION" => Some(Self::AlterSubscriptionConnection),
-            "ALTER_SUBSCRIPTION_SET_PUBLICATION" => Some(Self::AlterSubscriptionSetPublication),
-            "ALTER_SUBSCRIPTION_ADD_PUBLICATION" => Some(Self::AlterSubscriptionAddPublication),
-            "ALTER_SUBSCRIPTION_DROP_PUBLICATION" => Some(Self::AlterSubscriptionDropPublication),
+            "ALTER_SUBSCRIPTION_SET_PUBLICATION" => {
+                Some(Self::AlterSubscriptionSetPublication)
+            }
+            "ALTER_SUBSCRIPTION_ADD_PUBLICATION" => {
+                Some(Self::AlterSubscriptionAddPublication)
+            }
+            "ALTER_SUBSCRIPTION_DROP_PUBLICATION" => {
+                Some(Self::AlterSubscriptionDropPublication)
+            }
             "ALTER_SUBSCRIPTION_REFRESH" => Some(Self::AlterSubscriptionRefresh),
             "ALTER_SUBSCRIPTION_ENABLED" => Some(Self::AlterSubscriptionEnabled),
             "ALTER_SUBSCRIPTION_SKIP" => Some(Self::AlterSubscriptionSkip),
