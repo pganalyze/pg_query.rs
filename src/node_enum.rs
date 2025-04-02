@@ -62,15 +62,15 @@ impl NodeEnum {
                             }
                         });
                     }
-                    match protobuf::SetOperation::from_i32(s.op) {
-                        Some(protobuf::SetOperation::SetopNone) => {
+                    match protobuf::SetOperation::try_from(s.op) {
+                        Ok(protobuf::SetOperation::SetopNone) => {
                             s.from_clause.iter().for_each(|n| {
                                 if let Some(n) = n.node.as_ref() {
                                     iter.push((n.to_ref(), depth, Context::Select, false));
                                 }
                             });
                         }
-                        Some(protobuf::SetOperation::SetopUnion) => {
+                        Ok(protobuf::SetOperation::SetopUnion) => {
                             if let Some(left) = s.larg.as_ref() {
                                 iter.push((left.to_ref(), depth, Context::Select, false));
                             }
@@ -78,7 +78,7 @@ impl NodeEnum {
                                 iter.push((right.to_ref(), depth, Context::Select, false));
                             }
                         }
-                        Some(protobuf::SetOperation::SetopExcept) => {
+                        Ok(protobuf::SetOperation::SetopExcept) => {
                             if let Some(left) = s.larg.as_ref() {
                                 iter.push((left.to_ref(), depth, Context::Select, false));
                             }
@@ -86,7 +86,7 @@ impl NodeEnum {
                                 iter.push((right.to_ref(), depth, Context::Select, false));
                             }
                         }
-                        Some(protobuf::SetOperation::SetopIntersect) => {
+                        Ok(protobuf::SetOperation::SetopIntersect) => {
                             if let Some(left) = s.larg.as_ref() {
                                 iter.push((left.to_ref(), depth, Context::Select, false));
                             }
@@ -94,7 +94,7 @@ impl NodeEnum {
                                 iter.push((right.to_ref(), depth, Context::Select, false));
                             }
                         }
-                        Some(protobuf::SetOperation::Undefined) | None => (),
+                        Ok(protobuf::SetOperation::Undefined) | Err(_) => (),
                     }
                 }
                 NodeRef::InsertStmt(s) => {
@@ -267,7 +267,7 @@ impl NodeEnum {
                     }
                 }
                 NodeRef::GrantStmt(s) => {
-                    if let Some(protobuf::ObjectType::ObjectTable) = protobuf::ObjectType::from_i32(s.objtype) {
+                    if let Ok(protobuf::ObjectType::ObjectTable) = protobuf::ObjectType::try_from(s.objtype) {
                         s.objects.iter().for_each(|n| {
                             if let Some(n) = n.node.as_ref() {
                                 iter.push((n.to_ref(), depth, Context::DDL, false));
@@ -495,15 +495,15 @@ impl NodeEnum {
                             }
                         });
                     }
-                    match protobuf::SetOperation::from_i32(s.op) {
-                        Some(protobuf::SetOperation::SetopNone) => {
+                    match protobuf::SetOperation::try_from(s.op) {
+                        Ok(protobuf::SetOperation::SetopNone) => {
                             s.from_clause.iter_mut().for_each(|n| {
                                 if let Some(n) = n.node.as_mut() {
                                     iter.push((n.to_mut(), depth, Context::Select));
                                 }
                             });
                         }
-                        Some(protobuf::SetOperation::SetopUnion) => {
+                        Ok(protobuf::SetOperation::SetopUnion) => {
                             if let Some(left) = s.larg.as_mut() {
                                 iter.push((left.to_mut(), depth, Context::Select));
                             }
@@ -511,7 +511,7 @@ impl NodeEnum {
                                 iter.push((right.to_mut(), depth, Context::Select));
                             }
                         }
-                        Some(protobuf::SetOperation::SetopExcept) => {
+                        Ok(protobuf::SetOperation::SetopExcept) => {
                             if let Some(left) = s.larg.as_mut() {
                                 iter.push((left.to_mut(), depth, Context::Select));
                             }
@@ -519,7 +519,7 @@ impl NodeEnum {
                                 iter.push((right.to_mut(), depth, Context::Select));
                             }
                         }
-                        Some(protobuf::SetOperation::SetopIntersect) => {
+                        Ok(protobuf::SetOperation::SetopIntersect) => {
                             if let Some(left) = s.larg.as_mut() {
                                 iter.push((left.to_mut(), depth, Context::Select));
                             }
@@ -527,7 +527,7 @@ impl NodeEnum {
                                 iter.push((right.to_mut(), depth, Context::Select));
                             }
                         }
-                        Some(protobuf::SetOperation::Undefined) | None => (),
+                        Ok(protobuf::SetOperation::Undefined) | Err(_) => (),
                     }
                 }
                 NodeMut::InsertStmt(s) => {
@@ -711,7 +711,7 @@ impl NodeEnum {
                 }
                 NodeMut::GrantStmt(s) => {
                     let s = s.as_mut().unwrap();
-                    if let Some(protobuf::ObjectType::ObjectTable) = protobuf::ObjectType::from_i32(s.objtype) {
+                    if let Ok(protobuf::ObjectType::ObjectTable) = protobuf::ObjectType::try_from(s.objtype) {
                         s.objects.iter_mut().for_each(|n| {
                             if let Some(n) = n.node.as_mut() {
                                 iter.push((n.to_mut(), depth, Context::DDL));
