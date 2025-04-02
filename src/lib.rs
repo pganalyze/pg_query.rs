@@ -45,6 +45,7 @@ mod node_mut;
 mod node_ref;
 mod node_structs;
 mod parse_result;
+pub mod protobuf;
 mod query;
 mod truncate;
 
@@ -55,10 +56,6 @@ pub use node_ref::*;
 pub use parse_result::*;
 pub use query::*;
 pub use truncate::*;
-
-pub mod protobuf {
-    include!(concat!(env!("OUT_DIR"), "/pg_query.rs"));
-}
 
 pub use protobuf::Node;
 
