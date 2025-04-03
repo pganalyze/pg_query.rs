@@ -4455,6 +4455,115 @@ pub struct ScanToken {
     #[prost(enumeration = "KeywordKind", tag = "5")]
     pub keyword_kind: i32,
 }
+/// protobuf-c doesn't support optional fields, so any optional strings
+/// are just an empty string if it should be the equivalent of None/nil.
+///
+/// These fields have `// optional` at the end of the line.
+///
+/// Upstream issue: <https://github.com/protobuf-c/protobuf-c/issues/476>
+#[derive(serde::Serialize)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct SummaryResult {
+    #[prost(message, repeated, tag = "1")]
+    pub tables: ::prost::alloc::vec::Vec<summary_result::Table>,
+    /// The value here is the table name (i.e. schema.table or just table).
+    #[prost(map = "string, string", tag = "2")]
+    pub aliases: ::std::collections::HashMap<
+        ::prost::alloc::string::String,
+        ::prost::alloc::string::String,
+    >,
+    #[prost(string, repeated, tag = "3")]
+    pub cte_names: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    #[prost(message, repeated, tag = "4")]
+    pub functions: ::prost::alloc::vec::Vec<summary_result::Function>,
+    #[prost(message, repeated, tag = "5")]
+    pub filter_columns: ::prost::alloc::vec::Vec<summary_result::FilterColumn>,
+    /// optional, empty if truncaation limit is -1
+    #[prost(string, tag = "6")]
+    pub truncated_query: ::prost::alloc::string::String,
+}
+/// Nested message and enum types in `SummaryResult`.
+pub mod summary_result {
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct Table {
+        #[prost(string, tag = "1")]
+        pub name: ::prost::alloc::string::String,
+        #[prost(string, tag = "2")]
+        pub schema_name: ::prost::alloc::string::String,
+        #[prost(string, tag = "3")]
+        pub rel_name: ::prost::alloc::string::String,
+        #[prost(enumeration = "Context", tag = "4")]
+        pub context: i32,
+    }
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct Function {
+        #[prost(string, tag = "1")]
+        pub name: ::prost::alloc::string::String,
+        #[prost(string, tag = "2")]
+        pub function_name: ::prost::alloc::string::String,
+        /// optional
+        #[prost(string, tag = "3")]
+        pub schema_name: ::prost::alloc::string::String,
+        #[prost(enumeration = "Context", tag = "4")]
+        pub context: i32,
+    }
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct FilterColumn {
+        /// optional
+        #[prost(string, tag = "1")]
+        pub schema: ::prost::alloc::string::String,
+        /// optional
+        #[prost(string, tag = "2")]
+        pub table: ::prost::alloc::string::String,
+        #[prost(string, tag = "3")]
+        pub column: ::prost::alloc::string::String,
+    }
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum Context {
+        None = 0,
+        Select = 1,
+        Dml = 2,
+        Ddl = 3,
+        Call = 4,
+    }
+    impl Context {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::None => "None",
+                Self::Select => "Select",
+                Self::Dml => "DML",
+                Self::Ddl => "DDL",
+                Self::Call => "Call",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "None" => Some(Self::None),
+                "Select" => Some(Self::Select),
+                "DML" => Some(Self::Dml),
+                "DDL" => Some(Self::Ddl),
+                "Call" => Some(Self::Call),
+                _ => None,
+            }
+        }
+    }
+}
 #[derive(serde::Serialize)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
