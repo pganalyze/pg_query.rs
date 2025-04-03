@@ -12,7 +12,8 @@ include = [
     # libpg_query
     "Makefile", "pg_query.h",
     "libpg_query/{src,vendor}/**/*.{c,h}",
-    "libpg_query/protobuf/{pg_query.pb-c.*,pg_query.proto}",
+    "libpg_query/protobuf/pg_query.pb-c.{c,h}",
+    "libpg_query/protobuf/pg_query.proto",
 ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
