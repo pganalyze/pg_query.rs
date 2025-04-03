@@ -1,5 +1,17 @@
 # Changelog
 
+## 6.1.0   2025-04-02
+
+* Upgrade to libpg_query 17-6.1.0
+  - Update to Postgres 17.4, and add recent patches scheduled for Postgres 17.5 (not yet released)
+    - Notably, this pulls in support for macOS 15.4 which defines strchrnul
+      in its standard library, fixing builds on up-to-date macOS versions.
+  - Deparser improvements
+    - Add parenthesis around AT LOCAL / AT TIMEZONE if needed
+    - Correctness improvements related to expressions and function calls
+* Upgrade prost dependency to fix build issues on Linux
+* `ParseResult`: make `tables` and `functions` fields public
+
 ## 6.0.0   2024-11-26
 
 * Upgrade to libpg_query 17-6.0.0
