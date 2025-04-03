@@ -48,6 +48,8 @@ mod parse_result;
 #[rustfmt::skip]
 pub mod protobuf;
 mod query;
+mod summary;
+mod summary_result;
 mod truncate;
 
 pub use error::*;
@@ -56,6 +58,8 @@ pub use node_mut::*;
 pub use node_ref::*;
 pub use parse_result::*;
 pub use query::*;
+pub use summary::*;
+pub use summary_result::*;
 pub use truncate::*;
 
 pub use protobuf::Node;
