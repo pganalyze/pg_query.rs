@@ -2,7 +2,7 @@ use crate::*;
 
 pub use protobuf::node::Node as NodeEnum;
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, serde::Serialize)]
 pub enum Context {
     None,
     Select,
