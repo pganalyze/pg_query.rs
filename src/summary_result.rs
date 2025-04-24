@@ -66,6 +66,18 @@ impl SummaryResult {
         });
         Vec::from_iter(tables)
     }
+
+    /// Returns only tables that were selected from
+    pub fn select_tables(&self) -> Vec<String> {
+        self.tables
+            .iter()
+            .filter_map(|table| match &table.context {
+                Context::Select => Some(table.name.to_string()),
+                _ => None,
+            })
+            .collect()
+    }
+
 }
 
 #[derive(Debug, Eq, Hash, PartialEq)]
