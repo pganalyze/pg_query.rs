@@ -14,28 +14,19 @@ use pg_query::{
 mod support;
 use support::*;
 
-/*#[test]
+#[test]
 fn it_parses_simple_query() {
-    //let result = summary("SELECT 1", 0, -1, 0, -1).unwrap();
-    let result = summary("SELECT * FROM test WHERE a = 1", 0, -1, 0, -1).unwrap();
-    println!("{:#?}", result);
-    assert_eq!(
-        result,
-        SummaryResult {
-            protobuf: Default::default(),
-            warnings: vec![],
-            tables: vec![],
-            aliases: std::collections::HashMap::new(),
-            cte_names: vec![],
-            functions: vec![],
-            filter_columns: vec![],
-            truncated_query: Some(String::from("x")),
-        }
-    );
+    let result = summary("SELECT * FROM test WHERE a = 1", 0, -1).unwrap();
 
-    //assert_eq!(result.tables().len(), 0);
+    assert_eq!(result.warnings.len(), 0);
+    assert_eq!(result.tables().len(), 1);
+    assert_eq!(result.aliases.is_empty(), true);
+    assert_eq!(result.cte_names.len(), 0);
+    assert_eq!(result.functions.len(), 0);
+    assert_eq!(result.filter_columns.len(), 0);
+    assert_eq!(result.truncated_query.is_none(), true);
     //assert_eq!(result.statement_types(), ["SelectStmt"]);
-}*/
+}
 
 #[test]
 fn it_handles_errors() {
