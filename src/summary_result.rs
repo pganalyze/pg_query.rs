@@ -59,7 +59,6 @@ impl SummaryResult {
 
     /// Returns all referenced tables in the query
     pub fn tables(&self) -> Vec<String> {
-        // Copied from ParseResult::tables() for compatibility reasons.
         let mut tables = HashSet::new();
         self.tables.iter().for_each(|table| {
             tables.insert(table.name.clone());
@@ -76,6 +75,64 @@ impl SummaryResult {
                 _ => None,
             })
             .collect()
+    }
+
+    /// Returns only tables that were modified by the query
+    pub fn dml_tables(&self) -> Vec<String> {
+        self.tables
+            .iter()
+            .filter_map(|table| match &table.context {
+                Context::Dml => Some(table.name.to_string()),
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// Returns only tables that were modified by DDL statements
+    pub fn ddl_tables(&self) -> Vec<String> {
+        self.tables
+            .iter()
+            .filter_map(|table| match &table.context {
+                Context::Ddl => Some(table.name.to_string()),
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// Returns all function references
+    pub fn functions(&self) -> Vec<String> {
+        let mut functions = HashSet::new();
+        self.functions.iter().for_each(|f| {
+            functions.insert(f.name.to_string());
+        });
+        Vec::from_iter(functions)
+    }
+
+    /// Returns DDL functions
+    pub fn ddl_functions(&self) -> Vec<String> {
+        self.functions
+            .iter()
+            .filter_map(|function| match &function.context {
+                Context::Ddl => Some(function.name.to_string()),
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// Returns functions that were called
+    pub fn call_functions(&self) -> Vec<String> {
+        self.functions
+            .iter()
+            .filter_map(|function| match &function.context {
+                Context::Call => Some(function.name.to_string()),
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// Returns all statement types in the query
+    pub fn statement_types(&self) -> Vec<&str> {
+        unimplemented!("SummaryResult does not yet have the information needed to implement statement_types()")
     }
 
 }
