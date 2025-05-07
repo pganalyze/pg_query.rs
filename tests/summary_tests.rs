@@ -91,16 +91,22 @@ fn it_parses_real_queries() {
     assert_eq!(select_tables, ["snapshots", "system_snapshots"]);
     //assert_eq!(result.statement_types(), ["SelectStmt"]);
 }
-/*
+
 #[test]
 fn it_parses_empty_queries() {
     let result = summary("-- nothing", 0, -1).unwrap();
-    assert_eq!(result.protobuf.nodes().len(), 0);
-    assert_eq!(result.tables().len(), 0);
+    //assert_eq!(result.protobuf.nodes().len(), 0);
+    //assert_eq!(result.statement_types().len(), 0);
     assert_eq!(result.warnings.len(), 0);
-    assert_eq!(result.statement_types().len(), 0);
+    assert_eq!(result.tables().len(), 0);
+    assert_eq!(result.aliases.is_empty(), true);
+    assert_eq!(result.cte_names.len(), 0);
+    assert_eq!(result.functions.len(), 0);
+    assert_eq!(result.filter_columns.len(), 0);
+    assert_eq!(result.truncated_query.is_none(), true);
 }
 
+/*
 #[test]
 fn it_parses_floats_with_leading_dot() {
     let result = summary("SELECT .1", 0, -1).unwrap();
@@ -125,7 +131,7 @@ fn it_parses_bit_strings_hex_notation() {
 
 #[test]
 fn it_parses_ALTER_TABLE() {
-    let result = summary("ALTER TABLE test ADD PRIMARY KEY (gid, 0, -1)").unwrap();
+    let result = summary("ALTER TABLE test ADD PRIMARY KEY (gid)", 0, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["test"]);
     assert_eq!(result.ddl_tables(), ["test"]);
@@ -1241,10 +1247,12 @@ fn it_parses_table_functions() {
     assert_eq!(result.call_functions().len(), 0);
     assert_eq!(result.statement_types(), ["CreateFunctionStmt"]);
 }
+*/
 
+/* FIXME: REMOVE THIS ONCE statement_types() WORKS
 #[test]
 fn it_finds_called_functions() {
-    let result = summary("SELECT testfunc(1, 0, -1);").unwrap();
+    let result = summary("SELECT testfunc(1);", 0, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.functions(), ["testfunc"]);
@@ -1255,7 +1263,7 @@ fn it_finds_called_functions() {
 
 #[test]
 fn it_finds_dropped_functions() {
-    let result = summary("DROP FUNCTION IF EXISTS testfunc(x integer, 0, -1);").unwrap();
+    let result = summary("DROP FUNCTION IF EXISTS testfunc(x integer);", 0, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.functions(), ["testfunc"]);
@@ -1266,7 +1274,7 @@ fn it_finds_dropped_functions() {
 
 #[test]
 fn it_finds_renamed_functions() {
-    let result = summary("ALTER FUNCTION testfunc(integer, 0, -1) RENAME TO testfunc2;").unwrap();
+    let result = summary("ALTER FUNCTION testfunc(integer) RENAME TO testfunc2;", 0, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 0);
     let functions: Vec<String> = sorted(result.functions()).collect();
@@ -1276,7 +1284,9 @@ fn it_finds_renamed_functions() {
     assert_eq!(result.call_functions().len(), 0);
     assert_eq!(result.statement_types(), ["RenameStmt"]);
 }
+// FIXME: REMOVE THIS ONCE statement_types() WORKS */
 
+/*
 // https://github.com/pganalyze/pg_query/issues/38
 #[test]
 fn it_finds_nested_tables_in_SELECT() {
