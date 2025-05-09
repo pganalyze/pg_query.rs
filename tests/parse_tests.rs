@@ -285,6 +285,20 @@ fn it_parses_VACUUM() {
 }
 
 #[test]
+fn it_parses_MERGE() {
+    let result = parse(
+        "MERGE INTO my_table USING g.other_table ON (id=oid) WHEN MATCHED THEN UPDATE SET a=b WHEN NOT MATCHED THEN INSERT (id, a) VALUES (oid, b);",
+    )
+    .unwrap();
+    assert_eq!(result.warnings.len(), 0);
+
+    let tables: Vec<String> = sorted(result.tables()).collect();
+    assert_eq!(tables, ["g.other_table", "my_table"]);
+    assert_eq!(result.statement_types(), ["MergeStmt"]);
+    cast!(result.protobuf.nodes()[0].0, NodeRef::MergeStmt);
+}
+
+#[test]
 fn it_parses_EXPLAIN() {
     let result = parse("EXPLAIN DELETE FROM test").unwrap();
     assert_eq!(result.warnings.len(), 0);

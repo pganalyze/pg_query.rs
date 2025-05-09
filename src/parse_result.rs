@@ -276,6 +276,7 @@ impl ParseResult {
                 Some(NodeEnum::DeleteStmt(..)) => Some("DeleteStmt"),
                 Some(NodeEnum::UpdateStmt(..)) => Some("UpdateStmt"),
                 Some(NodeEnum::SelectStmt(..)) => Some("SelectStmt"),
+                Some(NodeEnum::MergeStmt(..)) => Some("MergeStmt"),
                 Some(NodeEnum::AlterTableStmt(..)) => Some("AlterTableStmt"),
                 Some(NodeEnum::AlterTableCmd(..)) => Some("AlterTableCmd"),
                 Some(NodeEnum::AlterDomainStmt(..)) => Some("AlterDomainStmt"),
