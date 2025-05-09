@@ -171,9 +171,17 @@ impl NodeEnum {
                         iter.push((t.to_ref(), depth, Context::DML, false));
                     }
 
+                    if let Some(clause) = &m.with_clause {
+                        clause.ctes.iter().for_each(|n| {
+                            if let Some(n) = n.node.as_ref() {
+                                iter.push((n.to_ref(), depth, Context::DML, false));
+                            }
+                        });
+                    }
+
                     m.source_relation.iter().for_each(|n| {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, Context::DML, false));
+                            iter.push((n.to_ref(), depth, Context::Select, false));
                         }
                     });
                     m.merge_when_clauses.iter().for_each(|n| {
@@ -186,13 +194,6 @@ impl NodeEnum {
                             iter.push((n.to_ref(), depth, Context::Select, false));
                         }
                     });
-                    if let Some(clause) = m.with_clause.as_ref() {
-                        clause.ctes.iter().for_each(|n| {
-                            if let Some(n) = n.node.as_ref() {
-                                iter.push((n.to_ref(), depth, Context::Select, false));
-                            }
-                        });
-                    }
                 }
                 NodeRef::CommonTableExpr(s) => {
                     if let Some(n) = &s.ctequery {
