@@ -25,7 +25,7 @@ fn it_parses_simple_query() {
     assert_eq!(result.functions.len(), 0);
     assert_eq!(result.filter_columns.len(), 0);
     assert_eq!(result.truncated_query.is_none(), true);
-    //assert_eq!(result.statement_types(), ["SelectStmt"]);
+    assert_eq!(result.statement_types(), ["SelectStmt"]);
 }
 
 #[test]
@@ -56,7 +56,7 @@ fn it_handles_join_expression() {
     let query = r#"SELECT * FROM "t0" JOIN "t1" ON (1)"#;
     let result = summary(query, 0, -1).unwrap();
     assert_eq!(result.tables().len(), 2);
-    //assert_eq!(result.statement_types(), ["SelectStmt"]);
+    assert_eq!(result.statement_types(), ["SelectStmt"]);
 }
 
 
@@ -72,7 +72,7 @@ fn it_handles_recursion_without_error() {
         JOIN "t26" ON (1) JOIN "t27" ON (1) JOIN "t28" ON (1) JOIN "t29" ON (1)"#;
     let result = summary(query, 0, -1).unwrap();
     assert_eq!(result.tables().len(), 30);
-    //assert_eq!(result.statement_types(), ["SelectStmt"]);
+    assert_eq!(result.statement_types(), ["SelectStmt"]);
 }
 
 #[test]
@@ -89,14 +89,14 @@ fn it_parses_real_queries() {
     let select_tables: Vec<String> = sorted(result.select_tables()).collect();
     assert_eq!(tables, ["snapshots", "system_snapshots"]);
     assert_eq!(select_tables, ["snapshots", "system_snapshots"]);
-    //assert_eq!(result.statement_types(), ["SelectStmt"]);
+    assert_eq!(result.statement_types(), ["SelectStmt"]);
 }
 
 #[test]
 fn it_parses_empty_queries() {
     let result = summary("-- nothing", 0, -1).unwrap();
     //assert_eq!(result.protobuf.nodes().len(), 0);
-    //assert_eq!(result.statement_types().len(), 0);
+    assert_eq!(result.statement_types().len(), 0);
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.aliases.is_empty(), true);
