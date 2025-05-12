@@ -3,8 +3,8 @@ use std::collections::HashSet;
 use std::iter::FromIterator;
 use std::string::String;
 
-use crate::*;
 use crate::protobuf::summary_result::Context;
+use crate::*;
 
 /// Result from calling [summary].
 /// Where possible, this is API-compatible with [ParseResult].
@@ -139,12 +139,8 @@ impl SummaryResult {
     pub fn statement_types(&self) -> Vec<&str> {
         // Converts statement_types from Vec<String> to Vec<&str> for
         // strict API compatibility with ParseResult.
-        self.statement_types
-            .iter()
-            .map(AsRef::as_ref)
-            .collect()
+        self.statement_types.iter().map(AsRef::as_ref).collect()
     }
-
 }
 
 #[derive(Debug, Eq, Hash, PartialEq)]
@@ -200,10 +196,6 @@ impl From<&protobuf::summary_result::FilterColumn> for FilterColumn {
         let table = (!v.table.is_empty()).then(|| v.table.to_owned());
         let column = v.column.to_owned();
 
-        Self {
-            schema,
-            table,
-            column,
-        }
+        Self { schema, table, column }
     }
 }

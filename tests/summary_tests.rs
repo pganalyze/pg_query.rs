@@ -5,9 +5,8 @@
 use itertools::sorted;
 
 use pg_query::{
-    summary,
     protobuf::{self, a_const::Val},
-    Error, NodeEnum, NodeRef, SummaryResult, TriggerType,
+    summary, Error, NodeEnum, NodeRef, SummaryResult, TriggerType,
 };
 
 #[macro_use]
@@ -58,7 +57,6 @@ fn it_handles_join_expression() {
     assert_eq!(result.tables().len(), 2);
     assert_eq!(result.statement_types(), ["SelectStmt"]);
 }
-
 
 #[test]
 fn it_handles_recursion_without_error() {

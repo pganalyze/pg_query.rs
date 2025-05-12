@@ -7,7 +7,6 @@ use crate::error::*;
 use crate::protobuf;
 use crate::summary_result::SummaryResult;
 
-
 /// Parses the given SQL statement and provides a summary of it.
 ///
 /// # Example
