@@ -18,6 +18,7 @@ pub struct SummaryResult {
     pub functions: Vec<Function>,
     pub filter_columns: Vec<FilterColumn>,
     pub truncated_query: Option<String>,
+    pub statement_types: Vec<String>,
 }
 
 impl SummaryResult {
@@ -29,6 +30,7 @@ impl SummaryResult {
         let mut functions: HashSet<Function> = HashSet::new();
         let mut filter_columns: HashSet<FilterColumn> = HashSet::new();
         let truncated_query = (!protobuf.truncated_query.is_empty()).then(|| protobuf.truncated_query.to_owned());
+        let statement_types: Vec<String>;
 
         for table in &protobuf.tables {
             tables.insert(Table::from(table));
@@ -45,6 +47,8 @@ impl SummaryResult {
             filter_columns.insert(FilterColumn::from(filter_column));
         }
 
+        statement_types = protobuf.statement_types.clone();
+
         Self {
             protobuf,
             warnings,
@@ -54,6 +58,7 @@ impl SummaryResult {
             functions: Vec::from_iter(functions),
             filter_columns: Vec::from_iter(filter_columns),
             truncated_query,
+            statement_types,
         }
     }
 
@@ -132,7 +137,12 @@ impl SummaryResult {
 
     /// Returns all statement types in the query
     pub fn statement_types(&self) -> Vec<&str> {
-        unimplemented!("SummaryResult does not yet have the information needed to implement statement_types()")
+        // Converts statement_types from Vec<String> to Vec<&str> for
+        // strict API compatibility with ParseResult.
+        self.statement_types
+            .iter()
+            .map(AsRef::as_ref)
+            .collect()
     }
 
 }
