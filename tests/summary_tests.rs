@@ -1741,7 +1741,7 @@ fn it_parses_UPDATE() {
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     assert_eq!(tables, ["other_users", "users"]);
-    assert_eq!(result.statement_types(), ["UpdateStmt"]);
+    assert_eq!(result.statement_types(), ["UpdateStmt", "SelectStmt"]);
 
     let sql = "
         with cte as (
@@ -1756,7 +1756,7 @@ fn it_parses_UPDATE() {
     assert_eq!(result.select_tables(), ["other_users"]);
     assert_eq!(result.dml_tables(), ["users"]);
     assert_eq!(result.cte_names, ["cte"]);
-    assert_eq!(result.statement_types(), ["UpdateStmt"]);
+    assert_eq!(result.statement_types(), ["UpdateStmt", "SelectStmt"]);
 
     let sql = "
         UPDATE users SET name = users_new.name
@@ -1804,7 +1804,7 @@ fn it_parses_DELETE() {
     assert_eq!(tables, ["foo", "users"]);
     assert_eq!(result.dml_tables(), ["users"]);
     assert_eq!(result.select_tables(), ["foo"]);
-    assert_eq!(result.statement_types(), ["DeleteStmt"]);
+    assert_eq!(result.statement_types(), ["DeleteStmt", "SelectStmt"]);
 }
 
 #[test]
