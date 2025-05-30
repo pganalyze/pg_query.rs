@@ -1284,7 +1284,6 @@ fn it_finds_renamed_functions() {
 }
 // FIXME: REMOVE THIS ONCE statement_types() WORKS */
 
-/*
 // https://github.com/pganalyze/pg_query/issues/38
 #[test]
 fn it_finds_nested_tables_in_SELECT() {
@@ -1312,7 +1311,7 @@ fn it_separates_CTE_names_from_table_names() {
 
 #[test]
 fn it_finds_nested_tables_in_FROM_clause() {
-    let result = summary("select u.* from (select * from users, 0, -1) u").unwrap();
+    let result = summary("select u.* from (select * from users) u", 0, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["users"]);
     assert_eq!(result.select_tables(), ["users"]);
@@ -1321,7 +1320,7 @@ fn it_finds_nested_tables_in_FROM_clause() {
 
 #[test]
 fn it_finds_nested_tables_in_WHERE_clause() {
-    let result = summary("select users.id from users where 1 = (select count(*, 0, -1) from user_roles)").unwrap();
+    let result = summary("select users.id from users where 1 = (select count(*) from user_roles)", 0, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     let select_tables: Vec<String> = sorted(result.select_tables()).collect();
@@ -1706,11 +1705,11 @@ fn it_finds_functions_in_LATERAL_clause() {
 
 #[test]
 fn it_parses_INSERT() {
-    let result = summary("insert into users(pk, name, 0, -1) values (1, 'bob');").unwrap();
+    let result = summary("insert into users(pk, name) values (1, 'bob');", 0, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["users"]);
 
-    let result = summary("insert into users(pk, name, 0, -1) select pk, name from other_users;").unwrap();
+    let result = summary("insert into users(pk, name) select pk, name from other_users;", 0, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     assert_eq!(tables, ["other_users", "users"]);
@@ -1738,7 +1737,7 @@ fn it_parses_UPDATE() {
     assert_eq!(result.tables(), ["users"]);
     assert_eq!(result.statement_types(), ["UpdateStmt"]);
 
-    let result = summary("update users set name = (select name from other_users limit 1, 0, -1);").unwrap();
+    let result = summary("update users set name = (select name from other_users limit 1);", 0, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     assert_eq!(tables, ["other_users", "users"]);
@@ -1807,7 +1806,6 @@ fn it_parses_DELETE() {
     assert_eq!(result.select_tables(), ["foo"]);
     assert_eq!(result.statement_types(), ["DeleteStmt"]);
 }
-*/
 
 #[test]
 fn it_parses_DROP_TYPE() {
