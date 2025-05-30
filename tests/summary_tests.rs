@@ -1807,59 +1807,19 @@ fn it_parses_DELETE() {
     assert_eq!(result.select_tables(), ["foo"]);
     assert_eq!(result.statement_types(), ["DeleteStmt"]);
 }
+*/
 
 #[test]
 fn it_parses_DROP_TYPE() {
     let result = summary("DROP TYPE IF EXISTS repack.pk_something", 0, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.statement_types(), ["DropStmt"]);
-    assert_debug_eq!(
-        result.protobuf.nodes()[0].0,
-        r#"DropStmt(
-    DropStmt {
-        objects: [
-            Node {
-                node: Some(
-                    TypeName(
-                        TypeName {
-                            names: [
-                                Node {
-                                    node: Some(
-                                        String(
-                                            String {
-                                                sval: "repack",
-                                            },
-                                        ),
-                                    ),
-                                },
-                                Node {
-                                    node: Some(
-                                        String(
-                                            String {
-                                                sval: "pk_something",
-                                            },
-                                        ),
-                                    ),
-                                },
-                            ],
-                            type_oid: 0,
-                            setof: false,
-                            pct_type: false,
-                            typmods: [],
-                            typemod: -1,
-                            array_bounds: [],
-                            location: 20,
-                        },
-                    ),
-                ),
-            },
-        ],
-        remove_type: ObjectType,
-        behavior: DropRestrict,
-        missing_ok: true,
-        concurrent: false,
-    },
-)"#
-    );
+
+    // TODO: VERIFY THIS IS CORRECT.
+    assert_eq!(result.tables().len(), 0);
+    assert_eq!(result.aliases.len(), 0);
+    assert_eq!(result.cte_names.len(), 0);
+    assert_eq!(result.functions.len(), 0);
+    assert_eq!(result.filter_columns.len(), 0);
+    assert_eq!(result.truncated_query, None);
 }
-*/
