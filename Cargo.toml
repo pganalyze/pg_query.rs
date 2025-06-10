@@ -37,3 +37,15 @@ glob = "0.3.1"
 easy-parallel = "3.2.0"
 pretty_assertions = "1.4.0"
 regex = "1.6.0"
+brunch = "0.8.*"
+
+[profile.bench]
+debug = true
+
+[[bench]]
+name = "parse"
+harness = false
+
+[[bench]]
+name = "parse_protobuf"
+harness = false
