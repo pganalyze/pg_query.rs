@@ -1727,7 +1727,7 @@ fn it_parses_INSERT() {
     assert_eq!(result.select_tables(), ["other_users"]);
     assert_eq!(result.dml_tables(), ["users"]);
     assert_eq!(result.cte_names, ["cte"]);
-    assert_eq!(result.statement_types(), ["InsertStmt"]);
+    assert_eq!(result.statement_types(), ["InsertStmt", "SelectStmt"]);
 }
 
 #[test]
