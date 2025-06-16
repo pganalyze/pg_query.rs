@@ -1254,6 +1254,17 @@ fn it_finds_called_functions() {
 }
 
 #[test]
+fn it_finds_functions_invoked_with_CALL() {
+    let result = parse("CALL testfunc(1);").unwrap();
+    assert_eq!(result.warnings.len(), 0);
+    assert_eq!(result.tables().len(), 0);
+    assert_eq!(result.functions(), ["testfunc"]);
+    assert_eq!(result.ddl_functions().len(), 0);
+    assert_eq!(result.call_functions(), ["testfunc"]);
+    assert_eq!(result.statement_types(), ["CallStmt"]);
+}
+
+#[test]
 fn it_finds_dropped_functions() {
     let result = parse("DROP FUNCTION IF EXISTS testfunc(x integer);").unwrap();
     assert_eq!(result.warnings.len(), 0);
