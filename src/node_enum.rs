@@ -212,6 +212,11 @@ impl NodeEnum {
                         iter.push((rel.to_ref(), depth, Context::DML, false));
                     }
                 }
+                NodeRef::CallStmt(s) => {
+                    if let Some(n) = s.funccall.as_ref() {
+                        iter.push((n.to_ref(), depth, Context::Call, false));
+                    }
+                }
                 //
                 // The following statement types are DDL (changing table structure)
                 //
@@ -650,6 +655,12 @@ impl NodeEnum {
                     }
                     if let Some(rel) = s.relation.as_mut() {
                         iter.push((rel.to_mut(), depth, Context::DML));
+                    }
+                }
+                NodeMut::CallStmt(s) => {
+                    let s = s.as_mut().unwrap();
+                    if let Some(n) = s.funccall.as_mut() {
+                        iter.push((n.to_mut(), depth, Context::Call));
                     }
                 }
                 //
