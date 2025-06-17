@@ -11,16 +11,13 @@ static SOURCE_DIRECTORY: &str = "libpg_query";
 static LIBRARY_NAME: &str = "pg_query";
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // return if proto file changes
-    println!("cargo:rerun-if-changed=libpg_query/protobuf/pg_query.proto");
-
     let out_dir = PathBuf::from(env::var("OUT_DIR")?);
     let build_path = Path::new(".").join(SOURCE_DIRECTORY);
     let out_header_path = out_dir.join(LIBRARY_NAME).with_extension("h");
     let out_protobuf_path = out_dir.join("protobuf");
     let target = env::var("TARGET").unwrap();
 
-    // Configure cargo through stdout
+    println!("cargo:rerun-if-changed=libpg_query");
     println!("cargo:rustc-link-search=native={}", out_dir.display());
     println!("cargo:rustc-link-lib=static={LIBRARY_NAME}");
 
