@@ -7,26 +7,20 @@ use std::env;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-static SOURCE_DIRECTORY: &str = "libpg_query";
-static LIBRARY_NAME: &str = "pg_query";
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // return if proto file changes
-    println!("cargo:rerun-if-changed=libpg_query/protobuf/pg_query.proto");
-
     let out_dir = PathBuf::from(env::var("OUT_DIR")?);
-    let build_path = Path::new(".").join(SOURCE_DIRECTORY);
-    let out_header_path = out_dir.join(LIBRARY_NAME).with_extension("h");
+    let build_path = Path::new(".").join("libpg_query");
+    let out_header_path = out_dir.join("pg_query").with_extension("h");
     let out_protobuf_path = out_dir.join("protobuf");
     let target = env::var("TARGET").unwrap();
 
-    // Configure cargo through stdout
+    println!("cargo:rerun-if-changed=libpg_query");
     println!("cargo:rustc-link-search=native={}", out_dir.display());
-    println!("cargo:rustc-link-lib=static={LIBRARY_NAME}");
+    println!("cargo:rustc-link-lib=static=pg_query");
 
     // Copy the relevant source files to the OUT_DIR
     let source_paths = vec![
-        build_path.join(LIBRARY_NAME).with_extension("h"),
+        build_path.join("pg_query").with_extension("h"),
         build_path.join("Makefile"),
         build_path.join("src"),
         build_path.join("protobuf"),
@@ -59,7 +53,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             build.include(out_dir.join("./src/postgres/include/port/win32_msvc"));
         }
     }
-    build.compile(LIBRARY_NAME);
+    build.compile("pg_query");
 
     // Generate bindings for Rust
     bindgen::Builder::default()
@@ -79,7 +73,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let src_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR")?).join("src");
         env::set_var("OUT_DIR", &src_dir);
 
-        prost_build::compile_protos(&[&out_protobuf_path.join(LIBRARY_NAME).with_extension("proto")], &[&out_protobuf_path])?;
+        prost_build::compile_protos(&[&out_protobuf_path.join("pg_query").with_extension("proto")], &[&out_protobuf_path])?;
 
         std::fs::rename(src_dir.join("pg_query.rs"), src_dir.join("protobuf.rs"))?;
 
