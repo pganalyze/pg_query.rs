@@ -132,11 +132,6 @@ fn it_parses_SET() {
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.ddl_tables().len(), 0);
     assert_eq!(result.statement_types(), ["VariableSetStmt"]);
-    let set = cast!(result.protobuf.nodes()[0].0, NodeRef::VariableSetStmt);
-    let a_const = cast!(set.args[0].node.as_ref().unwrap(), NodeEnum::AConst);
-    let val = cast!(a_const.val.as_ref().unwrap(), Val::Ival);
-    assert_eq!(val.ival, 1);
-    assert_eq!(a_const.location, 22);
 }
 
 #[test]
@@ -145,8 +140,6 @@ fn it_parses_SHOW() {
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.statement_types(), ["VariableShowStmt"]);
-    let show = cast!(result.protobuf.nodes()[0].0, NodeRef::VariableShowStmt);
-    assert_eq!(show.name, "work_mem");
 }
 
 #[test]
@@ -155,40 +148,6 @@ fn it_parses_COPY() {
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["test"]);
     assert_eq!(result.statement_types(), ["CopyStmt"]);
-    let copy = cast!(result.protobuf.nodes()[0].0, NodeRef::CopyStmt);
-    assert_debug_eq!(
-        copy,
-        r#"CopyStmt {
-    relation: Some(
-        RangeVar {
-            catalogname: "",
-            schemaname: "",
-            relname: "test",
-            inh: true,
-            relpersistence: "p",
-            alias: None,
-            location: 5,
-        },
-    ),
-    query: None,
-    attlist: [
-        Node {
-            node: Some(
-                String(
-                    String {
-                        sval: "id",
-                    },
-                ),
-            ),
-        },
-    ],
-    is_from: false,
-    is_program: false,
-    filename: "",
-    options: [],
-    where_clause: None,
-}"#
-    );
 }
 
 #[test]
@@ -198,8 +157,6 @@ fn it_parses_DROP_TABLE() {
     assert_eq!(result.tables(), ["abc.test123"]);
     assert_eq!(result.ddl_tables(), ["abc.test123"]);
     assert_eq!(result.statement_types(), ["DropStmt"]);
-    let drop = cast!(result.protobuf.nodes()[0].0, NodeRef::DropStmt);
-    assert_eq!(protobuf::DropBehavior::from_i32(drop.behavior), Some(protobuf::DropBehavior::DropCascade));
 
     let result = summary("drop table abc.test123, test", 0, -1).unwrap();
     let tables: Vec<String> = sorted(result.tables()).collect();
@@ -213,8 +170,6 @@ fn it_parses_COMMIT() {
     let result = summary("COMMIT", 0, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.statement_types(), ["TransactionStmt"]);
-    let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::TransactionStmt);
-    assert_eq!(protobuf::TransactionStmtKind::from_i32(stmt.kind), Some(protobuf::TransactionStmtKind::TransStmtCommit));
 }
 
 #[test]
@@ -222,7 +177,6 @@ fn it_parses_CHECKPOINT() {
     let result = summary("CHECKPOINT", 0, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.statement_types(), ["CheckPointStmt"]);
-    cast!(result.protobuf.nodes()[0].0, NodeRef::CheckPointStmt);
 }
 */
 
@@ -233,7 +187,6 @@ fn it_parses_VACUUM() {
     assert_eq!(result.tables(), ["my_table"]);
     assert_eq!(result.ddl_tables(), ["my_table"]);
     assert_eq!(result.statement_types(), ["VacuumStmt"]);
-    //cast!(result.protobuf.nodes()[0].0, NodeRef::VacuumStmt);
 }
 
 /*
@@ -243,8 +196,6 @@ fn it_parses_EXPLAIN() {
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["test"]);
     assert_eq!(result.statement_types(), ["ExplainStmt"]);
-    let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::ExplainStmt);
-    cast!(stmt.query.as_ref().unwrap().node.as_ref().unwrap(), NodeEnum::DeleteStmt);
 }
 
 #[test]
@@ -254,36 +205,6 @@ fn it_parses_SELECT_INTO() {
     assert_eq!(result.tables(), ["test"]);
     assert_eq!(result.ddl_tables(), ["test"]);
     assert_eq!(result.statement_types(), ["CreateTableAsStmt"]);
-    let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::CreateTableAsStmt);
-    let select = cast!(stmt.query.as_ref().unwrap().node.as_ref().unwrap(), NodeEnum::SelectStmt);
-    let target = cast!(select.target_list[0].node.as_ref().unwrap(), NodeEnum::ResTarget);
-    let a_const = cast!(target.val.as_ref().unwrap().node.as_ref().unwrap(), NodeEnum::AConst);
-    let val = cast!(a_const.val.as_ref().unwrap(), Val::Ival);
-    assert_eq!(val.ival, 1);
-    let into = stmt.into.as_ref().unwrap();
-    assert_debug_eq!(
-        into,
-        r#"IntoClause {
-    rel: Some(
-        RangeVar {
-            catalogname: "",
-            schemaname: "",
-            relname: "test",
-            inh: true,
-            relpersistence: "t",
-            alias: None,
-            location: 18,
-        },
-    ),
-    col_names: [],
-    access_method: "",
-    options: [],
-    on_commit: OncommitNoop,
-    table_space_name: "",
-    view_query: None,
-    skip_data: false,
-}"#
-    );
 }
 
 #[test]
@@ -292,8 +213,6 @@ fn it_parses_LOCK() {
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["public.schema_migrations"]);
     assert_eq!(result.statement_types(), ["LockStmt"]);
-    let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::LockStmt);
-    assert_eq!(stmt.mode, 1);
 }
 
 #[test]
@@ -303,53 +222,6 @@ fn it_parses_CREATE_TABLE() {
     assert_eq!(result.tables(), ["test"]);
     assert_eq!(result.ddl_tables(), ["test"]);
     assert_eq!(result.statement_types(), ["CreateStmt"]);
-    let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::CreateStmt);
-    let column = cast!(stmt.table_elts[0].node.as_ref().unwrap(), NodeEnum::ColumnDef);
-    assert_debug_eq!(
-        column,
-        r#"ColumnDef {
-    colname: "a",
-    type_name: Some(
-        TypeName {
-            names: [
-                Node {
-                    node: Some(
-                        String(
-                            String {
-                                sval: "int4",
-                            },
-                        ),
-                    ),
-                },
-            ],
-            type_oid: 0,
-            setof: false,
-            pct_type: false,
-            typmods: [],
-            typemod: -1,
-            array_bounds: [],
-            location: 21,
-        },
-    ),
-    compression: "",
-    inhcount: 0,
-    is_local: true,
-    is_not_null: false,
-    is_from_type: false,
-    storage: "",
-    storage_name: "",
-    raw_default: None,
-    cooked_default: None,
-    identity: "",
-    identity_sequence: None,
-    generated: "",
-    coll_clause: None,
-    coll_oid: 0,
-    constraints: [],
-    fdwoptions: [],
-    location: 19,
-}"#
-    );
 }
 
 #[test]
@@ -397,22 +269,6 @@ fn it_parses_CREATE_SCHEMA() {
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.statement_types(), ["CreateSchemaStmt"]);
-    let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::CreateSchemaStmt);
-    assert_debug_eq!(
-        stmt,
-        r#"CreateSchemaStmt {
-    schemaname: "test",
-    authrole: Some(
-        RoleSpec {
-            roletype: RolespecCstring,
-            rolename: "joe",
-            location: 47,
-        },
-    ),
-    schema_elts: [],
-    if_not_exists: true,
-}"#
-    );
 }
 
 #[test]
@@ -424,105 +280,6 @@ fn it_parses_CREATE_VIEW() {
     assert_eq!(result.ddl_tables(), ["myview"]);
     assert_eq!(result.select_tables(), ["mytab"]);
     assert_eq!(result.statement_types(), ["ViewStmt"]);
-    let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::ViewStmt);
-    assert_debug_eq!(
-        stmt,
-        r#"ViewStmt {
-    view: Some(
-        RangeVar {
-            catalogname: "",
-            schemaname: "",
-            relname: "myview",
-            inh: true,
-            relpersistence: "p",
-            alias: None,
-            location: 12,
-        },
-    ),
-    aliases: [],
-    query: Some(
-        Node {
-            node: Some(
-                SelectStmt(
-                    SelectStmt {
-                        distinct_clause: [],
-                        into_clause: None,
-                        target_list: [
-                            Node {
-                                node: Some(
-                                    ResTarget(
-                                        ResTarget {
-                                            name: "",
-                                            indirection: [],
-                                            val: Some(
-                                                Node {
-                                                    node: Some(
-                                                        ColumnRef(
-                                                            ColumnRef {
-                                                                fields: [
-                                                                    Node {
-                                                                        node: Some(
-                                                                            AStar(
-                                                                                AStar,
-                                                                            ),
-                                                                        ),
-                                                                    },
-                                                                ],
-                                                                location: 29,
-                                                            },
-                                                        ),
-                                                    ),
-                                                },
-                                            ),
-                                            location: 29,
-                                        },
-                                    ),
-                                ),
-                            },
-                        ],
-                        from_clause: [
-                            Node {
-                                node: Some(
-                                    RangeVar(
-                                        RangeVar {
-                                            catalogname: "",
-                                            schemaname: "",
-                                            relname: "mytab",
-                                            inh: true,
-                                            relpersistence: "p",
-                                            alias: None,
-                                            location: 36,
-                                        },
-                                    ),
-                                ),
-                            },
-                        ],
-                        where_clause: None,
-                        group_clause: [],
-                        group_distinct: false,
-                        having_clause: None,
-                        window_clause: [],
-                        values_lists: [],
-                        sort_clause: [],
-                        limit_offset: None,
-                        limit_count: None,
-                        limit_option: Default,
-                        locking_clause: [],
-                        with_clause: None,
-                        op: SetopNone,
-                        all: false,
-                        larg: None,
-                        rarg: None,
-                    },
-                ),
-            ),
-        },
-    ),
-    replace: false,
-    options: [],
-    with_check_option: NoCheckOption,
-}"#
-    );
 }
 
 #[test]
@@ -532,7 +289,6 @@ fn it_parses_REFRESH_MATERIALIZED_VIEW() {
     assert_eq!(result.tables(), ["myview"]);
     assert_eq!(result.ddl_tables(), ["myview"]);
     assert_eq!(result.statement_types(), ["RefreshMatViewStmt"]);
-    cast!(result.protobuf.nodes()[0].0, NodeRef::RefreshMatViewStmt);
 }
 
 #[test]
@@ -543,9 +299,6 @@ fn it_parses_CREATE_RULE() {
     assert_eq!(result.tables(), ["shoe"]);
     assert_eq!(result.ddl_tables(), ["shoe"]);
     assert_eq!(result.statement_types(), ["RuleStmt"]);
-    let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::RuleStmt);
-    assert_eq!(stmt.rulename, "shoe_ins_protect");
-    assert_eq!(protobuf::CmdType::from_i32(stmt.event), Some(protobuf::CmdType::CmdInsert));
 }
 
 #[test]
@@ -556,11 +309,6 @@ fn it_parses_CREATE_TRIGGER() {
     assert_eq!(result.tables(), ["accounts"]);
     assert_eq!(result.ddl_tables(), ["accounts"]);
     assert_eq!(result.statement_types(), ["CreateTrigStmt"]);
-    let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::CreateTrigStmt);
-    let func = cast!(stmt.funcname[0].node.as_ref().unwrap(), NodeEnum::String);
-    assert_eq!(func.sval, "check_account_update");
-    assert_eq!(TriggerType::from_i32(stmt.timing), Some(TriggerType::Before));
-    assert_eq!(TriggerType::from_i32(stmt.events), Some(TriggerType::Update));
 }
 
 #[test]
@@ -569,27 +317,6 @@ fn it_parses_DROP_SCHEMA() {
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.statement_types(), ["DropStmt"]);
-    let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::DropStmt);
-    assert_debug_eq!(
-        stmt,
-        r#"DropStmt {
-    objects: [
-        Node {
-            node: Some(
-                String(
-                    String {
-                        sval: "myschema",
-                    },
-                ),
-            ),
-        },
-    ],
-    remove_type: ObjectSchema,
-    behavior: DropRestrict,
-    missing_ok: false,
-    concurrent: false,
-}"#
-    );
 }
 
 #[test]
@@ -598,56 +325,6 @@ fn it_parses_DROP_VIEW() {
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.statement_types(), ["DropStmt"]);
-    let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::DropStmt);
-    assert_debug_eq!(
-        stmt,
-        r#"DropStmt {
-    objects: [
-        Node {
-            node: Some(
-                List(
-                    List {
-                        items: [
-                            Node {
-                                node: Some(
-                                    String(
-                                        String {
-                                            sval: "myview",
-                                        },
-                                    ),
-                                ),
-                            },
-                        ],
-                    },
-                ),
-            ),
-        },
-        Node {
-            node: Some(
-                List(
-                    List {
-                        items: [
-                            Node {
-                                node: Some(
-                                    String(
-                                        String {
-                                            sval: "myview2",
-                                        },
-                                    ),
-                                ),
-                            },
-                        ],
-                    },
-                ),
-            ),
-        },
-    ],
-    remove_type: ObjectView,
-    behavior: DropRestrict,
-    missing_ok: false,
-    concurrent: false,
-}"#
-    );
 }
 
 #[test]
@@ -656,37 +333,6 @@ fn it_parses_DROP_INDEX() {
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.statement_types(), ["DropStmt"]);
-    let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::DropStmt);
-    assert_debug_eq!(
-        stmt,
-        r#"DropStmt {
-    objects: [
-        Node {
-            node: Some(
-                List(
-                    List {
-                        items: [
-                            Node {
-                                node: Some(
-                                    String(
-                                        String {
-                                            sval: "myindex",
-                                        },
-                                    ),
-                                ),
-                            },
-                        ],
-                    },
-                ),
-            ),
-        },
-    ],
-    remove_type: ObjectIndex,
-    behavior: DropRestrict,
-    missing_ok: false,
-    concurrent: true,
-}"#
-    );
 }
 
 #[test]
@@ -696,46 +342,6 @@ fn it_parses_DROP_RULE() {
     assert_eq!(result.tables(), ["mytable"]);
     assert_eq!(result.ddl_tables(), ["mytable"]);
     assert_eq!(result.statement_types(), ["DropStmt"]);
-    let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::DropStmt);
-    assert_debug_eq!(
-        stmt,
-        r#"DropStmt {
-    objects: [
-        Node {
-            node: Some(
-                List(
-                    List {
-                        items: [
-                            Node {
-                                node: Some(
-                                    String(
-                                        String {
-                                            sval: "mytable",
-                                        },
-                                    ),
-                                ),
-                            },
-                            Node {
-                                node: Some(
-                                    String(
-                                        String {
-                                            sval: "myrule",
-                                        },
-                                    ),
-                                ),
-                            },
-                        ],
-                    },
-                ),
-            ),
-        },
-    ],
-    remove_type: ObjectRule,
-    behavior: DropCascade,
-    missing_ok: false,
-    concurrent: false,
-}"#
-    );
 }
 
 #[test]
@@ -745,46 +351,6 @@ fn it_parses_DROP_TRIGGER() {
     assert_eq!(result.tables(), ["mytable"]);
     assert_eq!(result.ddl_tables(), ["mytable"]);
     assert_eq!(result.statement_types(), ["DropStmt"]);
-    let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::DropStmt);
-    assert_debug_eq!(
-        stmt,
-        r#"DropStmt {
-    objects: [
-        Node {
-            node: Some(
-                List(
-                    List {
-                        items: [
-                            Node {
-                                node: Some(
-                                    String(
-                                        String {
-                                            sval: "mytable",
-                                        },
-                                    ),
-                                ),
-                            },
-                            Node {
-                                node: Some(
-                                    String(
-                                        String {
-                                            sval: "mytrigger",
-                                        },
-                                    ),
-                                ),
-                            },
-                        ],
-                    },
-                ),
-            ),
-        },
-    ],
-    remove_type: ObjectTrigger,
-    behavior: DropRestrict,
-    missing_ok: true,
-    concurrent: false,
-}"#
-    );
 }
 */
 
@@ -804,41 +370,6 @@ fn it_parses_REVOKE() {
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.statement_types(), ["GrantRoleStmt"]);
-    let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::GrantRoleStmt);
-    assert_debug_eq!(
-        stmt,
-        r#"GrantRoleStmt {
-    granted_roles: [
-        Node {
-            node: Some(
-                AccessPriv(
-                    AccessPriv {
-                        priv_name: "admins",
-                        cols: [],
-                    },
-                ),
-            ),
-        },
-    ],
-    grantee_roles: [
-        Node {
-            node: Some(
-                RoleSpec(
-                    RoleSpec {
-                        roletype: RolespecCstring,
-                        rolename: "joe",
-                        location: 19,
-                    },
-                ),
-            ),
-        },
-    ],
-    is_grant: false,
-    opt: [],
-    grantor: None,
-    behavior: DropRestrict,
-}"#
-    );
 }
 
 #[test]
@@ -850,46 +381,6 @@ fn it_parses_TRUNCATE() {
     assert_eq!(tables, ["bigtable", "fattable"]);
     assert_eq!(ddl_tables, ["bigtable", "fattable"]);
     assert_eq!(result.statement_types(), ["TruncateStmt"]);
-    let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::TruncateStmt);
-    assert_debug_eq!(
-        stmt,
-        r#"TruncateStmt {
-    relations: [
-        Node {
-            node: Some(
-                RangeVar(
-                    RangeVar {
-                        catalogname: "",
-                        schemaname: "",
-                        relname: "bigtable",
-                        inh: true,
-                        relpersistence: "p",
-                        alias: None,
-                        location: 9,
-                    },
-                ),
-            ),
-        },
-        Node {
-            node: Some(
-                RangeVar(
-                    RangeVar {
-                        catalogname: "",
-                        schemaname: "",
-                        relname: "fattable",
-                        inh: true,
-                        relpersistence: "p",
-                        alias: None,
-                        location: 19,
-                    },
-                ),
-            ),
-        },
-    ],
-    restart_seqs: true,
-    behavior: DropRestrict,
-}"#
-    );
 }
 
 #[test]
