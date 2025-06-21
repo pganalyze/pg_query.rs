@@ -372,13 +372,12 @@ fn it_parses_CREATE_TABLE_AS() {
     assert_eq!(select_tables, ["bar", "baz"]);
     assert_eq!(result.statement_types(), ["CreateTableAsStmt"]);
 }
-
+*/
 #[test]
 fn it_fails_to_parse_CREATE_TABLE_WITH_OIDS() {
-    let error = summary("CREATE TABLE test (a int4, 0, -1) WITH OIDS").err().unwrap();
+    let error = summary("CREATE TABLE test (a int4) WITH OIDS", 0, -1).err().unwrap();
     assert_eq!(error, Error::Parse("syntax error at or near \"OIDS\"".to_string()));
 }
-*/
 
 #[test]
 fn it_parses_CREATE_INDEX() {
@@ -389,8 +388,6 @@ fn it_parses_CREATE_INDEX() {
     assert_eq!(result.statement_types(), ["IndexStmt"]);
     let call_functions: Vec<String> = sorted(result.call_functions()).collect();
     assert_eq!(call_functions, ["lower", "pow", "upper"]);
-    //let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::IndexStmt);
-    //assert_eq!(stmt.idxname, "testidx".to_string());
 }
 
 /*
