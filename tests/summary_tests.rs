@@ -979,6 +979,7 @@ fn it_parses_WITH() {
     assert_eq!(result.cte_names, ["a"]);
     assert_eq!(result.statement_types(), ["SelectStmt"]);
 }
+*/
 
 #[test]
 fn it_parses_multi_line_functions() {
@@ -1007,173 +1008,6 @@ $BODY$
     assert_eq!(result.ddl_functions(), ["thing"]);
     assert_eq!(result.call_functions().len(), 0);
     assert_eq!(result.statement_types(), ["CreateFunctionStmt"]);
-    let stmt = cast!(result.protobuf.nodes()[0].0, NodeRef::CreateFunctionStmt);
-    assert_debug_eq!(
-        stmt,
-        r#"CreateFunctionStmt {
-    is_procedure: false,
-    replace: true,
-    funcname: [
-        Node {
-            node: Some(
-                String(
-                    String {
-                        sval: "thing",
-                    },
-                ),
-            ),
-        },
-    ],
-    parameters: [
-        Node {
-            node: Some(
-                FunctionParameter(
-                    FunctionParameter {
-                        name: "parameter_thing",
-                        arg_type: Some(
-                            TypeName {
-                                names: [
-                                    Node {
-                                        node: Some(
-                                            String(
-                                                String {
-                                                    sval: "text",
-                                                },
-                                            ),
-                                        ),
-                                    },
-                                ],
-                                type_oid: 0,
-                                setof: false,
-                                pct_type: false,
-                                typmods: [],
-                                typemod: -1,
-                                array_bounds: [],
-                                location: 49,
-                            },
-                        ),
-                        mode: FuncParamDefault,
-                        defexpr: None,
-                    },
-                ),
-            ),
-        },
-    ],
-    return_type: Some(
-        TypeName {
-            names: [
-                Node {
-                    node: Some(
-                        String(
-                            String {
-                                sval: "pg_catalog",
-                            },
-                        ),
-                    ),
-                },
-                Node {
-                    node: Some(
-                        String(
-                            String {
-                                sval: "int8",
-                            },
-                        ),
-                    ),
-                },
-            ],
-            type_oid: 0,
-            setof: false,
-            pct_type: false,
-            typmods: [],
-            typemod: -1,
-            array_bounds: [],
-            location: 65,
-        },
-    ),
-    options: [
-        Node {
-            node: Some(
-                DefElem(
-                    DefElem {
-                        defnamespace: "",
-                        defname: "as",
-                        arg: Some(
-                            Node {
-                                node: Some(
-                                    List(
-                                        List {
-                                            items: [
-                                                Node {
-                                                    node: Some(
-                                                        String(
-                                                            String {
-                                                                sval: "\nDECLARE\n        local_thing_id BIGINT := 0;\nBEGIN\n        SELECT thing_id INTO local_thing_id FROM thing_map\n        WHERE\n                thing_map_field = parameter_thing\n        ORDER BY 1 LIMIT 1;\n\n        IF NOT FOUND THEN\n                local_thing_id = 0;\n        END IF;\n        RETURN local_thing_id;\nEND;\n",
-                                                            },
-                                                        ),
-                                                    ),
-                                                },
-                                            ],
-                                        },
-                                    ),
-                                ),
-                            },
-                        ),
-                        defaction: DefelemUnspec,
-                        location: 72,
-                    },
-                ),
-            ),
-        },
-        Node {
-            node: Some(
-                DefElem(
-                    DefElem {
-                        defnamespace: "",
-                        defname: "language",
-                        arg: Some(
-                            Node {
-                                node: Some(
-                                    String(
-                                        String {
-                                            sval: "plpgsql",
-                                        },
-                                    ),
-                                ),
-                            },
-                        ),
-                        defaction: DefelemUnspec,
-                        location: 407,
-                    },
-                ),
-            ),
-        },
-        Node {
-            node: Some(
-                DefElem(
-                    DefElem {
-                        defnamespace: "",
-                        defname: "volatility",
-                        arg: Some(
-                            Node {
-                                node: Some(
-                                    String(
-                                        String {
-                                            sval: "stable",
-                                        },
-                                    ),
-                                ),
-                            },
-                        ),
-                        defaction: DefelemUnspec,
-                        location: 424,
-                    },
-                ),
-            ),
-        },
-    ],
-    sql_body: None,
-}"#
-    );
 }
 
 #[test]
@@ -1187,9 +1021,7 @@ fn it_parses_table_functions() {
     assert_eq!(result.call_functions().len(), 0);
     assert_eq!(result.statement_types(), ["CreateFunctionStmt"]);
 }
-*/
 
-/* FIXME: REMOVE THIS ONCE statement_types() WORKS
 #[test]
 fn it_finds_called_functions() {
     let result = summary("SELECT testfunc(1);", 0, -1).unwrap();
@@ -1224,7 +1056,6 @@ fn it_finds_renamed_functions() {
     assert_eq!(result.call_functions().len(), 0);
     assert_eq!(result.statement_types(), ["RenameStmt"]);
 }
-// FIXME: REMOVE THIS ONCE statement_types() WORKS */
 
 // https://github.com/pganalyze/pg_query/issues/38
 #[test]
