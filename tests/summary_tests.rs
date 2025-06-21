@@ -124,7 +124,7 @@ fn it_parses_ALTER_TABLE() {
     assert_eq!(result.ddl_tables(), ["test"]);
     assert_eq!(result.statement_types(), ["AlterTableStmt"]);
 }
-/*
+
 #[test]
 fn it_parses_SET() {
     let result = summary("SET statement_timeout=1", 0, -1).unwrap();
@@ -144,12 +144,12 @@ fn it_parses_SHOW() {
 
 #[test]
 fn it_parses_COPY() {
-    let result = summary("COPY test (id, 0, -1) TO stdout").unwrap();
+    let result = summary("COPY test (id) TO stdout", 0, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["test"]);
     assert_eq!(result.statement_types(), ["CopyStmt"]);
 }
-
+/*
 #[test]
 fn it_parses_DROP_TABLE() {
     let result = summary("drop table abc.test123 cascade", 0, -1).unwrap();
@@ -164,6 +164,7 @@ fn it_parses_DROP_TABLE() {
     assert_eq!(tables, ["abc.test123", "test"]);
     assert_eq!(ddl_tables, ["abc.test123", "test"]);
 }
+*/
 
 #[test]
 fn it_parses_COMMIT() {
@@ -178,7 +179,6 @@ fn it_parses_CHECKPOINT() {
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.statement_types(), ["CheckPointStmt"]);
 }
-*/
 
 #[test]
 fn it_parses_VACUUM() {
