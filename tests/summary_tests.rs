@@ -104,27 +104,16 @@ fn it_parses_empty_queries() {
     assert_eq!(result.truncated_query.is_none(), true);
 }
 
-/*
 #[test]
 fn it_parses_floats_with_leading_dot() {
     let result = summary("SELECT .1", 0, -1).unwrap();
-    let select = cast!(result.protobuf.nodes()[0].0, NodeRef::SelectStmt);
-    let target = cast!(select.target_list[0].node.as_ref().unwrap(), NodeEnum::ResTarget);
-    let a_const = cast!(target.val.as_ref().unwrap().node.as_ref().unwrap(), NodeEnum::AConst);
-    let float = cast!(a_const.val.as_ref().unwrap(), Val::Fval);
-    assert_eq!(float.fval, ".1");
-    assert_eq!(a_const.location, 7);
+    assert_eq!(result.warnings.len(), 0);
 }
 
 #[test]
 fn it_parses_bit_strings_hex_notation() {
     let result = summary("SELECT X'EFFF'", 0, -1).unwrap();
-    let select = cast!(result.protobuf.nodes()[0].0, NodeRef::SelectStmt);
-    let target = cast!(select.target_list[0].node.as_ref().unwrap(), NodeEnum::ResTarget);
-    let a_const = cast!(target.val.as_ref().unwrap().node.as_ref().unwrap(), NodeEnum::AConst);
-    let bit_string = cast!(a_const.val.as_ref().unwrap(), Val::Bsval);
-    assert_eq!(bit_string.bsval, "xEFFF");
-    assert_eq!(a_const.location, 7);
+    assert_eq!(result.warnings.len(), 0);
 }
 
 #[test]
@@ -134,73 +123,8 @@ fn it_parses_ALTER_TABLE() {
     assert_eq!(result.tables(), ["test"]);
     assert_eq!(result.ddl_tables(), ["test"]);
     assert_eq!(result.statement_types(), ["AlterTableStmt"]);
-    let alter = cast!(result.protobuf.nodes()[0].0, NodeRef::AlterTableStmt);
-    let cmd = cast!(alter.cmds[0].node.as_ref().unwrap(), NodeEnum::AlterTableCmd);
-    assert_debug_eq!(
-        cmd,
-        r#"AlterTableCmd {
-    subtype: AtAddConstraint,
-    name: "",
-    num: 0,
-    newowner: None,
-    def: Some(
-        Node {
-            node: Some(
-                Constraint(
-                    Constraint {
-                        contype: ConstrPrimary,
-                        conname: "",
-                        deferrable: false,
-                        initdeferred: false,
-                        skip_validation: false,
-                        initially_valid: false,
-                        is_no_inherit: false,
-                        raw_expr: None,
-                        cooked_expr: "",
-                        generated_when: "",
-                        inhcount: 0,
-                        nulls_not_distinct: false,
-                        keys: [
-                            Node {
-                                node: Some(
-                                    String(
-                                        String {
-                                            sval: "gid",
-                                        },
-                                    ),
-                                ),
-                            },
-                        ],
-                        including: [],
-                        exclusions: [],
-                        options: [],
-                        indexname: "",
-                        indexspace: "",
-                        reset_default_tblspc: false,
-                        access_method: "",
-                        where_clause: None,
-                        pktable: None,
-                        fk_attrs: [],
-                        pk_attrs: [],
-                        fk_matchtype: "",
-                        fk_upd_action: "",
-                        fk_del_action: "",
-                        fk_del_set_cols: [],
-                        old_conpfeqop: [],
-                        old_pktable_oid: 0,
-                        location: 21,
-                    },
-                ),
-            ),
-        },
-    ),
-    behavior: DropRestrict,
-    missing_ok: false,
-    recurse: false,
-}"#
-    );
 }
-
+/*
 #[test]
 fn it_parses_SET() {
     let result = summary("SET statement_timeout=1", 0, -1).unwrap();
