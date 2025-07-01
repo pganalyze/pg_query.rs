@@ -189,15 +189,14 @@ fn it_parses_VACUUM() {
     assert_eq!(result.statement_types(), ["VacuumStmt"]);
 }
 
-/*
 #[test]
 fn it_parses_EXPLAIN() {
     let result = summary("EXPLAIN DELETE FROM test", 0, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["test"]);
-    assert_eq!(result.statement_types(), ["ExplainStmt"]);
+    assert_eq!(result.statement_types(), ["ExplainStmt", "DeleteStmt"]);
 }
-
+/*
 #[test]
 fn it_parses_SELECT_INTO() {
     let result = summary("CREATE TEMP TABLE test AS SELECT 1", 0, -1).unwrap();
