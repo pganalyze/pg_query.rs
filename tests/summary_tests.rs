@@ -260,7 +260,7 @@ fn it_parses_CREATE_INDEX() {
     let call_functions: Vec<String> = sorted(result.call_functions()).collect();
     assert_eq!(call_functions, ["lower", "pow", "upper"]);
 }
-/* FIXME: "Terminating process due to FATAL error"
+
 #[test]
 fn it_parses_CREATE_SCHEMA() {
     let result = summary("CREATE SCHEMA IF NOT EXISTS test AUTHORIZATION joe", 0, -1).unwrap();
@@ -277,7 +277,7 @@ fn it_parses_CREATE_VIEW() {
     assert_eq!(tables, ["mytab", "myview"]);
     assert_eq!(result.ddl_tables(), ["myview"]);
     assert_eq!(result.select_tables(), ["mytab"]);
-    assert_eq!(result.statement_types(), ["ViewStmt"]);
+    assert_eq!(result.statement_types(), ["ViewStmt", "SelectStmt"]);
 }
 
 #[test]
@@ -308,7 +308,7 @@ fn it_parses_CREATE_TRIGGER() {
     assert_eq!(result.ddl_tables(), ["accounts"]);
     assert_eq!(result.statement_types(), ["CreateTrigStmt"]);
 }
-*/
+
 #[test]
 fn it_parses_DROP_SCHEMA() {
     let result = summary("DROP SCHEMA myschema", 0, -1).unwrap();
