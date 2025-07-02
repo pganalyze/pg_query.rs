@@ -196,16 +196,16 @@ fn it_parses_EXPLAIN() {
     assert_eq!(result.tables(), ["test"]);
     assert_eq!(result.statement_types(), ["ExplainStmt", "DeleteStmt"]);
 }
-/* FIXME: "Terminating process due to FATAL error"
+
 #[test]
 fn it_parses_SELECT_INTO() {
     let result = summary("CREATE TEMP TABLE test AS SELECT 1", 0, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["test"]);
     assert_eq!(result.ddl_tables(), ["test"]);
-    assert_eq!(result.statement_types(), ["CreateTableAsStmt"]);
+    assert_eq!(result.statement_types(), ["CreateTableAsStmt", "SelectStmt"]);
 }
-*/
+
 #[test]
 fn it_parses_LOCK() {
     let result = summary("LOCK TABLE public.schema_migrations IN ACCESS SHARE MODE", 0, -1).unwrap();
@@ -222,7 +222,7 @@ fn it_parses_CREATE_TABLE() {
     assert_eq!(result.ddl_tables(), ["test"]);
     assert_eq!(result.statement_types(), ["CreateStmt"]);
 }
-/* FIXME: "Terminating process due to FATAL error"
+
 #[test]
 fn it_parses_CREATE_TABLE_AS() {
     let result = summary("CREATE TABLE foo AS SELECT * FROM bar;", 0, -1).unwrap();
@@ -231,7 +231,7 @@ fn it_parses_CREATE_TABLE_AS() {
     assert_eq!(tables, ["bar", "foo"]);
     assert_eq!(result.ddl_tables(), ["foo"]);
     assert_eq!(result.select_tables(), ["bar"]);
-    assert_eq!(result.statement_types(), ["CreateTableAsStmt"]);
+    assert_eq!(result.statement_types(), ["CreateTableAsStmt", "SelectStmt"]);
 
     let sql = "CREATE TABLE foo AS SELECT id FROM bar UNION SELECT id from baz;";
     let result = summary(sql, 0, -1).unwrap();
@@ -241,9 +241,9 @@ fn it_parses_CREATE_TABLE_AS() {
     assert_eq!(tables, ["bar", "baz", "foo"]);
     assert_eq!(result.ddl_tables(), ["foo"]);
     assert_eq!(select_tables, ["bar", "baz"]);
-    assert_eq!(result.statement_types(), ["CreateTableAsStmt"]);
+    assert_eq!(result.statement_types(), ["CreateTableAsStmt", "SelectStmt"]);
 }
-*/
+
 #[test]
 fn it_fails_to_parse_CREATE_TABLE_WITH_OIDS() {
     let error = summary("CREATE TABLE test (a int4) WITH OIDS", 0, -1).err().unwrap();
