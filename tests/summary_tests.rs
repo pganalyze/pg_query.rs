@@ -149,7 +149,7 @@ fn it_parses_COPY() {
     assert_eq!(result.tables(), ["test"]);
     assert_eq!(result.statement_types(), ["CopyStmt"]);
 }
-/* FIXME: segfaults
+
 #[test]
 fn it_parses_DROP_TABLE() {
     let result = summary("drop table abc.test123 cascade", 0, -1).unwrap();
@@ -164,7 +164,6 @@ fn it_parses_DROP_TABLE() {
     assert_eq!(tables, ["abc.test123", "test"]);
     assert_eq!(ddl_tables, ["abc.test123", "test"]);
 }
-*/
 
 #[test]
 fn it_parses_COMMIT() {
@@ -332,7 +331,7 @@ fn it_parses_DROP_INDEX() {
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.statement_types(), ["DropStmt"]);
 }
-/* FIXME: segfault
+
 #[test]
 fn it_parses_DROP_RULE() {
     let result = summary("DROP RULE myrule ON mytable CASCADE", 0, -1).unwrap();
@@ -350,7 +349,6 @@ fn it_parses_DROP_TRIGGER() {
     assert_eq!(result.ddl_tables(), ["mytable"]);
     assert_eq!(result.statement_types(), ["DropStmt"]);
 }
-*/
 
 #[test]
 fn it_parses_GRANT() {
