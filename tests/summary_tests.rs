@@ -149,7 +149,7 @@ fn it_parses_COPY() {
     assert_eq!(result.tables(), ["test"]);
     assert_eq!(result.statement_types(), ["CopyStmt"]);
 }
-/*
+/* FIXME: segfaults
 #[test]
 fn it_parses_DROP_TABLE() {
     let result = summary("drop table abc.test123 cascade", 0, -1).unwrap();
@@ -196,7 +196,7 @@ fn it_parses_EXPLAIN() {
     assert_eq!(result.tables(), ["test"]);
     assert_eq!(result.statement_types(), ["ExplainStmt", "DeleteStmt"]);
 }
-/*
+/* FIXME: "Terminating process due to FATAL error"
 #[test]
 fn it_parses_SELECT_INTO() {
     let result = summary("CREATE TEMP TABLE test AS SELECT 1", 0, -1).unwrap();
@@ -213,16 +213,16 @@ fn it_parses_LOCK() {
     assert_eq!(result.tables(), ["public.schema_migrations"]);
     assert_eq!(result.statement_types(), ["LockStmt"]);
 }
-/*
+
 #[test]
 fn it_parses_CREATE_TABLE() {
-    let result = summary("CREATE TABLE test (a int4, 0, -1)").unwrap();
+    let result = summary("CREATE TABLE test (a int4)", 0, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["test"]);
     assert_eq!(result.ddl_tables(), ["test"]);
     assert_eq!(result.statement_types(), ["CreateStmt"]);
 }
-
+/* FIXME: "Terminating process due to FATAL error"
 #[test]
 fn it_parses_CREATE_TABLE_AS() {
     let result = summary("CREATE TABLE foo AS SELECT * FROM bar;", 0, -1).unwrap();
@@ -260,8 +260,7 @@ fn it_parses_CREATE_INDEX() {
     let call_functions: Vec<String> = sorted(result.call_functions()).collect();
     assert_eq!(call_functions, ["lower", "pow", "upper"]);
 }
-
-/*
+/* FIXME: "Terminating process due to FATAL error"
 #[test]
 fn it_parses_CREATE_SCHEMA() {
     let result = summary("CREATE SCHEMA IF NOT EXISTS test AUTHORIZATION joe", 0, -1).unwrap();
@@ -309,7 +308,7 @@ fn it_parses_CREATE_TRIGGER() {
     assert_eq!(result.ddl_tables(), ["accounts"]);
     assert_eq!(result.statement_types(), ["CreateTrigStmt"]);
 }
-
+*/
 #[test]
 fn it_parses_DROP_SCHEMA() {
     let result = summary("DROP SCHEMA myschema", 0, -1).unwrap();
@@ -333,7 +332,7 @@ fn it_parses_DROP_INDEX() {
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.statement_types(), ["DropStmt"]);
 }
-
+/* FIXME: segfault
 #[test]
 fn it_parses_DROP_RULE() {
     let result = summary("DROP RULE myrule ON mytable CASCADE", 0, -1).unwrap();
@@ -362,7 +361,6 @@ fn it_parses_GRANT() {
     assert_eq!(result.statement_types(), ["GrantStmt"]);
 }
 
-/*
 #[test]
 fn it_parses_REVOKE() {
     let result = summary("REVOKE admins FROM joe", 0, -1).unwrap();
@@ -384,13 +382,12 @@ fn it_parses_TRUNCATE() {
 
 #[test]
 fn it_parses_WITH() {
-    let result = summary("WITH a AS (SELECT * FROM x WHERE x.y = $1 AND x.z = 1, 0, -1) SELECT * FROM a").unwrap();
+    let result = summary("WITH a AS (SELECT * FROM x WHERE x.y = $1 AND x.z = 1) SELECT * FROM a", 0, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["x"]);
     assert_eq!(result.cte_names, ["a"]);
     assert_eq!(result.statement_types(), ["SelectStmt"]);
 }
-*/
 
 #[test]
 fn it_parses_multi_line_functions() {
