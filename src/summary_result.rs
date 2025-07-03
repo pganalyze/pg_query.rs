@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::iter::FromIterator;
@@ -19,6 +20,28 @@ pub struct SummaryResult {
     pub filter_columns: Vec<FilterColumn>,
     pub truncated_query: Option<String>,
     pub statement_types: Vec<String>,
+}
+
+impl PartialOrd for FilterColumn {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for FilterColumn {
+    fn cmp(&self, other: &Self) -> Ordering {
+        let schema_cmp = self.schema.cmp(&other.schema);
+        let table_cmp = self.table.cmp(&other.table);
+        let column_cmp = self.column.cmp(&other.column);
+
+        if schema_cmp != Ordering::Equal {
+            schema_cmp
+        } else if table_cmp != Ordering::Equal {
+            table_cmp
+        } else {
+            column_cmp
+        }
+    }
 }
 
 impl SummaryResult {

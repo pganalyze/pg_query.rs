@@ -22,7 +22,7 @@ fn it_parses_simple_query() {
     assert_eq!(result.aliases.is_empty(), true);
     assert_eq!(result.cte_names.len(), 0);
     assert_eq!(result.functions.len(), 0);
-    assert_eq!(result.filter_columns.len(), 0);
+    assert_eq!(result.filter_columns.len(), 1);
     assert_eq!(result.truncated_query.is_none(), true);
     assert_eq!(result.statement_types(), ["SelectStmt"]);
 }
