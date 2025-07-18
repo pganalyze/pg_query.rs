@@ -28,6 +28,21 @@ fn it_parses_simple_query() {
 }
 
 #[test]
+fn it_parses_simple_query_with_alias() {
+    let result = summary("SELECT * FROM test AS x WHERE a = 1", 0, -1).unwrap();
+
+    assert_eq!(result.warnings.len(), 0);
+    assert_eq!(result.tables().len(), 1);
+    assert_eq!(result.aliases.len(), 1);
+    assert_eq!(result.aliases["x"], "test");
+    assert_eq!(result.cte_names.len(), 0);
+    assert_eq!(result.functions.len(), 0);
+    assert_eq!(result.filter_columns.len(), 1);
+    assert_eq!(result.truncated_query.is_none(), true);
+    assert_eq!(result.statement_types(), ["SelectStmt"]);
+}
+
+#[test]
 fn it_handles_errors() {
     let error = summary("CREATE RANDOM ix_test ON contacts.person;", 0, -1).err().unwrap();
     assert_eq!(error, Error::Parse("syntax error at or near \"RANDOM\"".into()));
