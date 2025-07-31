@@ -30,8 +30,8 @@ impl PartialOrd for FilterColumn {
 
 impl Ord for FilterColumn {
     fn cmp(&self, other: &Self) -> Ordering {
-        let schema_cmp = self.schema.cmp(&other.schema);
-        let table_cmp = self.table.cmp(&other.table);
+        let schema_cmp = self.schema_name.cmp(&other.schema_name);
+        let table_cmp = self.table_name.cmp(&other.table_name);
         let column_cmp = self.column.cmp(&other.column);
 
         if schema_cmp != Ordering::Equal {
@@ -170,7 +170,7 @@ impl SummaryResult {
 pub struct Table {
     pub name: String,
     pub schema_name: String,
-    pub rel_name: String,
+    pub table_name: String,
     pub context: Context,
 }
 
@@ -179,7 +179,7 @@ impl From<&protobuf::summary_result::Table> for Table {
         Self {
             name: v.name.to_owned(),
             schema_name: v.schema_name.to_owned(),
-            rel_name: v.rel_name.to_owned(),
+            table_name: v.table_name.to_owned(),
             context: Context::try_from(v.context).unwrap(), // FIXME: avoid unwrap()
         }
     }
@@ -208,17 +208,17 @@ impl From<&protobuf::summary_result::Function> for Function {
 
 #[derive(Debug, Eq, Hash, PartialEq)]
 pub struct FilterColumn {
-    pub schema: Option<String>,
-    pub table: Option<String>,
+    pub schema_name: Option<String>,
+    pub table_name: Option<String>,
     pub column: String,
 }
 
 impl From<&protobuf::summary_result::FilterColumn> for FilterColumn {
     fn from(v: &protobuf::summary_result::FilterColumn) -> Self {
-        let schema = (!v.schema.is_empty()).then(|| v.schema.to_owned());
-        let table = (!v.table.is_empty()).then(|| v.table.to_owned());
+        let schema_name = (!v.schema_name.is_empty()).then(|| v.schema_name.to_owned());
+        let table_name = (!v.table_name.is_empty()).then(|| v.table_name.to_owned());
         let column = v.column.to_owned();
 
-        Self { schema, table, column }
+        Self { schema_name, table_name, column }
     }
 }

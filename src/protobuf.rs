@@ -4218,7 +4218,7 @@ pub mod summary_result {
         #[prost(string, tag = "2")]
         pub schema_name: ::prost::alloc::string::String,
         #[prost(string, tag = "3")]
-        pub rel_name: ::prost::alloc::string::String,
+        pub table_name: ::prost::alloc::string::String,
         #[prost(enumeration = "Context", tag = "4")]
         pub context: i32,
     }
@@ -4238,10 +4238,10 @@ pub mod summary_result {
     pub struct FilterColumn {
         /// optional
         #[prost(string, tag = "1")]
-        pub schema: ::prost::alloc::string::String,
+        pub schema_name: ::prost::alloc::string::String,
         /// optional
         #[prost(string, tag = "2")]
-        pub table: ::prost::alloc::string::String,
+        pub table_name: ::prost::alloc::string::String,
         #[prost(string, tag = "3")]
         pub column: ::prost::alloc::string::String,
     }
