@@ -21,7 +21,7 @@ use crate::summary_result::SummaryResult;
 /// ```
 pub fn summary(statement: &str, parser_options: i32, truncate_limit: i32) -> Result<SummaryResult> {
     let input = CString::new(statement)?;
-    let result = unsafe { pg_query_parse_summary(input.as_ptr(), parser_options, truncate_limit) };
+    let result = unsafe { pg_query_summary(input.as_ptr(), parser_options, truncate_limit) };
     let parse_result = if !result.error.is_null() {
         let message = unsafe { CStr::from_ptr((*result.error).message) }.to_string_lossy().to_string();
         Err(Error::Parse(message))

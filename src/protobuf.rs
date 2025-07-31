@@ -4478,7 +4478,7 @@ pub struct SummaryResult {
     pub functions: ::prost::alloc::vec::Vec<summary_result::Function>,
     #[prost(message, repeated, tag = "5")]
     pub filter_columns: ::prost::alloc::vec::Vec<summary_result::FilterColumn>,
-    /// string truncated_query = 7; /* optional, empty if truncation limit is -1 */
+    /// UNIMPLEMENTED(truncated_query): string truncated_query = 7; /* optional, empty if truncation limit is -1 */
     #[prost(string, repeated, tag = "6")]
     pub statement_types: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
