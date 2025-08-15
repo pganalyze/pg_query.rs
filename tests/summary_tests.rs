@@ -6,7 +6,7 @@ use itertools::sorted;
 
 use pg_query::{
     protobuf::{self, a_const::Val},
-    summary, Error, NodeEnum, NodeRef, SummaryResult, TriggerType,
+    summary, Error, FilterColumn, NodeEnum, NodeRef, SummaryResult, TriggerType,
 };
 
 #[macro_use]
@@ -39,6 +39,31 @@ fn it_parses_simple_query_with_alias() {
     assert_eq!(result.functions.len(), 0);
     assert_eq!(result.filter_columns.len(), 1);
     // UNIMPLEMENTED(truncated_query): assert_eq!(result.truncated_query.is_none(), true);
+    assert_eq!(result.statement_types(), ["SelectStmt"]);
+}
+
+#[test]
+fn it_parses_query_with_nested_select_where() {
+    let result = summary("SELECT * FROM test WHERE col1 = (SELECT col2 FROM test2 WHERE col3 = 123)", 0, -1).unwrap();
+
+    assert_eq!(result.warnings.len(), 0);
+    assert_eq!(result.tables().len(), 2);
+    assert_eq!(result.aliases.len(), 0);
+    assert_eq!(result.cte_names.len(), 0);
+    assert_eq!(result.functions.len(), 0);
+    let filter_columns: Vec<&FilterColumn> = sorted(&result.filter_columns).collect();
+    assert_eq!(filter_columns, [
+        &FilterColumn {
+            schema_name: None,
+            table_name: None,
+            column: "col1".to_string(),
+        },
+        &FilterColumn {
+            schema_name: None,
+            table_name: None,
+            column: "col3".to_string(),
+        },
+    ]);
     assert_eq!(result.statement_types(), ["SelectStmt"]);
 }
 
@@ -97,7 +122,6 @@ fn it_parses_real_queries() {
         WHERE s.database_id = $0 AND s.collected_at BETWEEN $0 AND $0
         ORDER BY collected_at";
     let result = summary(query, 0, -1).unwrap();
-    eprintln!("{:?}", result);
     let tables: Vec<String> = sorted(result.tables()).collect();
     let select_tables: Vec<String> = sorted(result.select_tables()).collect();
     assert_eq!(tables, ["snapshots", "system_snapshots"]);
@@ -500,6 +524,39 @@ fn it_separates_CTE_names_from_table_names() {
     assert_eq!(result.tables(), ["table_name"]);
     assert_eq!(result.select_tables(), ["table_name"]);
     assert_eq!(result.cte_names, ["cte_name"]);
+    assert_eq!(result.statement_types(), ["SelectStmt"]);
+}
+
+#[test]
+fn it_finds_tables_in_SELECT_FROM_TABLESAMPLE() {
+    let sql = "SELECT * FROM tbl TABLESAMPLE sample(1)";
+    let result = summary(sql, 0, -1).unwrap();
+    assert_eq!(result.warnings.len(), 0);
+    assert_eq!(result.tables(), ["tbl"]);
+    assert_eq!(result.select_tables(), ["tbl"]);
+    assert_eq!(result.cte_names.len(), 0);
+    assert_eq!(result.statement_types(), ["SelectStmt"]);
+}
+
+#[test]
+fn it_finds_tables_in_SELECT_FROM_XMLTABLE() {
+    let sql = "SELECT xmltable.* FROM xmlelements, XMLTABLE('/root' PASSING data COLUMNS element text)";
+    let result = summary(sql, 0, -1).unwrap();
+    assert_eq!(result.warnings.len(), 0);
+    assert_eq!(result.tables(), ["xmlelements"]);
+    assert_eq!(result.select_tables(), ["xmlelements"]);
+    assert_eq!(result.cte_names.len(), 0);
+    assert_eq!(result.statement_types(), ["SelectStmt"]);
+}
+
+#[test]
+fn it_ignores_JSON_TABLE() {
+    let sql = "SELECT jt.* FROM my_films, JSON_TABLE (js, '$.favorites[*]' COLUMNS (id FOR ORDINALITY, kind text PATH '$.kind')) AS jt;";
+    let result = summary(sql, 0, -1).unwrap();
+    assert_eq!(result.warnings.len(), 0);
+    assert_eq!(result.tables(), ["my_films"]);
+    assert_eq!(result.select_tables(), ["my_films"]);
+    assert_eq!(result.cte_names.len(), 0);
     assert_eq!(result.statement_types(), ["SelectStmt"]);
 }
 
