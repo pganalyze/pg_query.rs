@@ -293,6 +293,29 @@ fn it_parses_VACUUM() {
 }
 
 #[test]
+fn it_parses_MERGE() {
+    let result = parse(
+        "WITH cte AS (SELECT * FROM g.other_table CROSS JOIN p) MERGE INTO my_table USING cte ON (id=oid) WHEN MATCHED THEN UPDATE SET a=b WHEN NOT MATCHED THEN INSERT (id, a) VALUES (oid, b);",
+    )
+    .unwrap();
+    assert_eq!(result.warnings.len(), 0);
+
+    let select_tables: Vec<String> = sorted(result.select_tables()).collect();
+    assert_eq!(select_tables, ["g.other_table", "p"]);
+
+    let dml_tables: Vec<String> = sorted(result.dml_tables()).collect();
+    assert_eq!(dml_tables, ["my_table"]);
+
+    let all_tables: Vec<String> = sorted(result.tables()).collect();
+    assert_eq!(all_tables, ["g.other_table", "my_table", "p"]);
+
+    assert_eq!(result.cte_names, ["cte"]);
+    assert_eq!(result.statement_types(), ["MergeStmt"]);
+
+    cast!(result.protobuf.nodes()[0].0, NodeRef::MergeStmt);
+}
+
+#[test]
 fn it_parses_EXPLAIN() {
     let result = parse("EXPLAIN DELETE FROM test").unwrap();
     assert_eq!(result.warnings.len(), 0);
@@ -1236,6 +1259,17 @@ fn it_finds_called_functions() {
     assert_eq!(result.ddl_functions().len(), 0);
     assert_eq!(result.call_functions(), ["testfunc"]);
     assert_eq!(result.statement_types(), ["SelectStmt"]);
+}
+
+#[test]
+fn it_finds_functions_invoked_with_CALL() {
+    let result = parse("CALL testfunc(1);").unwrap();
+    assert_eq!(result.warnings.len(), 0);
+    assert_eq!(result.tables().len(), 0);
+    assert_eq!(result.functions(), ["testfunc"]);
+    assert_eq!(result.ddl_functions().len(), 0);
+    assert_eq!(result.call_functions(), ["testfunc"]);
+    assert_eq!(result.statement_types(), ["CallStmt"]);
 }
 
 #[test]

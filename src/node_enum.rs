@@ -166,6 +166,35 @@ impl NodeEnum {
                         }
                     });
                 }
+                NodeRef::MergeStmt(m) => {
+                    if let Some(t) = m.relation.as_ref() {
+                        iter.push((t.to_ref(), depth, Context::DML, false));
+                    }
+
+                    if let Some(clause) = &m.with_clause {
+                        clause.ctes.iter().for_each(|n| {
+                            if let Some(n) = n.node.as_ref() {
+                                iter.push((n.to_ref(), depth, Context::DML, false));
+                            }
+                        });
+                    }
+
+                    m.source_relation.iter().for_each(|n| {
+                        if let Some(n) = n.node.as_ref() {
+                            iter.push((n.to_ref(), depth, Context::Select, false));
+                        }
+                    });
+                    m.merge_when_clauses.iter().for_each(|n| {
+                        if let Some(n) = n.node.as_ref() {
+                            iter.push((n.to_ref(), depth, Context::DML, true));
+                        }
+                    });
+                    m.join_condition.iter().for_each(|n| {
+                        if let Some(n) = n.node.as_ref() {
+                            iter.push((n.to_ref(), depth, Context::Select, false));
+                        }
+                    });
+                }
                 NodeRef::CommonTableExpr(s) => {
                     if let Some(n) = &s.ctequery {
                         if let Some(n) = n.node.as_ref() {
@@ -181,6 +210,11 @@ impl NodeEnum {
                     }
                     if let Some(rel) = s.relation.as_ref() {
                         iter.push((rel.to_ref(), depth, Context::DML, false));
+                    }
+                }
+                NodeRef::CallStmt(s) => {
+                    if let Some(n) = s.funccall.as_ref() {
+                        iter.push((n.to_ref(), depth, Context::Call, false));
                     }
                 }
                 //
@@ -231,6 +265,8 @@ impl NodeEnum {
                     }
                     s.index_params.iter().for_each(|n| {
                         if let Some(NodeEnum::IndexElem(n)) = n.node.as_ref() {
+                            iter.push((n.to_ref(), depth, Context::DDL, false));
+
                             if let Some(n) = n.expr.as_ref().and_then(|n| n.node.as_ref()) {
                                 iter.push((n.to_ref(), depth, Context::DDL, false));
                             }
@@ -619,6 +655,12 @@ impl NodeEnum {
                     }
                     if let Some(rel) = s.relation.as_mut() {
                         iter.push((rel.to_mut(), depth, Context::DML));
+                    }
+                }
+                NodeMut::CallStmt(s) => {
+                    let s = s.as_mut().unwrap();
+                    if let Some(n) = s.funccall.as_mut() {
+                        iter.push((n.to_mut(), depth, Context::Call));
                     }
                 }
                 //
