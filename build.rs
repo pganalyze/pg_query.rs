@@ -73,7 +73,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let src_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR")?).join("src");
         env::set_var("OUT_DIR", &src_dir);
 
-        prost_build::compile_protos(&[&out_protobuf_path.join("pg_query").with_extension("proto")], &[&out_protobuf_path])?;
+        let mut prost_build = prost_build::Config::new();
+        prost_build.type_attribute(".", "#[derive(serde::Serialize)]");
+        prost_build.compile_protos(&[&out_protobuf_path.join("pg_query").with_extension("proto")], &[&out_protobuf_path])?;
 
         std::fs::rename(src_dir.join("pg_query.rs"), src_dir.join("protobuf.rs"))?;
 
