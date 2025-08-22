@@ -24,7 +24,7 @@ impl protobuf::ParseResult {
     }
 
     // Note: this doesn't iterate over every possible node type, since we only care about a subset of nodes.
-    pub fn nodes(&self) -> Vec<(NodeRef, i32, Context, bool)> {
+    pub fn nodes(&self) -> Vec<(NodeRef<'_>, i32, Context, bool)> {
         self.stmts
             .iter()
             .filter_map(|s|

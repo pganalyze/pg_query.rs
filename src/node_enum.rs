@@ -19,7 +19,7 @@ impl NodeEnum {
         })
     }
 
-    pub fn nodes(&self) -> Vec<(NodeRef, i32, Context, bool)> {
+    pub fn nodes(&self) -> Vec<(NodeRef<'_>, i32, Context, bool)> {
         let mut iter = vec![(self.to_ref(), 0, Context::None, false)];
         let mut nodes = Vec::new();
         while !iter.is_empty() {
@@ -951,7 +951,7 @@ impl NodeEnum {
         nodes
     }
 
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         match self {
             NodeEnum::Alias(n) => NodeRef::Alias(n),
             NodeEnum::RangeVar(n) => NodeRef::RangeVar(n),
