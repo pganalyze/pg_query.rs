@@ -1,5 +1,12 @@
 # Changelog
 
+## 6.1.1   2025-08-22
+
+* `NodeEnum`: Support `MERGE` queries
+* `NodeEnum`: Support `CALL fn()` queries
+* `NodeEnum`: Iterate over `IndexElem` nodes
+* Derive `serde::Serialize` for `protobuf::ParseResult`
+
 ## 6.1.0   2025-04-02
 
 * Upgrade to libpg_query 17-6.1.0
