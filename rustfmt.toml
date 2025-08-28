@@ -2,4 +2,4 @@ edition = "2021"
 max_width = 150
 overflow_delimited_expr = true
 use_small_heuristics = "Max"
-fn_args_layout = "Compressed"
+fn_params_layout = "Compressed"

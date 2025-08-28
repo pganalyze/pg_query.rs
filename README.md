@@ -22,7 +22,7 @@ Add the following to your `Cargo.toml`
 
 ```toml
 [dependencies]
-pg_query = "5.1"
+pg_query = "6.1"
 ```
 
 ## Examples

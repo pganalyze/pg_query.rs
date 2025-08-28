@@ -10,7 +10,7 @@ impl Node {
 }
 
 impl protobuf::Alias {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::Alias(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -19,7 +19,7 @@ impl protobuf::Alias {
 }
 
 impl protobuf::RangeVar {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::RangeVar(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -28,7 +28,7 @@ impl protobuf::RangeVar {
 }
 
 impl protobuf::TableFunc {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::TableFunc(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -37,7 +37,7 @@ impl protobuf::TableFunc {
 }
 
 impl protobuf::Var {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::Var(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -46,7 +46,7 @@ impl protobuf::Var {
 }
 
 impl protobuf::Param {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::Param(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -55,7 +55,7 @@ impl protobuf::Param {
 }
 
 impl protobuf::Aggref {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::Aggref(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -64,7 +64,7 @@ impl protobuf::Aggref {
 }
 
 impl protobuf::GroupingFunc {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::GroupingFunc(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -73,7 +73,7 @@ impl protobuf::GroupingFunc {
 }
 
 impl protobuf::WindowFunc {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::WindowFunc(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -82,7 +82,7 @@ impl protobuf::WindowFunc {
 }
 
 impl protobuf::SubscriptingRef {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::SubscriptingRef(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -91,7 +91,7 @@ impl protobuf::SubscriptingRef {
 }
 
 impl protobuf::FuncExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::FuncExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -100,7 +100,7 @@ impl protobuf::FuncExpr {
 }
 
 impl protobuf::NamedArgExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::NamedArgExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -109,7 +109,7 @@ impl protobuf::NamedArgExpr {
 }
 
 impl protobuf::OpExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::OpExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -118,7 +118,7 @@ impl protobuf::OpExpr {
 }
 
 impl protobuf::DistinctExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::DistinctExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -127,7 +127,7 @@ impl protobuf::DistinctExpr {
 }
 
 impl protobuf::NullIfExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::NullIfExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -136,7 +136,7 @@ impl protobuf::NullIfExpr {
 }
 
 impl protobuf::ScalarArrayOpExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::ScalarArrayOpExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -145,7 +145,7 @@ impl protobuf::ScalarArrayOpExpr {
 }
 
 impl protobuf::BoolExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::BoolExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -154,7 +154,7 @@ impl protobuf::BoolExpr {
 }
 
 impl protobuf::SubLink {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::SubLink(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -163,7 +163,7 @@ impl protobuf::SubLink {
 }
 
 impl protobuf::SubPlan {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::SubPlan(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -172,7 +172,7 @@ impl protobuf::SubPlan {
 }
 
 impl protobuf::AlternativeSubPlan {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlternativeSubPlan(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -181,7 +181,7 @@ impl protobuf::AlternativeSubPlan {
 }
 
 impl protobuf::FieldSelect {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::FieldSelect(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -190,7 +190,7 @@ impl protobuf::FieldSelect {
 }
 
 impl protobuf::FieldStore {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::FieldStore(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -199,7 +199,7 @@ impl protobuf::FieldStore {
 }
 
 impl protobuf::RelabelType {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::RelabelType(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -208,7 +208,7 @@ impl protobuf::RelabelType {
 }
 
 impl protobuf::CoerceViaIo {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CoerceViaIo(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -217,7 +217,7 @@ impl protobuf::CoerceViaIo {
 }
 
 impl protobuf::ArrayCoerceExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::ArrayCoerceExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -226,7 +226,7 @@ impl protobuf::ArrayCoerceExpr {
 }
 
 impl protobuf::ConvertRowtypeExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::ConvertRowtypeExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -235,7 +235,7 @@ impl protobuf::ConvertRowtypeExpr {
 }
 
 impl protobuf::CollateExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CollateExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -244,7 +244,7 @@ impl protobuf::CollateExpr {
 }
 
 impl protobuf::CaseExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CaseExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -253,7 +253,7 @@ impl protobuf::CaseExpr {
 }
 
 impl protobuf::CaseWhen {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CaseWhen(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -262,7 +262,7 @@ impl protobuf::CaseWhen {
 }
 
 impl protobuf::CaseTestExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CaseTestExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -271,7 +271,7 @@ impl protobuf::CaseTestExpr {
 }
 
 impl protobuf::ArrayExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::ArrayExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -280,7 +280,7 @@ impl protobuf::ArrayExpr {
 }
 
 impl protobuf::RowExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::RowExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -289,7 +289,7 @@ impl protobuf::RowExpr {
 }
 
 impl protobuf::RowCompareExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::RowCompareExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -298,7 +298,7 @@ impl protobuf::RowCompareExpr {
 }
 
 impl protobuf::CoalesceExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CoalesceExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -307,7 +307,7 @@ impl protobuf::CoalesceExpr {
 }
 
 impl protobuf::MinMaxExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::MinMaxExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -316,7 +316,7 @@ impl protobuf::MinMaxExpr {
 }
 
 impl protobuf::SqlValueFunction {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::SqlvalueFunction(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -325,7 +325,7 @@ impl protobuf::SqlValueFunction {
 }
 
 impl protobuf::XmlExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::XmlExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -334,7 +334,7 @@ impl protobuf::XmlExpr {
 }
 
 impl protobuf::NullTest {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::NullTest(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -343,7 +343,7 @@ impl protobuf::NullTest {
 }
 
 impl protobuf::BooleanTest {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::BooleanTest(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -352,7 +352,7 @@ impl protobuf::BooleanTest {
 }
 
 impl protobuf::CoerceToDomain {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CoerceToDomain(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -361,7 +361,7 @@ impl protobuf::CoerceToDomain {
 }
 
 impl protobuf::CoerceToDomainValue {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CoerceToDomainValue(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -370,7 +370,7 @@ impl protobuf::CoerceToDomainValue {
 }
 
 impl protobuf::SetToDefault {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::SetToDefault(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -379,7 +379,7 @@ impl protobuf::SetToDefault {
 }
 
 impl protobuf::CurrentOfExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CurrentOfExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -388,7 +388,7 @@ impl protobuf::CurrentOfExpr {
 }
 
 impl protobuf::NextValueExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::NextValueExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -397,7 +397,7 @@ impl protobuf::NextValueExpr {
 }
 
 impl protobuf::InferenceElem {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::InferenceElem(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -406,7 +406,7 @@ impl protobuf::InferenceElem {
 }
 
 impl protobuf::TargetEntry {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::TargetEntry(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -415,7 +415,7 @@ impl protobuf::TargetEntry {
 }
 
 impl protobuf::RangeTblRef {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::RangeTblRef(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -424,7 +424,7 @@ impl protobuf::RangeTblRef {
 }
 
 impl protobuf::JoinExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::JoinExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -433,7 +433,7 @@ impl protobuf::JoinExpr {
 }
 
 impl protobuf::FromExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::FromExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -442,7 +442,7 @@ impl protobuf::FromExpr {
 }
 
 impl protobuf::OnConflictExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::OnConflictExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -451,7 +451,7 @@ impl protobuf::OnConflictExpr {
 }
 
 impl protobuf::IntoClause {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::IntoClause(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -460,7 +460,7 @@ impl protobuf::IntoClause {
 }
 
 impl protobuf::RawStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::RawStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -469,7 +469,7 @@ impl protobuf::RawStmt {
 }
 
 impl protobuf::Query {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::Query(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -478,7 +478,7 @@ impl protobuf::Query {
 }
 
 impl protobuf::InsertStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::InsertStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -487,7 +487,7 @@ impl protobuf::InsertStmt {
 }
 
 impl protobuf::DeleteStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::DeleteStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -496,7 +496,7 @@ impl protobuf::DeleteStmt {
 }
 
 impl protobuf::UpdateStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::UpdateStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -505,7 +505,7 @@ impl protobuf::UpdateStmt {
 }
 
 impl protobuf::SelectStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::SelectStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -514,7 +514,7 @@ impl protobuf::SelectStmt {
 }
 
 impl protobuf::AlterTableStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterTableStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -523,7 +523,7 @@ impl protobuf::AlterTableStmt {
 }
 
 impl protobuf::AlterTableCmd {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterTableCmd(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -532,7 +532,7 @@ impl protobuf::AlterTableCmd {
 }
 
 impl protobuf::AlterDomainStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterDomainStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -541,7 +541,7 @@ impl protobuf::AlterDomainStmt {
 }
 
 impl protobuf::SetOperationStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::SetOperationStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -550,7 +550,7 @@ impl protobuf::SetOperationStmt {
 }
 
 impl protobuf::GrantStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::GrantStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -559,7 +559,7 @@ impl protobuf::GrantStmt {
 }
 
 impl protobuf::GrantRoleStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::GrantRoleStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -568,7 +568,7 @@ impl protobuf::GrantRoleStmt {
 }
 
 impl protobuf::AlterDefaultPrivilegesStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterDefaultPrivilegesStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -577,7 +577,7 @@ impl protobuf::AlterDefaultPrivilegesStmt {
 }
 
 impl protobuf::ClosePortalStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::ClosePortalStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -586,7 +586,7 @@ impl protobuf::ClosePortalStmt {
 }
 
 impl protobuf::ClusterStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::ClusterStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -595,7 +595,7 @@ impl protobuf::ClusterStmt {
 }
 
 impl protobuf::CopyStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CopyStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -604,7 +604,7 @@ impl protobuf::CopyStmt {
 }
 
 impl protobuf::CreateStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -613,7 +613,7 @@ impl protobuf::CreateStmt {
 }
 
 impl protobuf::DefineStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::DefineStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -622,7 +622,7 @@ impl protobuf::DefineStmt {
 }
 
 impl protobuf::DropStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::DropStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -631,7 +631,7 @@ impl protobuf::DropStmt {
 }
 
 impl protobuf::TruncateStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::TruncateStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -640,7 +640,7 @@ impl protobuf::TruncateStmt {
 }
 
 impl protobuf::CommentStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CommentStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -649,7 +649,7 @@ impl protobuf::CommentStmt {
 }
 
 impl protobuf::FetchStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::FetchStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -658,7 +658,7 @@ impl protobuf::FetchStmt {
 }
 
 impl protobuf::IndexStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::IndexStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -667,7 +667,7 @@ impl protobuf::IndexStmt {
 }
 
 impl protobuf::CreateFunctionStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateFunctionStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -676,7 +676,7 @@ impl protobuf::CreateFunctionStmt {
 }
 
 impl protobuf::AlterFunctionStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterFunctionStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -685,7 +685,7 @@ impl protobuf::AlterFunctionStmt {
 }
 
 impl protobuf::DoStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::DoStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -694,7 +694,7 @@ impl protobuf::DoStmt {
 }
 
 impl protobuf::RenameStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::RenameStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -703,7 +703,7 @@ impl protobuf::RenameStmt {
 }
 
 impl protobuf::RuleStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::RuleStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -712,7 +712,7 @@ impl protobuf::RuleStmt {
 }
 
 impl protobuf::NotifyStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::NotifyStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -721,7 +721,7 @@ impl protobuf::NotifyStmt {
 }
 
 impl protobuf::ListenStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::ListenStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -730,7 +730,7 @@ impl protobuf::ListenStmt {
 }
 
 impl protobuf::UnlistenStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::UnlistenStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -739,7 +739,7 @@ impl protobuf::UnlistenStmt {
 }
 
 impl protobuf::TransactionStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::TransactionStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -748,7 +748,7 @@ impl protobuf::TransactionStmt {
 }
 
 impl protobuf::ViewStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::ViewStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -757,7 +757,7 @@ impl protobuf::ViewStmt {
 }
 
 impl protobuf::LoadStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::LoadStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -766,7 +766,7 @@ impl protobuf::LoadStmt {
 }
 
 impl protobuf::CreateDomainStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateDomainStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -775,7 +775,7 @@ impl protobuf::CreateDomainStmt {
 }
 
 impl protobuf::CreatedbStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreatedbStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -784,7 +784,7 @@ impl protobuf::CreatedbStmt {
 }
 
 impl protobuf::DropdbStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::DropdbStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -793,7 +793,7 @@ impl protobuf::DropdbStmt {
 }
 
 impl protobuf::VacuumStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::VacuumStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -802,7 +802,7 @@ impl protobuf::VacuumStmt {
 }
 
 impl protobuf::ExplainStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::ExplainStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -811,7 +811,7 @@ impl protobuf::ExplainStmt {
 }
 
 impl protobuf::CreateTableAsStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateTableAsStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -820,7 +820,7 @@ impl protobuf::CreateTableAsStmt {
 }
 
 impl protobuf::CreateSeqStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateSeqStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -829,7 +829,7 @@ impl protobuf::CreateSeqStmt {
 }
 
 impl protobuf::AlterSeqStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterSeqStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -838,7 +838,7 @@ impl protobuf::AlterSeqStmt {
 }
 
 impl protobuf::VariableSetStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::VariableSetStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -847,7 +847,7 @@ impl protobuf::VariableSetStmt {
 }
 
 impl protobuf::VariableShowStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::VariableShowStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -856,7 +856,7 @@ impl protobuf::VariableShowStmt {
 }
 
 impl protobuf::DiscardStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::DiscardStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -865,7 +865,7 @@ impl protobuf::DiscardStmt {
 }
 
 impl protobuf::CreateTrigStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateTrigStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -874,7 +874,7 @@ impl protobuf::CreateTrigStmt {
 }
 
 impl protobuf::CreatePLangStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreatePlangStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -883,7 +883,7 @@ impl protobuf::CreatePLangStmt {
 }
 
 impl protobuf::CreateRoleStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateRoleStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -892,7 +892,7 @@ impl protobuf::CreateRoleStmt {
 }
 
 impl protobuf::AlterRoleStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterRoleStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -901,7 +901,7 @@ impl protobuf::AlterRoleStmt {
 }
 
 impl protobuf::DropRoleStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::DropRoleStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -910,7 +910,7 @@ impl protobuf::DropRoleStmt {
 }
 
 impl protobuf::LockStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::LockStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -919,7 +919,7 @@ impl protobuf::LockStmt {
 }
 
 impl protobuf::ConstraintsSetStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::ConstraintsSetStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -928,7 +928,7 @@ impl protobuf::ConstraintsSetStmt {
 }
 
 impl protobuf::ReindexStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::ReindexStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -937,7 +937,7 @@ impl protobuf::ReindexStmt {
 }
 
 impl protobuf::CheckPointStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CheckPointStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -946,7 +946,7 @@ impl protobuf::CheckPointStmt {
 }
 
 impl protobuf::CreateSchemaStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateSchemaStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -955,7 +955,7 @@ impl protobuf::CreateSchemaStmt {
 }
 
 impl protobuf::AlterDatabaseStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterDatabaseStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -964,7 +964,7 @@ impl protobuf::AlterDatabaseStmt {
 }
 
 impl protobuf::AlterDatabaseSetStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterDatabaseSetStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -973,7 +973,7 @@ impl protobuf::AlterDatabaseSetStmt {
 }
 
 impl protobuf::AlterRoleSetStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterRoleSetStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -982,7 +982,7 @@ impl protobuf::AlterRoleSetStmt {
 }
 
 impl protobuf::CreateConversionStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateConversionStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -991,7 +991,7 @@ impl protobuf::CreateConversionStmt {
 }
 
 impl protobuf::CreateCastStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateCastStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1000,7 +1000,7 @@ impl protobuf::CreateCastStmt {
 }
 
 impl protobuf::CreateOpClassStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateOpClassStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1009,7 +1009,7 @@ impl protobuf::CreateOpClassStmt {
 }
 
 impl protobuf::CreateOpFamilyStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateOpFamilyStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1018,7 +1018,7 @@ impl protobuf::CreateOpFamilyStmt {
 }
 
 impl protobuf::AlterOpFamilyStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterOpFamilyStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1027,7 +1027,7 @@ impl protobuf::AlterOpFamilyStmt {
 }
 
 impl protobuf::PrepareStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::PrepareStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1036,7 +1036,7 @@ impl protobuf::PrepareStmt {
 }
 
 impl protobuf::ExecuteStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::ExecuteStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1045,7 +1045,7 @@ impl protobuf::ExecuteStmt {
 }
 
 impl protobuf::DeallocateStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::DeallocateStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1054,7 +1054,7 @@ impl protobuf::DeallocateStmt {
 }
 
 impl protobuf::DeclareCursorStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::DeclareCursorStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1063,7 +1063,7 @@ impl protobuf::DeclareCursorStmt {
 }
 
 impl protobuf::CreateTableSpaceStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateTableSpaceStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1072,7 +1072,7 @@ impl protobuf::CreateTableSpaceStmt {
 }
 
 impl protobuf::DropTableSpaceStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::DropTableSpaceStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1081,7 +1081,7 @@ impl protobuf::DropTableSpaceStmt {
 }
 
 impl protobuf::AlterObjectDependsStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterObjectDependsStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1090,7 +1090,7 @@ impl protobuf::AlterObjectDependsStmt {
 }
 
 impl protobuf::AlterObjectSchemaStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterObjectSchemaStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1099,7 +1099,7 @@ impl protobuf::AlterObjectSchemaStmt {
 }
 
 impl protobuf::AlterOwnerStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterOwnerStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1108,7 +1108,7 @@ impl protobuf::AlterOwnerStmt {
 }
 
 impl protobuf::AlterOperatorStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterOperatorStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1117,7 +1117,7 @@ impl protobuf::AlterOperatorStmt {
 }
 
 impl protobuf::AlterTypeStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterTypeStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1126,7 +1126,7 @@ impl protobuf::AlterTypeStmt {
 }
 
 impl protobuf::DropOwnedStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::DropOwnedStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1135,7 +1135,7 @@ impl protobuf::DropOwnedStmt {
 }
 
 impl protobuf::ReassignOwnedStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::ReassignOwnedStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1144,7 +1144,7 @@ impl protobuf::ReassignOwnedStmt {
 }
 
 impl protobuf::CompositeTypeStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CompositeTypeStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1153,7 +1153,7 @@ impl protobuf::CompositeTypeStmt {
 }
 
 impl protobuf::CreateEnumStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateEnumStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1162,7 +1162,7 @@ impl protobuf::CreateEnumStmt {
 }
 
 impl protobuf::CreateRangeStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateRangeStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1171,7 +1171,7 @@ impl protobuf::CreateRangeStmt {
 }
 
 impl protobuf::AlterEnumStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterEnumStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1180,7 +1180,7 @@ impl protobuf::AlterEnumStmt {
 }
 
 impl protobuf::AlterTsDictionaryStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterTsdictionaryStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1189,7 +1189,7 @@ impl protobuf::AlterTsDictionaryStmt {
 }
 
 impl protobuf::AlterTsConfigurationStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterTsconfigurationStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1198,7 +1198,7 @@ impl protobuf::AlterTsConfigurationStmt {
 }
 
 impl protobuf::CreateFdwStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateFdwStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1207,7 +1207,7 @@ impl protobuf::CreateFdwStmt {
 }
 
 impl protobuf::AlterFdwStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterFdwStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1216,7 +1216,7 @@ impl protobuf::AlterFdwStmt {
 }
 
 impl protobuf::CreateForeignServerStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateForeignServerStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1225,7 +1225,7 @@ impl protobuf::CreateForeignServerStmt {
 }
 
 impl protobuf::AlterForeignServerStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterForeignServerStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1234,7 +1234,7 @@ impl protobuf::AlterForeignServerStmt {
 }
 
 impl protobuf::CreateUserMappingStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateUserMappingStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1243,7 +1243,7 @@ impl protobuf::CreateUserMappingStmt {
 }
 
 impl protobuf::AlterUserMappingStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterUserMappingStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1252,7 +1252,7 @@ impl protobuf::AlterUserMappingStmt {
 }
 
 impl protobuf::DropUserMappingStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::DropUserMappingStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1261,7 +1261,7 @@ impl protobuf::DropUserMappingStmt {
 }
 
 impl protobuf::AlterTableSpaceOptionsStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterTableSpaceOptionsStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1270,7 +1270,7 @@ impl protobuf::AlterTableSpaceOptionsStmt {
 }
 
 impl protobuf::AlterTableMoveAllStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterTableMoveAllStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1279,7 +1279,7 @@ impl protobuf::AlterTableMoveAllStmt {
 }
 
 impl protobuf::SecLabelStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::SecLabelStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1288,7 +1288,7 @@ impl protobuf::SecLabelStmt {
 }
 
 impl protobuf::CreateForeignTableStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateForeignTableStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1297,7 +1297,7 @@ impl protobuf::CreateForeignTableStmt {
 }
 
 impl protobuf::ImportForeignSchemaStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::ImportForeignSchemaStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1306,7 +1306,7 @@ impl protobuf::ImportForeignSchemaStmt {
 }
 
 impl protobuf::CreateExtensionStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateExtensionStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1315,7 +1315,7 @@ impl protobuf::CreateExtensionStmt {
 }
 
 impl protobuf::AlterExtensionStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterExtensionStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1324,7 +1324,7 @@ impl protobuf::AlterExtensionStmt {
 }
 
 impl protobuf::AlterExtensionContentsStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterExtensionContentsStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1333,7 +1333,7 @@ impl protobuf::AlterExtensionContentsStmt {
 }
 
 impl protobuf::CreateEventTrigStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateEventTrigStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1342,7 +1342,7 @@ impl protobuf::CreateEventTrigStmt {
 }
 
 impl protobuf::AlterEventTrigStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterEventTrigStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1351,7 +1351,7 @@ impl protobuf::AlterEventTrigStmt {
 }
 
 impl protobuf::RefreshMatViewStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::RefreshMatViewStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1360,7 +1360,7 @@ impl protobuf::RefreshMatViewStmt {
 }
 
 impl protobuf::ReplicaIdentityStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::ReplicaIdentityStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1369,7 +1369,7 @@ impl protobuf::ReplicaIdentityStmt {
 }
 
 impl protobuf::AlterSystemStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterSystemStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1378,7 +1378,7 @@ impl protobuf::AlterSystemStmt {
 }
 
 impl protobuf::CreatePolicyStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreatePolicyStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1387,7 +1387,7 @@ impl protobuf::CreatePolicyStmt {
 }
 
 impl protobuf::AlterPolicyStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterPolicyStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1396,7 +1396,7 @@ impl protobuf::AlterPolicyStmt {
 }
 
 impl protobuf::CreateTransformStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateTransformStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1405,7 +1405,7 @@ impl protobuf::CreateTransformStmt {
 }
 
 impl protobuf::CreateAmStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateAmStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1414,7 +1414,7 @@ impl protobuf::CreateAmStmt {
 }
 
 impl protobuf::CreatePublicationStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreatePublicationStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1423,7 +1423,7 @@ impl protobuf::CreatePublicationStmt {
 }
 
 impl protobuf::AlterPublicationStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterPublicationStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1432,7 +1432,7 @@ impl protobuf::AlterPublicationStmt {
 }
 
 impl protobuf::CreateSubscriptionStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateSubscriptionStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1441,7 +1441,7 @@ impl protobuf::CreateSubscriptionStmt {
 }
 
 impl protobuf::AlterSubscriptionStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterSubscriptionStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1450,7 +1450,7 @@ impl protobuf::AlterSubscriptionStmt {
 }
 
 impl protobuf::DropSubscriptionStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::DropSubscriptionStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1459,7 +1459,7 @@ impl protobuf::DropSubscriptionStmt {
 }
 
 impl protobuf::CreateStatsStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateStatsStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1468,7 +1468,7 @@ impl protobuf::CreateStatsStmt {
 }
 
 impl protobuf::AlterCollationStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterCollationStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1477,7 +1477,7 @@ impl protobuf::AlterCollationStmt {
 }
 
 impl protobuf::CallStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CallStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1486,7 +1486,7 @@ impl protobuf::CallStmt {
 }
 
 impl protobuf::AlterStatsStmt {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AlterStatsStmt(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1495,7 +1495,7 @@ impl protobuf::AlterStatsStmt {
 }
 
 impl protobuf::AExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1504,7 +1504,7 @@ impl protobuf::AExpr {
 }
 
 impl protobuf::ColumnRef {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::ColumnRef(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1513,7 +1513,7 @@ impl protobuf::ColumnRef {
 }
 
 impl protobuf::ParamRef {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::ParamRef(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1522,7 +1522,7 @@ impl protobuf::ParamRef {
 }
 
 impl protobuf::AConst {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AConst(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1531,7 +1531,7 @@ impl protobuf::AConst {
 }
 
 impl protobuf::FuncCall {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::FuncCall(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1540,7 +1540,7 @@ impl protobuf::FuncCall {
 }
 
 impl protobuf::AStar {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AStar(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1549,7 +1549,7 @@ impl protobuf::AStar {
 }
 
 impl protobuf::AIndices {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AIndices(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1558,7 +1558,7 @@ impl protobuf::AIndices {
 }
 
 impl protobuf::AIndirection {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AIndirection(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1567,7 +1567,7 @@ impl protobuf::AIndirection {
 }
 
 impl protobuf::AArrayExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AArrayExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1576,7 +1576,7 @@ impl protobuf::AArrayExpr {
 }
 
 impl protobuf::ResTarget {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::ResTarget(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1585,7 +1585,7 @@ impl protobuf::ResTarget {
 }
 
 impl protobuf::MultiAssignRef {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::MultiAssignRef(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1594,7 +1594,7 @@ impl protobuf::MultiAssignRef {
 }
 
 impl protobuf::TypeCast {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::TypeCast(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1603,7 +1603,7 @@ impl protobuf::TypeCast {
 }
 
 impl protobuf::CollateClause {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CollateClause(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1612,7 +1612,7 @@ impl protobuf::CollateClause {
 }
 
 impl protobuf::SortBy {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::SortBy(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1621,7 +1621,7 @@ impl protobuf::SortBy {
 }
 
 impl protobuf::WindowDef {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::WindowDef(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1630,7 +1630,7 @@ impl protobuf::WindowDef {
 }
 
 impl protobuf::RangeSubselect {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::RangeSubselect(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1639,7 +1639,7 @@ impl protobuf::RangeSubselect {
 }
 
 impl protobuf::RangeFunction {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::RangeFunction(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1648,7 +1648,7 @@ impl protobuf::RangeFunction {
 }
 
 impl protobuf::RangeTableSample {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::RangeTableSample(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1657,7 +1657,7 @@ impl protobuf::RangeTableSample {
 }
 
 impl protobuf::RangeTableFunc {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::RangeTableFunc(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1666,7 +1666,7 @@ impl protobuf::RangeTableFunc {
 }
 
 impl protobuf::RangeTableFuncCol {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::RangeTableFuncCol(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1675,7 +1675,7 @@ impl protobuf::RangeTableFuncCol {
 }
 
 impl protobuf::TypeName {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::TypeName(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1684,7 +1684,7 @@ impl protobuf::TypeName {
 }
 
 impl protobuf::ColumnDef {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::ColumnDef(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1693,7 +1693,7 @@ impl protobuf::ColumnDef {
 }
 
 impl protobuf::IndexElem {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::IndexElem(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1702,7 +1702,7 @@ impl protobuf::IndexElem {
 }
 
 impl protobuf::Constraint {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::Constraint(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1711,7 +1711,7 @@ impl protobuf::Constraint {
 }
 
 impl protobuf::DefElem {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::DefElem(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1720,7 +1720,7 @@ impl protobuf::DefElem {
 }
 
 impl protobuf::RangeTblEntry {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::RangeTblEntry(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1729,7 +1729,7 @@ impl protobuf::RangeTblEntry {
 }
 
 impl protobuf::RangeTblFunction {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::RangeTblFunction(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1738,7 +1738,7 @@ impl protobuf::RangeTblFunction {
 }
 
 impl protobuf::TableSampleClause {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::TableSampleClause(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1747,7 +1747,7 @@ impl protobuf::TableSampleClause {
 }
 
 impl protobuf::WithCheckOption {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::WithCheckOption(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1756,7 +1756,7 @@ impl protobuf::WithCheckOption {
 }
 
 impl protobuf::SortGroupClause {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::SortGroupClause(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1765,7 +1765,7 @@ impl protobuf::SortGroupClause {
 }
 
 impl protobuf::GroupingSet {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::GroupingSet(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1774,7 +1774,7 @@ impl protobuf::GroupingSet {
 }
 
 impl protobuf::WindowClause {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::WindowClause(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1783,7 +1783,7 @@ impl protobuf::WindowClause {
 }
 
 impl protobuf::ObjectWithArgs {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::ObjectWithArgs(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1792,7 +1792,7 @@ impl protobuf::ObjectWithArgs {
 }
 
 impl protobuf::AccessPriv {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::AccessPriv(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1801,7 +1801,7 @@ impl protobuf::AccessPriv {
 }
 
 impl protobuf::CreateOpClassItem {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CreateOpClassItem(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1810,7 +1810,7 @@ impl protobuf::CreateOpClassItem {
 }
 
 impl protobuf::TableLikeClause {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::TableLikeClause(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1819,7 +1819,7 @@ impl protobuf::TableLikeClause {
 }
 
 impl protobuf::FunctionParameter {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::FunctionParameter(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1828,7 +1828,7 @@ impl protobuf::FunctionParameter {
 }
 
 impl protobuf::LockingClause {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::LockingClause(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1837,7 +1837,7 @@ impl protobuf::LockingClause {
 }
 
 impl protobuf::RowMarkClause {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::RowMarkClause(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1846,7 +1846,7 @@ impl protobuf::RowMarkClause {
 }
 
 impl protobuf::XmlSerialize {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::XmlSerialize(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1855,7 +1855,7 @@ impl protobuf::XmlSerialize {
 }
 
 impl protobuf::WithClause {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::WithClause(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1864,7 +1864,7 @@ impl protobuf::WithClause {
 }
 
 impl protobuf::InferClause {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::InferClause(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1873,7 +1873,7 @@ impl protobuf::InferClause {
 }
 
 impl protobuf::OnConflictClause {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::OnConflictClause(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1882,7 +1882,7 @@ impl protobuf::OnConflictClause {
 }
 
 impl protobuf::CommonTableExpr {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CommonTableExpr(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1891,7 +1891,7 @@ impl protobuf::CommonTableExpr {
 }
 
 impl protobuf::RoleSpec {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::RoleSpec(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1900,7 +1900,7 @@ impl protobuf::RoleSpec {
 }
 
 impl protobuf::TriggerTransition {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::TriggerTransition(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1909,7 +1909,7 @@ impl protobuf::TriggerTransition {
 }
 
 impl protobuf::PartitionElem {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::PartitionElem(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1918,7 +1918,7 @@ impl protobuf::PartitionElem {
 }
 
 impl protobuf::PartitionSpec {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::PartitionSpec(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1927,7 +1927,7 @@ impl protobuf::PartitionSpec {
 }
 
 impl protobuf::PartitionBoundSpec {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::PartitionBoundSpec(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1936,7 +1936,7 @@ impl protobuf::PartitionBoundSpec {
 }
 
 impl protobuf::PartitionRangeDatum {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::PartitionRangeDatum(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1945,7 +1945,7 @@ impl protobuf::PartitionRangeDatum {
 }
 
 impl protobuf::PartitionCmd {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::PartitionCmd(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1954,7 +1954,7 @@ impl protobuf::PartitionCmd {
 }
 
 impl protobuf::VacuumRelation {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::VacuumRelation(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1963,7 +1963,7 @@ impl protobuf::VacuumRelation {
 }
 
 impl protobuf::InlineCodeBlock {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::InlineCodeBlock(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1972,7 +1972,7 @@ impl protobuf::InlineCodeBlock {
 }
 
 impl protobuf::CallContext {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::CallContext(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1981,7 +1981,7 @@ impl protobuf::CallContext {
 }
 
 impl protobuf::Integer {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::Integer(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1990,7 +1990,7 @@ impl protobuf::Integer {
 }
 
 impl protobuf::Float {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::Float(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -1999,7 +1999,7 @@ impl protobuf::Float {
 }
 
 impl protobuf::String {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::String(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -2008,7 +2008,7 @@ impl protobuf::String {
 }
 
 impl protobuf::BitString {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::BitString(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -2017,7 +2017,7 @@ impl protobuf::BitString {
 }
 
 impl protobuf::List {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::List(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -2026,7 +2026,7 @@ impl protobuf::List {
 }
 
 impl protobuf::IntList {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::IntList(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
@@ -2035,7 +2035,7 @@ impl protobuf::IntList {
 }
 
 impl protobuf::OidList {
-    pub fn to_ref(&self) -> NodeRef {
+    pub fn to_ref(&self) -> NodeRef<'_> {
         NodeRef::OidList(self)
     }
     pub fn to_mut(&mut self) -> NodeMut {
