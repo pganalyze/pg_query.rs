@@ -81,12 +81,12 @@ fn it_handles_basic_query() {
     let query = r#"SELECT * FROM "t0""#;
     let result = summary(query, 0, -1).unwrap();
     assert_eq!(result.tables().len(), 1);
-    assert_eq!(result.tables()[0], "t0");
-    assert_eq!(result.warnings, Vec::<String>::new());
-    assert_eq!(result.aliases, std::collections::HashMap::new());
-    assert_eq!(result.cte_names, Vec::<String>::new());
-    assert_eq!(result.functions, Vec::<pg_query::Function>::new());
-    assert_eq!(result.filter_columns, Vec::<pg_query::FilterColumn>::new());
+    assert_eq!(result.tables(), ["t0"]);
+    assert_eq!(result.warnings.len(), 0);
+    assert_eq!(result.aliases.len(), 0);
+    assert_eq!(result.cte_names.len(), 0);
+    assert_eq!(result.functions.len(), 0);
+    assert_eq!(result.filter_columns.len(), 0);
     // UNIMPLEMENTED(truncated_query): assert_eq!(result.truncated_query, None);
 }
 
