@@ -317,7 +317,8 @@ impl ParseResult {
                 Some(NodeEnum::VariableShowStmt(..)) => Some("VariableShowStmt"),
                 Some(NodeEnum::DiscardStmt(..)) => Some("DiscardStmt"),
                 Some(NodeEnum::CreateTrigStmt(..)) => Some("CreateTrigStmt"),
-                Some(NodeEnum::CreatePlangStmt(..)) => Some("CreatePlangStmt"),
+                // CreatePLangStmt is capitalized differently to match C implementation.
+                Some(NodeEnum::CreatePlangStmt(..)) => Some("CreatePLangStmt"),
                 Some(NodeEnum::CreateRoleStmt(..)) => Some("CreateRoleStmt"),
                 Some(NodeEnum::AlterRoleStmt(..)) => Some("AlterRoleStmt"),
                 Some(NodeEnum::DropRoleStmt(..)) => Some("DropRoleStmt"),
@@ -351,8 +352,10 @@ impl ParseResult {
                 Some(NodeEnum::CreateEnumStmt(..)) => Some("CreateEnumStmt"),
                 Some(NodeEnum::CreateRangeStmt(..)) => Some("CreateRangeStmt"),
                 Some(NodeEnum::AlterEnumStmt(..)) => Some("AlterEnumStmt"),
-                Some(NodeEnum::AlterTsdictionaryStmt(..)) => Some("AlterTsdictionaryStmt"),
-                Some(NodeEnum::AlterTsconfigurationStmt(..)) => Some("AlterTsconfigurationStmt"),
+                // AlterTSDictionaryStmt is capitalized differently to match C implementation.
+                Some(NodeEnum::AlterTsdictionaryStmt(..)) => Some("AlterTSDictionaryStmt"),
+                // AlterTSConfigurationStmt is capitalized differently to match C implementation.
+                Some(NodeEnum::AlterTsconfigurationStmt(..)) => Some("AlterTSConfigurationStmt"),
                 Some(NodeEnum::CreateFdwStmt(..)) => Some("CreateFdwStmt"),
                 Some(NodeEnum::AlterFdwStmt(..)) => Some("AlterFdwStmt"),
                 Some(NodeEnum::CreateForeignServerStmt(..)) => Some("CreateForeignServerStmt"),
