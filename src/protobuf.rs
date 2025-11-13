@@ -4478,12 +4478,15 @@ pub struct SummaryResult {
     pub functions: ::prost::alloc::vec::Vec<summary_result::Function>,
     #[prost(message, repeated, tag = "5")]
     pub filter_columns: ::prost::alloc::vec::Vec<summary_result::FilterColumn>,
-    /// UNIMPLEMENTED(truncated_query): string truncated_query = 7; /* optional, empty if truncation limit is -1 */
     #[prost(string, repeated, tag = "6")]
     pub statement_types: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    /// optional, empty if truncation limit is -1
+    #[prost(string, tag = "7")]
+    pub truncated_query: ::prost::alloc::string::String,
 }
 /// Nested message and enum types in `SummaryResult`.
 pub mod summary_result {
+    #[derive(serde::Serialize)]
     #[derive(Clone, PartialEq, ::prost::Message)]
     pub struct Table {
         #[prost(string, tag = "1")]
@@ -4495,6 +4498,7 @@ pub mod summary_result {
         #[prost(enumeration = "Context", tag = "4")]
         pub context: i32,
     }
+    #[derive(serde::Serialize)]
     #[derive(Clone, PartialEq, ::prost::Message)]
     pub struct Function {
         #[prost(string, tag = "1")]
@@ -4507,6 +4511,7 @@ pub mod summary_result {
         #[prost(enumeration = "Context", tag = "4")]
         pub context: i32,
     }
+    #[derive(serde::Serialize)]
     #[derive(Clone, PartialEq, ::prost::Message)]
     pub struct FilterColumn {
         /// optional
@@ -4518,6 +4523,7 @@ pub mod summary_result {
         #[prost(string, tag = "3")]
         pub column: ::prost::alloc::string::String,
     }
+    #[derive(serde::Serialize)]
     #[derive(
         Clone,
         Copy,
