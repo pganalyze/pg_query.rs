@@ -77,6 +77,14 @@ fn it_handles_errors() {
 }
 
 #[test]
+fn it_serializes_as_json() {
+    let result = summary("SELECT 1 FROM pg_class", 0, -1).unwrap();
+    let json = serde_json::to_string(&result.protobuf);
+
+    assert!(json.is_ok(), "Protobuf should be serializable: {json:?}");
+}
+
+#[test]
 fn it_handles_basic_query() {
     let query = r#"SELECT * FROM "t0""#;
     let result = summary(query, 0, -1).unwrap();
@@ -476,6 +484,17 @@ fn it_finds_called_functions() {
     assert_eq!(result.ddl_functions().len(), 0);
     assert_eq!(result.call_functions(), ["testfunc"]);
     assert_eq!(result.statement_types(), ["SelectStmt"]);
+}
+
+#[test]
+fn it_finds_functions_invoked_with_CALL() {
+    let result = summary("CALL testfunc(1);", 0, -1).unwrap();
+    assert_eq!(result.warnings.len(), 0);
+    assert_eq!(result.tables().len(), 0);
+    assert_eq!(result.functions(), ["testfunc"]);
+    assert_eq!(result.ddl_functions().len(), 0);
+    assert_eq!(result.call_functions(), ["testfunc"]);
+    assert_eq!(result.statement_types(), ["CallStmt"]);
 }
 
 #[test]
