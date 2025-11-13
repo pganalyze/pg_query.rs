@@ -18,9 +18,7 @@ pub struct SummaryResult {
     pub cte_names: Vec<String>,
     pub functions: Vec<Function>,
     pub filter_columns: Vec<FilterColumn>,
-    /* UNIMPLEMENTED(truncated_query):
     pub truncated_query: Option<String>,
-    */
     pub statement_types: Vec<String>,
 }
 
@@ -54,9 +52,7 @@ impl SummaryResult {
         let cte_names: HashSet<String>;
         let mut functions: HashSet<Function> = HashSet::new();
         let mut filter_columns: HashSet<FilterColumn> = HashSet::new();
-        /* UNIMPLEMENTED(truncated_query):
         let truncated_query = (!protobuf.truncated_query.is_empty()).then(|| protobuf.truncated_query.to_owned());
-        */
         let statement_types: Vec<String>;
 
         for table in &protobuf.tables {
@@ -84,7 +80,7 @@ impl SummaryResult {
             cte_names: Vec::from_iter(cte_names),
             functions: Vec::from_iter(functions),
             filter_columns: Vec::from_iter(filter_columns),
-            //truncated_query, // FIXME: Un-comment when implementing truncated_query.
+            truncated_query,
             statement_types,
         }
     }

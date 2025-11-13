@@ -23,7 +23,7 @@ fn it_parses_simple_query() {
     assert_eq!(result.cte_names.len(), 0);
     assert_eq!(result.functions.len(), 0);
     assert_eq!(result.filter_columns.len(), 1);
-    // UNIMPLEMENTED(truncated_query): assert_eq!(result.truncated_query.is_none(), true);
+    assert_eq!(result.truncated_query.is_none(), true);
     assert_eq!(result.statement_types(), ["SelectStmt"]);
 }
 
@@ -38,7 +38,7 @@ fn it_parses_simple_query_with_alias() {
     assert_eq!(result.cte_names.len(), 0);
     assert_eq!(result.functions.len(), 0);
     assert_eq!(result.filter_columns.len(), 1);
-    // UNIMPLEMENTED(truncated_query): assert_eq!(result.truncated_query.is_none(), true);
+    assert_eq!(result.truncated_query.is_none(), true);
     assert_eq!(result.statement_types(), ["SelectStmt"]);
 }
 
@@ -87,7 +87,7 @@ fn it_handles_basic_query() {
     assert_eq!(result.cte_names.len(), 0);
     assert_eq!(result.functions.len(), 0);
     assert_eq!(result.filter_columns.len(), 0);
-    // UNIMPLEMENTED(truncated_query): assert_eq!(result.truncated_query, None);
+    assert_eq!(result.truncated_query, None);
 }
 
 #[test]
@@ -140,7 +140,7 @@ fn it_parses_empty_queries() {
     assert_eq!(result.cte_names.len(), 0);
     assert_eq!(result.functions.len(), 0);
     assert_eq!(result.filter_columns.len(), 0);
-    // UNIMPLEMENTED(truncated_query): assert_eq!(result.truncated_query.is_none(), true);
+    assert_eq!(result.truncated_query.is_none(), true);
 }
 
 #[test]
@@ -1070,5 +1070,5 @@ fn it_parses_DROP_TYPE() {
     assert_eq!(result.cte_names.len(), 0);
     assert_eq!(result.functions.len(), 0);
     assert_eq!(result.filter_columns.len(), 0);
-    // UNIMPLEMENTED(truncated_query): assert_eq!(result.truncated_query, None);
+    assert_eq!(result.truncated_query, None);
 }
