@@ -4,14 +4,10 @@
 #[cfg(test)]
 use itertools::sorted;
 
-use pg_query::{
-    protobuf::{self, a_const::Val},
-    summary, Error, FilterColumn, NodeEnum, NodeRef, SummaryResult, TriggerType,
-};
+use pg_query::{summary, Error, FilterColumn};
 
 #[macro_use]
 mod support;
-use support::*;
 
 #[test]
 fn it_parses_simple_query() {
