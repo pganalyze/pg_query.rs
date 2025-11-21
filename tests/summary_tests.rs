@@ -226,8 +226,6 @@ fn it_parses_VACUUM() {
     assert_eq!(result.statement_types(), ["VacuumStmt"]);
 }
 
-/* FIXME: Un-comment it_parses_MERGE() once MERGE support is added to the C library. */
-/*
 #[test]
 fn it_parses_MERGE() {
     let result = summary(
@@ -248,9 +246,8 @@ fn it_parses_MERGE() {
     assert_eq!(all_tables, ["g.other_table", "my_table", "p"]);
 
     assert_eq!(result.cte_names, ["cte"]);
-    assert_eq!(result.statement_types(), ["MergeStmt"]);
+    assert_eq!(result.statement_types(), ["MergeStmt", "SelectStmt"]);
 }
-*/
 
 #[test]
 fn it_parses_EXPLAIN() {
