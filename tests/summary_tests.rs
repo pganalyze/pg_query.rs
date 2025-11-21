@@ -48,18 +48,13 @@ fn it_parses_query_with_nested_select_where() {
     assert_eq!(result.cte_names.len(), 0);
     assert_eq!(result.functions.len(), 0);
     let filter_columns: Vec<&FilterColumn> = sorted(&result.filter_columns).collect();
-    assert_eq!(filter_columns, [
-        &FilterColumn {
-            schema_name: None,
-            table_name: None,
-            column: "col1".to_string(),
-        },
-        &FilterColumn {
-            schema_name: None,
-            table_name: None,
-            column: "col3".to_string(),
-        },
-    ]);
+    assert_eq!(
+        filter_columns,
+        [
+            &FilterColumn { schema_name: None, table_name: None, column: "col1".to_string() },
+            &FilterColumn { schema_name: None, table_name: None, column: "col3".to_string() },
+        ]
+    );
     assert_eq!(result.statement_types(), ["SelectStmt"]);
 }
 
