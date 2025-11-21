@@ -508,8 +508,6 @@ fn it_finds_called_functions() {
     assert_eq!(result.statement_types(), ["SelectStmt"]);
 }
 
-/* FIXME: Un-comment it_finds_functions_invoked_with_call() once libpg_query fully supports it. */
-/*
 #[test]
 fn it_finds_functions_invoked_with_CALL() {
     let result = summary("CALL testfunc(1);", 0, -1).unwrap();
@@ -520,7 +518,6 @@ fn it_finds_functions_invoked_with_CALL() {
     assert_eq!(result.call_functions(), ["testfunc"]);
     assert_eq!(result.statement_types(), ["CallStmt"]);
 }
-*/
 
 #[test]
 fn it_finds_dropped_functions() {
