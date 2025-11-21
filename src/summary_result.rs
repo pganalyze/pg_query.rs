@@ -25,19 +25,16 @@ impl SummaryResult {
     pub fn new(protobuf: protobuf::SummaryResult, stderr: String) -> Self {
         let warnings = stderr.lines().filter_map(|l| if l.starts_with("WARNING") { Some(l.trim().into()) } else { None }).collect();
         let mut tables: HashSet<Table> = HashSet::new();
-        let aliases: HashMap<String, String>;
-        let cte_names: HashSet<String>;
+        let aliases = protobuf.aliases.clone();
+        let cte_names: HashSet<String> = HashSet::from_iter(protobuf.cte_names.to_owned());
         let mut functions: HashSet<Function> = HashSet::new();
         let mut filter_columns: HashSet<FilterColumn> = HashSet::new();
         let truncated_query = (!protobuf.truncated_query.is_empty()).then(|| protobuf.truncated_query.to_owned());
-        let statement_types: Vec<String>;
+        let statement_types = protobuf.statement_types.clone();
 
         for table in &protobuf.tables {
             tables.insert(Table::from(table));
         }
-
-        aliases = protobuf.aliases.clone();
-        cte_names = HashSet::from_iter(protobuf.cte_names.to_owned());
 
         for function in &protobuf.functions {
             functions.insert(Function::from(function));
@@ -46,8 +43,6 @@ impl SummaryResult {
         for filter_column in &protobuf.filter_columns {
             filter_columns.insert(FilterColumn::from(filter_column));
         }
-
-        statement_types = protobuf.statement_types.clone();
 
         Self {
             protobuf,
