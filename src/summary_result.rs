@@ -48,7 +48,7 @@ impl SummaryResult {
             protobuf,
             warnings,
             tables: Vec::from_iter(tables),
-            aliases: aliases,
+            aliases,
             cte_names: Vec::from_iter(cte_names),
             functions: Vec::from_iter(functions),
             filter_columns: Vec::from_iter(filter_columns),
