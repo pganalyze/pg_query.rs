@@ -17,7 +17,7 @@ pub struct SummaryResult {
     pub cte_names: Vec<String>,
     pub functions: Vec<Function>,
     pub filter_columns: Vec<FilterColumn>,
-    pub truncated_query: Option<String>,
+    pub truncated_query: String,
     pub statement_types: Vec<String>,
 }
 
@@ -29,7 +29,7 @@ impl SummaryResult {
         let cte_names: HashSet<String> = HashSet::from_iter(protobuf.cte_names.to_owned());
         let mut functions: HashSet<Function> = HashSet::new();
         let mut filter_columns: HashSet<FilterColumn> = HashSet::new();
-        let truncated_query = (!protobuf.truncated_query.is_empty()).then(|| protobuf.truncated_query.to_owned());
+        let truncated_query = protobuf.truncated_query.to_owned();
         let statement_types = protobuf.statement_types.clone();
 
         for table in &protobuf.tables {
