@@ -152,7 +152,7 @@ impl From<&protobuf::summary_result::Table> for Table {
             name: v.name.to_owned(),
             schema_name: v.schema_name.to_owned(),
             table_name: v.table_name.to_owned(),
-            context: Context::try_from(v.context).unwrap(), // FIXME: avoid unwrap()
+            context: Context::try_from(v.context).unwrap_or(Context::None),
         }
     }
 }
@@ -173,7 +173,7 @@ impl From<&protobuf::summary_result::Function> for Function {
             name: v.name.to_owned(),
             function_name: v.function_name.to_owned(),
             schema_name: schema_name,
-            context: Context::try_from(v.context).unwrap(), // FIXME: avoid unwrap()
+            context: Context::try_from(v.context).unwrap_or(Context::None),
         }
     }
 }
