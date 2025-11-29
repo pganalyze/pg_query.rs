@@ -4,7 +4,6 @@ use pg_query;
 brunch::benches!(
     Bench::new("parse").run_seeded_with(seed, |query| pg_query::parse(&query)),
     Bench::new("summary").run_seeded_with(seed, |query| pg_query::summary(&query, -1)),
-
     // I had to be less mean just so the parse+truncate one didn't crash.
     Bench::new("parse + truncate").run_seeded_with(less_mean_seed, |query| pg_query::parse(&query).unwrap().truncate(50).unwrap()),
     Bench::new("summary + truncate").run_seeded_with(less_mean_seed, |query| pg_query::summary(&query, 50)),
