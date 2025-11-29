@@ -9,6 +9,17 @@ use crate::summary_result::SummaryResult;
 
 /// Parses the given SQL statement and provides a summary of it.
 ///
+/// It is possible to generate the same data using `pg_query::parse` and
+/// iterating through the parse tree. However, `pg_query::summary` uses a
+/// C implementation to avoid sending as much data over protobuf.
+///
+/// Avoiding sending the parse tree over protobuf can cause as much as an
+/// *order of magnitude* performance improvement. It also prevents some
+/// crashes caused by protobuf handling such a large amount of data.
+///
+/// You can run `cargo bench parse_vs_summary` to run the benchmarks that
+/// comparse the two options.
+///
 /// # Example
 ///
 /// ```rust

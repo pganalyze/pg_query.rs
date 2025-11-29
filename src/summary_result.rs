@@ -8,6 +8,17 @@ use crate::*;
 
 /// Result from calling [summary].
 /// Where possible, this is API-compatible with [ParseResult].
+///
+/// The main distinction is that `summary` does truncation on the C side,
+/// whereas `parse` does it on the Rust side. This requires passing the
+/// maximum length ahead of time to `summary(query, max_length)`.
+///
+/// This means that `summary(query, max_length).truncated_query` is equivalent
+/// to `parse(query).truncate(max_length)`
+///
+/// For `tables`, `functions`, and `filter_columns`, `SummaryResult` stores
+/// more details than `ParseResult`, so the signatures have changed.
+/// However, the _functions_ that correspond to them should be equivalent.
 #[derive(Debug, PartialEq)]
 pub struct SummaryResult {
     pub protobuf: protobuf::SummaryResult,
