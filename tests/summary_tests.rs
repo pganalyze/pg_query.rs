@@ -11,7 +11,7 @@ mod support;
 
 #[test]
 fn it_parses_simple_query() {
-    let result = summary("SELECT * FROM test WHERE a = 1", 0, -1).unwrap();
+    let result = summary("SELECT * FROM test WHERE a = 1", -1).unwrap();
 
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 1);
@@ -25,7 +25,7 @@ fn it_parses_simple_query() {
 
 #[test]
 fn it_parses_simple_query_with_alias() {
-    let result = summary("SELECT * FROM test AS x WHERE a = 1", 0, -1).unwrap();
+    let result = summary("SELECT * FROM test AS x WHERE a = 1", -1).unwrap();
 
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 1);
@@ -40,7 +40,7 @@ fn it_parses_simple_query_with_alias() {
 
 #[test]
 fn it_parses_query_with_nested_select_where() {
-    let result = summary("SELECT * FROM test WHERE col1 = (SELECT col2 FROM test2 WHERE col3 = 123)", 0, -1).unwrap();
+    let result = summary("SELECT * FROM test WHERE col1 = (SELECT col2 FROM test2 WHERE col3 = 123)", -1).unwrap();
 
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 2);
@@ -60,16 +60,16 @@ fn it_parses_query_with_nested_select_where() {
 
 #[test]
 fn it_handles_errors() {
-    let error = summary("CREATE RANDOM ix_test ON contacts.person;", 0, -1).err().unwrap();
+    let error = summary("CREATE RANDOM ix_test ON contacts.person;", -1).err().unwrap();
     assert_eq!(error, Error::Parse("syntax error at or near \"RANDOM\"".into()));
 
-    let error = summary("SELECT 'ERR", 0, -1).err().unwrap();
+    let error = summary("SELECT 'ERR", -1).err().unwrap();
     assert_eq!(error, Error::Parse("unterminated quoted string at or near \"'ERR\"".into()));
 }
 
 #[test]
 fn it_serializes_as_json() {
-    let result = summary("SELECT 1 FROM pg_class", 0, -1).unwrap();
+    let result = summary("SELECT 1 FROM pg_class", -1).unwrap();
     let json = serde_json::to_string(&result.protobuf);
 
     assert!(json.is_ok(), "Protobuf should be serializable: {json:?}");
@@ -78,7 +78,7 @@ fn it_serializes_as_json() {
 #[test]
 fn it_handles_basic_query() {
     let query = r#"SELECT * FROM "t0""#;
-    let result = summary(query, 0, -1).unwrap();
+    let result = summary(query, -1).unwrap();
     assert_eq!(result.tables().len(), 1);
     assert_eq!(result.tables(), ["t0"]);
     assert_eq!(result.warnings.len(), 0);
@@ -92,7 +92,7 @@ fn it_handles_basic_query() {
 #[test]
 fn it_handles_join_expression() {
     let query = r#"SELECT * FROM "t0" JOIN "t1" ON (1)"#;
-    let result = summary(query, 0, -1).unwrap();
+    let result = summary(query, -1).unwrap();
     assert_eq!(result.tables().len(), 2);
     assert_eq!(result.statement_types(), ["SelectStmt"]);
 }
@@ -107,7 +107,7 @@ fn it_handles_recursion_without_error() {
         JOIN "t16" ON (1) JOIN "t17" ON (1) JOIN "t18" ON (1) JOIN "t19" ON (1) JOIN "t20" ON (1)
         JOIN "t21" ON (1) JOIN "t22" ON (1) JOIN "t23" ON (1) JOIN "t24" ON (1) JOIN "t25" ON (1)
         JOIN "t26" ON (1) JOIN "t27" ON (1) JOIN "t28" ON (1) JOIN "t29" ON (1)"#;
-    let result = summary(query, 0, -1).unwrap();
+    let result = summary(query, -1).unwrap();
     assert_eq!(result.tables().len(), 30);
     assert_eq!(result.statement_types(), ["SelectStmt"]);
 }
@@ -120,7 +120,7 @@ fn it_parses_real_queries() {
         FROM snapshots s JOIN system_snapshots ON (snapshot_id = s.id)
         WHERE s.database_id = $0 AND s.collected_at BETWEEN $0 AND $0
         ORDER BY collected_at";
-    let result = summary(query, 0, -1).unwrap();
+    let result = summary(query, -1).unwrap();
     let tables: Vec<String> = sorted(result.tables()).collect();
     let select_tables: Vec<String> = sorted(result.select_tables()).collect();
     assert_eq!(tables, ["snapshots", "system_snapshots"]);
@@ -130,7 +130,7 @@ fn it_parses_real_queries() {
 
 #[test]
 fn it_parses_empty_queries() {
-    let result = summary("-- nothing", 0, -1).unwrap();
+    let result = summary("-- nothing", -1).unwrap();
     //assert_eq!(result.protobuf.nodes().len(), 0);
     assert_eq!(result.statement_types().len(), 0);
     assert_eq!(result.warnings.len(), 0);
@@ -144,19 +144,19 @@ fn it_parses_empty_queries() {
 
 #[test]
 fn it_parses_floats_with_leading_dot() {
-    let result = summary("SELECT .1", 0, -1).unwrap();
+    let result = summary("SELECT .1", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
 }
 
 #[test]
 fn it_parses_bit_strings_hex_notation() {
-    let result = summary("SELECT X'EFFF'", 0, -1).unwrap();
+    let result = summary("SELECT X'EFFF'", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
 }
 
 #[test]
 fn it_parses_ALTER_TABLE() {
-    let result = summary("ALTER TABLE test ADD PRIMARY KEY (gid)", 0, -1).unwrap();
+    let result = summary("ALTER TABLE test ADD PRIMARY KEY (gid)", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["test"]);
     assert_eq!(result.ddl_tables(), ["test"]);
@@ -165,7 +165,7 @@ fn it_parses_ALTER_TABLE() {
 
 #[test]
 fn it_parses_SET() {
-    let result = summary("SET statement_timeout=1", 0, -1).unwrap();
+    let result = summary("SET statement_timeout=1", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.ddl_tables().len(), 0);
@@ -174,7 +174,7 @@ fn it_parses_SET() {
 
 #[test]
 fn it_parses_SHOW() {
-    let result = summary("SHOW work_mem", 0, -1).unwrap();
+    let result = summary("SHOW work_mem", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.statement_types(), ["VariableShowStmt"]);
@@ -182,7 +182,7 @@ fn it_parses_SHOW() {
 
 #[test]
 fn it_parses_COPY() {
-    let result = summary("COPY test (id) TO stdout", 0, -1).unwrap();
+    let result = summary("COPY test (id) TO stdout", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["test"]);
     assert_eq!(result.statement_types(), ["CopyStmt"]);
@@ -190,13 +190,13 @@ fn it_parses_COPY() {
 
 #[test]
 fn it_parses_DROP_TABLE() {
-    let result = summary("drop table abc.test123 cascade", 0, -1).unwrap();
+    let result = summary("drop table abc.test123 cascade", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["abc.test123"]);
     assert_eq!(result.ddl_tables(), ["abc.test123"]);
     assert_eq!(result.statement_types(), ["DropStmt"]);
 
-    let result = summary("drop table abc.test123, test", 0, -1).unwrap();
+    let result = summary("drop table abc.test123, test", -1).unwrap();
     let tables: Vec<String> = sorted(result.tables()).collect();
     let ddl_tables: Vec<String> = sorted(result.ddl_tables()).collect();
     assert_eq!(tables, ["abc.test123", "test"]);
@@ -205,21 +205,21 @@ fn it_parses_DROP_TABLE() {
 
 #[test]
 fn it_parses_COMMIT() {
-    let result = summary("COMMIT", 0, -1).unwrap();
+    let result = summary("COMMIT", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.statement_types(), ["TransactionStmt"]);
 }
 
 #[test]
 fn it_parses_CHECKPOINT() {
-    let result = summary("CHECKPOINT", 0, -1).unwrap();
+    let result = summary("CHECKPOINT", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.statement_types(), ["CheckPointStmt"]);
 }
 
 #[test]
 fn it_parses_VACUUM() {
-    let result = summary("VACUUM my_table", 0, -1).unwrap();
+    let result = summary("VACUUM my_table", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["my_table"]);
     assert_eq!(result.ddl_tables(), ["my_table"]);
@@ -230,7 +230,6 @@ fn it_parses_VACUUM() {
 fn it_parses_MERGE() {
     let result = summary(
         "WITH cte AS (SELECT * FROM g.other_table CROSS JOIN p) MERGE INTO my_table USING cte ON (id=oid) WHEN MATCHED THEN UPDATE SET a=b WHEN NOT MATCHED THEN INSERT (id, a) VALUES (oid, b);",
-        0,
         -1,
     )
     .unwrap();
@@ -251,7 +250,7 @@ fn it_parses_MERGE() {
 
 #[test]
 fn it_parses_EXPLAIN() {
-    let result = summary("EXPLAIN DELETE FROM test", 0, -1).unwrap();
+    let result = summary("EXPLAIN DELETE FROM test", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["test"]);
     assert_eq!(result.statement_types(), ["ExplainStmt", "DeleteStmt"]);
@@ -259,7 +258,7 @@ fn it_parses_EXPLAIN() {
 
 #[test]
 fn it_parses_SELECT_INTO() {
-    let result = summary("CREATE TEMP TABLE test AS SELECT 1", 0, -1).unwrap();
+    let result = summary("CREATE TEMP TABLE test AS SELECT 1", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["test"]);
     assert_eq!(result.ddl_tables(), ["test"]);
@@ -268,7 +267,7 @@ fn it_parses_SELECT_INTO() {
 
 #[test]
 fn it_parses_LOCK() {
-    let result = summary("LOCK TABLE public.schema_migrations IN ACCESS SHARE MODE", 0, -1).unwrap();
+    let result = summary("LOCK TABLE public.schema_migrations IN ACCESS SHARE MODE", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["public.schema_migrations"]);
     assert_eq!(result.statement_types(), ["LockStmt"]);
@@ -276,7 +275,7 @@ fn it_parses_LOCK() {
 
 #[test]
 fn it_parses_CREATE_TABLE() {
-    let result = summary("CREATE TABLE test (a int4)", 0, -1).unwrap();
+    let result = summary("CREATE TABLE test (a int4)", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["test"]);
     assert_eq!(result.ddl_tables(), ["test"]);
@@ -285,7 +284,7 @@ fn it_parses_CREATE_TABLE() {
 
 #[test]
 fn it_parses_CREATE_TABLE_AS() {
-    let result = summary("CREATE TABLE foo AS SELECT * FROM bar;", 0, -1).unwrap();
+    let result = summary("CREATE TABLE foo AS SELECT * FROM bar;", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     assert_eq!(tables, ["bar", "foo"]);
@@ -294,7 +293,7 @@ fn it_parses_CREATE_TABLE_AS() {
     assert_eq!(result.statement_types(), ["CreateTableAsStmt", "SelectStmt"]);
 
     let sql = "CREATE TABLE foo AS SELECT id FROM bar UNION SELECT id from baz;";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     let select_tables: Vec<String> = sorted(result.select_tables()).collect();
@@ -306,13 +305,13 @@ fn it_parses_CREATE_TABLE_AS() {
 
 #[test]
 fn it_fails_to_parse_CREATE_TABLE_WITH_OIDS() {
-    let error = summary("CREATE TABLE test (a int4) WITH OIDS", 0, -1).err().unwrap();
+    let error = summary("CREATE TABLE test (a int4) WITH OIDS", -1).err().unwrap();
     assert_eq!(error, Error::Parse("syntax error at or near \"OIDS\"".to_string()));
 }
 
 #[test]
 fn it_parses_CREATE_INDEX() {
-    let result = summary("CREATE INDEX testidx ON test USING btree (a, (lower(b) || upper(c))) WHERE pow(a, 2) > 25", 0, -1).unwrap();
+    let result = summary("CREATE INDEX testidx ON test USING btree (a, (lower(b) || upper(c))) WHERE pow(a, 2) > 25", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["test"]);
     assert_eq!(result.ddl_tables(), ["test"]);
@@ -323,7 +322,7 @@ fn it_parses_CREATE_INDEX() {
 
 #[test]
 fn it_parses_CREATE_SCHEMA() {
-    let result = summary("CREATE SCHEMA IF NOT EXISTS test AUTHORIZATION joe", 0, -1).unwrap();
+    let result = summary("CREATE SCHEMA IF NOT EXISTS test AUTHORIZATION joe", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.statement_types(), ["CreateSchemaStmt"]);
@@ -331,7 +330,7 @@ fn it_parses_CREATE_SCHEMA() {
 
 #[test]
 fn it_parses_CREATE_VIEW() {
-    let result = summary("CREATE VIEW myview AS SELECT * FROM mytab", 0, -1).unwrap();
+    let result = summary("CREATE VIEW myview AS SELECT * FROM mytab", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     assert_eq!(tables, ["mytab", "myview"]);
@@ -342,7 +341,7 @@ fn it_parses_CREATE_VIEW() {
 
 #[test]
 fn it_parses_REFRESH_MATERIALIZED_VIEW() {
-    let result = summary("REFRESH MATERIALIZED VIEW myview", 0, -1).unwrap();
+    let result = summary("REFRESH MATERIALIZED VIEW myview", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["myview"]);
     assert_eq!(result.ddl_tables(), ["myview"]);
@@ -352,7 +351,7 @@ fn it_parses_REFRESH_MATERIALIZED_VIEW() {
 #[test]
 fn it_parses_CREATE_RULE() {
     let sql = "CREATE RULE shoe_ins_protect AS ON INSERT TO shoe DO INSTEAD NOTHING";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["shoe"]);
     assert_eq!(result.ddl_tables(), ["shoe"]);
@@ -362,7 +361,7 @@ fn it_parses_CREATE_RULE() {
 #[test]
 fn it_parses_CREATE_TRIGGER() {
     let sql = "CREATE TRIGGER check_update BEFORE UPDATE ON accounts FOR EACH ROW EXECUTE PROCEDURE check_account_update()";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["accounts"]);
     assert_eq!(result.ddl_tables(), ["accounts"]);
@@ -371,7 +370,7 @@ fn it_parses_CREATE_TRIGGER() {
 
 #[test]
 fn it_parses_DROP_SCHEMA() {
-    let result = summary("DROP SCHEMA myschema", 0, -1).unwrap();
+    let result = summary("DROP SCHEMA myschema", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.statement_types(), ["DropStmt"]);
@@ -379,7 +378,7 @@ fn it_parses_DROP_SCHEMA() {
 
 #[test]
 fn it_parses_DROP_VIEW() {
-    let result = summary("DROP VIEW myview, myview2", 0, -1).unwrap();
+    let result = summary("DROP VIEW myview, myview2", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.statement_types(), ["DropStmt"]);
@@ -387,7 +386,7 @@ fn it_parses_DROP_VIEW() {
 
 #[test]
 fn it_parses_DROP_INDEX() {
-    let result = summary("DROP INDEX CONCURRENTLY myindex", 0, -1).unwrap();
+    let result = summary("DROP INDEX CONCURRENTLY myindex", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.statement_types(), ["DropStmt"]);
@@ -395,7 +394,7 @@ fn it_parses_DROP_INDEX() {
 
 #[test]
 fn it_parses_DROP_RULE() {
-    let result = summary("DROP RULE myrule ON mytable CASCADE", 0, -1).unwrap();
+    let result = summary("DROP RULE myrule ON mytable CASCADE", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["mytable"]);
     assert_eq!(result.ddl_tables(), ["mytable"]);
@@ -404,7 +403,7 @@ fn it_parses_DROP_RULE() {
 
 #[test]
 fn it_parses_DROP_TRIGGER() {
-    let result = summary("DROP TRIGGER IF EXISTS mytrigger ON mytable RESTRICT", 0, -1).unwrap();
+    let result = summary("DROP TRIGGER IF EXISTS mytrigger ON mytable RESTRICT", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["mytable"]);
     assert_eq!(result.ddl_tables(), ["mytable"]);
@@ -413,7 +412,7 @@ fn it_parses_DROP_TRIGGER() {
 
 #[test]
 fn it_parses_GRANT() {
-    let result = summary("GRANT INSERT, UPDATE ON mytable TO myuser", 0, -1).unwrap();
+    let result = summary("GRANT INSERT, UPDATE ON mytable TO myuser", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["mytable"]);
     assert_eq!(result.ddl_tables(), ["mytable"]);
@@ -422,7 +421,7 @@ fn it_parses_GRANT() {
 
 #[test]
 fn it_parses_REVOKE() {
-    let result = summary("REVOKE admins FROM joe", 0, -1).unwrap();
+    let result = summary("REVOKE admins FROM joe", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.statement_types(), ["GrantRoleStmt"]);
@@ -430,7 +429,7 @@ fn it_parses_REVOKE() {
 
 #[test]
 fn it_parses_TRUNCATE() {
-    let result = summary(r#"TRUNCATE bigtable, "fattable" RESTART IDENTITY"#, 0, -1).unwrap();
+    let result = summary(r#"TRUNCATE bigtable, "fattable" RESTART IDENTITY"#, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     let ddl_tables: Vec<String> = sorted(result.ddl_tables()).collect();
@@ -441,7 +440,7 @@ fn it_parses_TRUNCATE() {
 
 #[test]
 fn it_parses_WITH() {
-    let result = summary("WITH a AS (SELECT * FROM x WHERE x.y = $1 AND x.z = 1) SELECT * FROM a", 0, -1).unwrap();
+    let result = summary("WITH a AS (SELECT * FROM x WHERE x.y = $1 AND x.z = 1) SELECT * FROM a", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["x"]);
     assert_eq!(result.cte_names, ["a"]);
@@ -468,7 +467,7 @@ BEGIN
 END;
 $BODY$
   LANGUAGE plpgsql STABLE";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.functions(), ["thing"]);
@@ -480,7 +479,7 @@ $BODY$
 #[test]
 fn it_parses_table_functions() {
     let sql = "CREATE FUNCTION getfoo(int) RETURNS TABLE (f1 int) AS 'SELECT * FROM foo WHERE fooid = $1;' LANGUAGE SQL";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.functions(), ["getfoo"]);
@@ -491,7 +490,7 @@ fn it_parses_table_functions() {
 
 #[test]
 fn it_finds_called_functions() {
-    let result = summary("SELECT testfunc(1);", 0, -1).unwrap();
+    let result = summary("SELECT testfunc(1);", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.functions(), ["testfunc"]);
@@ -502,7 +501,7 @@ fn it_finds_called_functions() {
 
 #[test]
 fn it_finds_functions_invoked_with_CALL() {
-    let result = summary("CALL testfunc(1);", 0, -1).unwrap();
+    let result = summary("CALL testfunc(1);", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.functions(), ["testfunc"]);
@@ -513,7 +512,7 @@ fn it_finds_functions_invoked_with_CALL() {
 
 #[test]
 fn it_finds_dropped_functions() {
-    let result = summary("DROP FUNCTION IF EXISTS testfunc(x integer);", 0, -1).unwrap();
+    let result = summary("DROP FUNCTION IF EXISTS testfunc(x integer);", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.functions(), ["testfunc"]);
@@ -524,7 +523,7 @@ fn it_finds_dropped_functions() {
 
 #[test]
 fn it_finds_renamed_functions() {
-    let result = summary("ALTER FUNCTION testfunc(integer) RENAME TO testfunc2;", 0, -1).unwrap();
+    let result = summary("ALTER FUNCTION testfunc(integer) RENAME TO testfunc2;", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 0);
     let functions: Vec<String> = sorted(result.functions()).collect();
@@ -539,7 +538,7 @@ fn it_finds_renamed_functions() {
 #[test]
 fn it_finds_nested_tables_in_SELECT() {
     let sql = "select u.email, (select count(*) from enrollments e where e.user_id = u.id) as num_enrollments from users u";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     let select_tables: Vec<String> = sorted(result.select_tables()).collect();
@@ -552,7 +551,7 @@ fn it_finds_nested_tables_in_SELECT() {
 #[test]
 fn it_separates_CTE_names_from_table_names() {
     let sql = "WITH cte_name AS (SELECT 1) SELECT * FROM table_name, cte_name";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["table_name"]);
     assert_eq!(result.select_tables(), ["table_name"]);
@@ -563,7 +562,7 @@ fn it_separates_CTE_names_from_table_names() {
 #[test]
 fn it_finds_tables_in_SELECT_FROM_TABLESAMPLE() {
     let sql = "SELECT * FROM tbl TABLESAMPLE sample(1)";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["tbl"]);
     assert_eq!(result.select_tables(), ["tbl"]);
@@ -574,7 +573,7 @@ fn it_finds_tables_in_SELECT_FROM_TABLESAMPLE() {
 #[test]
 fn it_finds_tables_in_SELECT_FROM_XMLTABLE() {
     let sql = "SELECT xmltable.* FROM xmlelements, XMLTABLE('/root' PASSING data COLUMNS element text)";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["xmlelements"]);
     assert_eq!(result.select_tables(), ["xmlelements"]);
@@ -585,7 +584,7 @@ fn it_finds_tables_in_SELECT_FROM_XMLTABLE() {
 #[test]
 fn it_ignores_JSON_TABLE() {
     let sql = "SELECT jt.* FROM my_films, JSON_TABLE (js, '$.favorites[*]' COLUMNS (id FOR ORDINALITY, kind text PATH '$.kind')) AS jt;";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["my_films"]);
     assert_eq!(result.select_tables(), ["my_films"]);
@@ -595,7 +594,7 @@ fn it_ignores_JSON_TABLE() {
 
 #[test]
 fn it_finds_nested_tables_in_FROM_clause() {
-    let result = summary("select u.* from (select * from users) u", 0, -1).unwrap();
+    let result = summary("select u.* from (select * from users) u", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["users"]);
     assert_eq!(result.select_tables(), ["users"]);
@@ -604,7 +603,7 @@ fn it_finds_nested_tables_in_FROM_clause() {
 
 #[test]
 fn it_finds_nested_tables_in_WHERE_clause() {
-    let result = summary("select users.id from users where 1 = (select count(*) from user_roles)", 0, -1).unwrap();
+    let result = summary("select users.id from users where 1 = (select count(*) from user_roles)", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     let select_tables: Vec<String> = sorted(result.select_tables()).collect();
@@ -624,7 +623,7 @@ fn it_finds_tables_in_SELECT_with_subselects_without_FROM() {
             SELECT 17663 AS oid
         ) vals ON c.oid = vals.oid
     ";
-    let result = summary(query, 0, -1).unwrap();
+    let result = summary(query, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["pg_catalog.pg_class"]);
     assert_eq!(result.select_tables(), ["pg_catalog.pg_class"]);
@@ -641,7 +640,7 @@ fn it_finds_nested_tables_in_IN_clause() {
         where users.id IN (select user_roles.user_id from user_roles)
             and (users.created_at between '2016-06-01' and '2016-06-30')
     ";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     let select_tables: Vec<String> = sorted(result.select_tables()).collect();
@@ -661,7 +660,7 @@ fn it_finds_nested_tables_in_ORDER_BY_clause() {
             where user_roles.user_id = users.id
         )
     ";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     let select_tables: Vec<String> = sorted(result.select_tables()).collect();
@@ -685,7 +684,7 @@ fn it_finds_nested_tables_in_ORDER_BY_clause_with_multiple_entries() {
             where user_logins.user_id = users.id
         ) desc
     ";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     let select_tables: Vec<String> = sorted(result.select_tables()).collect();
@@ -705,7 +704,7 @@ fn it_finds_nested_tables_in_GROUP_BY_clause() {
             where user_roles.user_id = users.id
         )
     ";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     let select_tables: Vec<String> = sorted(result.select_tables()).collect();
@@ -729,7 +728,7 @@ fn it_finds_nested_tables_in_GROUP_BY_clause_with_multiple_entries() {
             where user_logins.user_id = users.id
         )
     ";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     let select_tables: Vec<String> = sorted(result.select_tables()).collect();
@@ -750,7 +749,7 @@ fn it_finds_nested_tables_in_HAVING_clause() {
             where user_roles.user_id = users.id
         )
     ";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     let select_tables: Vec<String> = sorted(result.select_tables()).collect();
@@ -771,7 +770,7 @@ fn it_finds_nested_tables_in_HAVING_clause_with_boolean_expression() {
             where user_roles.user_id = users.id
         )
     ";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     let select_tables: Vec<String> = sorted(result.select_tables()).collect();
@@ -788,7 +787,7 @@ fn it_finds_nested_tables_in_a_subselect_on_a_JOIN() {
         join ( select * from bar ) b
         on b.baz = foo.quux
     ";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     let select_tables: Vec<String> = sorted(result.select_tables()).collect();
@@ -815,7 +814,7 @@ fn it_finds_nested_tables_in_a_subselect_in_a_JOIN_condition() {
           SELECT id FROM sub_f
         )
     ";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     let select_tables: Vec<String> = sorted(result.select_tables()).collect();
@@ -837,7 +836,7 @@ fn it_correctly_categorizes_CTEs_after_UNION_SELECT() {
         UNION
         SELECT * FROM cte_a
     ";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     let cte_names: Vec<String> = sorted(result.cte_names.clone()).collect();
@@ -859,7 +858,7 @@ fn it_correctly_categorizes_CTEs_after_EXCEPT_SELECT() {
         EXCEPT
         SELECT * FROM cte_a
     ";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     let cte_names: Vec<String> = sorted(result.cte_names.clone()).collect();
@@ -881,7 +880,7 @@ fn it_correctly_categorizes_CTEs_after_INTERSECT_SELECT() {
         INTERSECT
         SELECT * FROM cte_a
     ";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     let cte_names: Vec<String> = sorted(result.cte_names.clone()).collect();
@@ -905,7 +904,7 @@ fn it_finds_tables_inside_subselectes_in_MIN_MAX_COALESCE() {
             )
         ) AS first_hourly_start_ts
     ";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["schema_aggregate_infos"]);
     assert_eq!(result.select_tables(), ["schema_aggregate_infos"]);
@@ -923,7 +922,7 @@ fn it_finds_tables_inside_CASE_statements() {
         END
         FROM foo
     ";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     let select_tables: Vec<String> = sorted(result.select_tables()).collect();
@@ -940,7 +939,7 @@ fn it_finds_tables_inside_casts() {
         WHERE  x = any(cast(array(SELECT a FROM bar) as bigint[]))
             OR x = any(array(SELECT a FROM baz)::bigint[])
     ";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     assert_eq!(tables, ["bar", "baz", "foo"]);
@@ -952,7 +951,7 @@ fn it_finds_tables_inside_casts() {
 #[test]
 fn it_finds_functions_in_FROM_clause() {
     let sql = "SELECT * FROM my_custom_func()";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables().len(), 0);
     assert_eq!(result.functions(), ["my_custom_func"]);
@@ -977,7 +976,7 @@ fn it_finds_functions_in_LATERAL_clause() {
             ) f
         ) AS g ON (1)
     ";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["public.c"]);
     let functions: Vec<String> = sorted(result.functions()).collect();
@@ -989,11 +988,11 @@ fn it_finds_functions_in_LATERAL_clause() {
 
 #[test]
 fn it_parses_INSERT() {
-    let result = summary("insert into users(pk, name) values (1, 'bob');", 0, -1).unwrap();
+    let result = summary("insert into users(pk, name) values (1, 'bob');", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["users"]);
 
-    let result = summary("insert into users(pk, name) select pk, name from other_users;", 0, -1).unwrap();
+    let result = summary("insert into users(pk, name) select pk, name from other_users;", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     assert_eq!(tables, ["other_users", "users"]);
@@ -1004,7 +1003,7 @@ fn it_parses_INSERT() {
         )
         insert into users(pk, name) select * from cte;
     ";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     assert_eq!(tables, ["other_users", "users"]);
@@ -1016,12 +1015,12 @@ fn it_parses_INSERT() {
 
 #[test]
 fn it_parses_UPDATE() {
-    let result = summary("update users set name = 'bob';", 0, -1).unwrap();
+    let result = summary("update users set name = 'bob';", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["users"]);
     assert_eq!(result.statement_types(), ["UpdateStmt"]);
 
-    let result = summary("update users set name = (select name from other_users limit 1);", 0, -1).unwrap();
+    let result = summary("update users set name = (select name from other_users limit 1);", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     assert_eq!(tables, ["other_users", "users"]);
@@ -1033,7 +1032,7 @@ fn it_parses_UPDATE() {
         )
         update users set name = (select name from cte);
     ";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     assert_eq!(tables, ["other_users", "users"]);
@@ -1048,7 +1047,7 @@ fn it_parses_UPDATE() {
         INNER JOIN join_table ON join_table.user_id = new_users.id
         WHERE users.id = users_new.id
     ";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     let select_tables: Vec<String> = sorted(result.select_tables()).collect();
@@ -1060,7 +1059,7 @@ fn it_parses_UPDATE() {
 
 #[test]
 fn it_parses_DELETE() {
-    let result = summary("DELETE FROM users;", 0, -1).unwrap();
+    let result = summary("DELETE FROM users;", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.tables(), ["users"]);
     assert_eq!(result.dml_tables(), ["users"]);
@@ -1070,7 +1069,7 @@ fn it_parses_DELETE() {
         DELETE FROM users USING foo
         WHERE foo_id = foo.id AND foo.action = 'delete';
     ";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     assert_eq!(tables, ["foo", "users"]);
@@ -1082,7 +1081,7 @@ fn it_parses_DELETE() {
         DELETE FROM users
         WHERE foo_id IN (SELECT id FROM foo WHERE action = 'delete');
     ";
-    let result = summary(sql, 0, -1).unwrap();
+    let result = summary(sql, -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     let tables: Vec<String> = sorted(result.tables()).collect();
     assert_eq!(tables, ["foo", "users"]);
@@ -1093,7 +1092,7 @@ fn it_parses_DELETE() {
 
 #[test]
 fn it_parses_DROP_TYPE() {
-    let result = summary("DROP TYPE IF EXISTS repack.pk_something", 0, -1).unwrap();
+    let result = summary("DROP TYPE IF EXISTS repack.pk_something", -1).unwrap();
     assert_eq!(result.warnings.len(), 0);
     assert_eq!(result.statement_types(), ["DropStmt"]);
 
