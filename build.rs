@@ -21,6 +21,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Copy the relevant source files to the OUT_DIR
     let source_paths = vec![
         build_path.join("pg_query").with_extension("h"),
+        build_path.join("postgres_deparse").with_extension("h"),
         build_path.join("Makefile"),
         build_path.join("src"),
         build_path.join("protobuf"),
