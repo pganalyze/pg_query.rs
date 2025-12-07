@@ -37,7 +37,10 @@ pub fn parse(statement: &str) -> Result<ParseResult> {
     } else {
         let data = unsafe { std::slice::from_raw_parts(result.parse_tree.data as *const u8, result.parse_tree.len as usize) };
         let stderr = unsafe { CStr::from_ptr(result.stderr_buffer) }.to_string_lossy().to_string();
-        protobuf::ParseResult::decode(data).map_err(Error::Decode).map(|result| ParseResult::new(result, stderr))
+        match protobuf::ParseResult::decode(data) {
+            Ok(result) => Ok(ParseResult::new(result, stderr)),
+            Err(error) => Err(Error::Decode(error)),
+        }
     };
     unsafe { pg_query_free_protobuf_parse_result(result) };
     parse_result

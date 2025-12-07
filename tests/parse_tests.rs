@@ -4,6 +4,9 @@
 #[cfg(test)]
 use itertools::sorted;
 
+#[cfg(test)]
+use std::thread::Builder;
+
 use pg_query::{
     parse,
     protobuf::{self, a_const::Val},
@@ -34,20 +37,19 @@ fn it_handles_errors() {
 fn it_serializes_as_json() {
     let result = parse("SELECT 1 FROM pg_class").unwrap();
     let json = serde_json::to_string(&result.protobuf);
-
     assert!(json.is_ok(), "Protobuf should be serializable: {json:?}");
 }
 
 #[test]
-fn it_handles_recursion_error() {
+fn it_handles_recursion_without_error_1() {
     let query = "SELECT a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(b))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))";
-    parse(query).err().unwrap();
-    // TODO: unsure how to unwrap the private fields on a protobuf decode error
-    // assert_eq!(error, Error::Decode("recursion limit reached".into()));
+    let result = Builder::new().stack_size(20 * 1024 * 1024).spawn(move || parse(query)).unwrap().join().unwrap().unwrap();
+    assert_eq!(result.tables().len(), 0);
+    assert_eq!(result.statement_types(), ["SelectStmt"]);
 }
 
 #[test]
-fn it_handles_recursion_without_error() {
+fn it_handles_recursion_without_error_2() {
     // The Ruby version of pg_query fails here because of Ruby protobuf limitations
     let query = r#"SELECT * FROM "t0"
         JOIN "t1" ON (1) JOIN "t2" ON (1) JOIN "t3" ON (1) JOIN "t4" ON (1) JOIN "t5" ON (1)
