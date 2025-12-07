@@ -61,6 +61,16 @@ let result = pg_query::parse(query).unwrap();
 assert_eq!(result.truncate(32).unwrap(), "INSERT INTO x (...) VALUES (...)");
 ```
 
+## Caveats
+
+When parsing very complex queries you may run into a stack overflow. This can be worked around by using a thread with a custom stack size ([stdlib](https://doc.rust-lang.org/std/thread/index.html#stack-size), [tokio](https://docs.rs/tokio/latest/tokio/runtime/struct.Builder.html#method.thread_stack_size)), or using the stacker crate to resize the main thread's stack:
+
+```rust
+stacker::grow(20 * 1024 * 1024, || pg_query::parse(query))
+```
+
+However, a sufficiently complex query could still run into a stack overflow after you increase the stack size. With some work it may be possible to add an adapter API to the prost crate in order to dynamically increase the stack size as needed like [serde_stacker](https://crates.io/crates/serde_stacker) does (if anyone wants to take that on).
+
 ## Credits
 
 Thanks to [Paul Mason](https://github.com/paupino) for his work on [pg_parse](https://github.com/paupino/pg_parse) that this crate is based on.

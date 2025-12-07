@@ -75,6 +75,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         env::set_var("OUT_DIR", &src_dir);
 
         let mut prost_build = prost_build::Config::new();
+        prost_build.recursion_limit("ParseResult", 1000);
         prost_build.type_attribute(".", "#[derive(serde::Serialize)]");
         prost_build.compile_protos(&[&out_protobuf_path.join("pg_query").with_extension("proto")], &[&out_protobuf_path])?;
 
