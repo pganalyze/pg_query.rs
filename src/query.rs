@@ -95,7 +95,7 @@ pub fn deparse(protobuf: &protobuf::ParseResult) -> Result<String> {
 /// assert_eq!(result, "SELECT * FROM contacts WHERE name=$1");
 /// ```
 pub fn normalize(statement: &str) -> Result<String> {
-    let input = CString::new(statement).unwrap();
+    let input = CString::new(statement)?;
     let result = unsafe { pg_query_normalize(input.as_ptr()) };
     let normalized_query = if !result.error.is_null() {
         let message = unsafe { CStr::from_ptr((*result.error).message) }.to_string_lossy().to_string();
