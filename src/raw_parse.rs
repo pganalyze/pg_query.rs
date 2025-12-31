@@ -335,6 +335,14 @@ unsafe fn convert_node(node_ptr: *mut bindings_raw::Node) -> Option<protobuf::No
             let re = node_ptr as *mut bindings_raw::RowExpr;
             Some(protobuf::node::Node::RowExpr(Box::new(convert_row_expr(&*re))))
         }
+        bindings_raw::NodeTag_T_PartitionElem => {
+            let pe = node_ptr as *mut bindings_raw::PartitionElem;
+            Some(protobuf::node::Node::PartitionElem(Box::new(convert_partition_elem(&*pe))))
+        }
+        bindings_raw::NodeTag_T_PartitionRangeDatum => {
+            let prd = node_ptr as *mut bindings_raw::PartitionRangeDatum;
+            Some(protobuf::node::Node::PartitionRangeDatum(Box::new(convert_partition_range_datum(&*prd))))
+        }
         _ => {
             // For unhandled node types, return None
             // In the future, we could add more node types here
@@ -1098,18 +1106,27 @@ unsafe fn convert_collate_clause_opt(cc: *mut bindings_raw::CollateClause) -> Op
 }
 
 unsafe fn convert_partition_spec(ps: &bindings_raw::PartitionSpec) -> protobuf::PartitionSpec {
+    // Map from C char values to protobuf enum values
+    // C: 'l'=108, 'r'=114, 'h'=104
+    // Protobuf: LIST=1, RANGE=2, HASH=3
+    let strategy = match ps.strategy as u8 as char {
+        'l' => 1, // LIST
+        'r' => 2, // RANGE
+        'h' => 3, // HASH
+        _ => 0,   // UNDEFINED
+    };
     protobuf::PartitionSpec {
-        strategy: ps.strategy as i32 + 1,
+        strategy,
         part_params: convert_list_to_nodes(ps.partParams),
         location: ps.location,
     }
 }
 
-unsafe fn convert_partition_spec_opt(ps: *mut bindings_raw::PartitionSpec) -> Option<Box<protobuf::PartitionSpec>> {
+unsafe fn convert_partition_spec_opt(ps: *mut bindings_raw::PartitionSpec) -> Option<protobuf::PartitionSpec> {
     if ps.is_null() {
         None
     } else {
-        Some(Box::new(convert_partition_spec(&*ps)))
+        Some(convert_partition_spec(&*ps))
     }
 }
 
@@ -1126,16 +1143,43 @@ unsafe fn convert_partition_bound_spec(pbs: &bindings_raw::PartitionBoundSpec) -
     }
 }
 
-unsafe fn convert_partition_bound_spec_opt(pbs: *mut bindings_raw::PartitionBoundSpec) -> Option<Box<protobuf::PartitionBoundSpec>> {
+unsafe fn convert_partition_bound_spec_opt(pbs: *mut bindings_raw::PartitionBoundSpec) -> Option<protobuf::PartitionBoundSpec> {
     if pbs.is_null() {
         None
     } else {
-        Some(Box::new(convert_partition_bound_spec(&*pbs)))
+        Some(convert_partition_bound_spec(&*pbs))
     }
 }
 
-unsafe fn convert_cte_search_clause(csc: &bindings_raw::CTESearchClause) -> protobuf::CtesearchClause {
-    protobuf::CtesearchClause {
+unsafe fn convert_partition_elem(pe: &bindings_raw::PartitionElem) -> protobuf::PartitionElem {
+    protobuf::PartitionElem {
+        name: convert_c_string(pe.name),
+        expr: convert_node_boxed(pe.expr),
+        collation: convert_list_to_nodes(pe.collation),
+        opclass: convert_list_to_nodes(pe.opclass),
+        location: pe.location,
+    }
+}
+
+unsafe fn convert_partition_range_datum(prd: &bindings_raw::PartitionRangeDatum) -> protobuf::PartitionRangeDatum {
+    // Map from C enum to protobuf enum
+    // C: PARTITION_RANGE_DATUM_MINVALUE=-1, PARTITION_RANGE_DATUM_VALUE=0, PARTITION_RANGE_DATUM_MAXVALUE=1
+    // Protobuf: UNDEFINED=0, MINVALUE=1, VALUE=2, MAXVALUE=3
+    let kind = match prd.kind {
+        bindings_raw::PartitionRangeDatumKind_PARTITION_RANGE_DATUM_MINVALUE => 1,
+        bindings_raw::PartitionRangeDatumKind_PARTITION_RANGE_DATUM_VALUE => 2,
+        bindings_raw::PartitionRangeDatumKind_PARTITION_RANGE_DATUM_MAXVALUE => 3,
+        _ => 0,
+    };
+    protobuf::PartitionRangeDatum {
+        kind,
+        value: convert_node_boxed(prd.value),
+        location: prd.location,
+    }
+}
+
+unsafe fn convert_cte_search_clause(csc: &bindings_raw::CTESearchClause) -> protobuf::CteSearchClause {
+    protobuf::CteSearchClause {
         search_col_list: convert_list_to_nodes(csc.search_col_list),
         search_breadth_first: csc.search_breadth_first,
         search_seq_column: convert_c_string(csc.search_seq_column),
@@ -1143,16 +1187,16 @@ unsafe fn convert_cte_search_clause(csc: &bindings_raw::CTESearchClause) -> prot
     }
 }
 
-unsafe fn convert_cte_search_clause_opt(csc: *mut bindings_raw::CTESearchClause) -> Option<Box<protobuf::CtesearchClause>> {
+unsafe fn convert_cte_search_clause_opt(csc: *mut bindings_raw::CTESearchClause) -> Option<protobuf::CteSearchClause> {
     if csc.is_null() {
         None
     } else {
-        Some(Box::new(convert_cte_search_clause(&*csc)))
+        Some(convert_cte_search_clause(&*csc))
     }
 }
 
-unsafe fn convert_cte_cycle_clause(ccc: &bindings_raw::CTECycleClause) -> protobuf::CtecycleClause {
-    protobuf::CtecycleClause {
+unsafe fn convert_cte_cycle_clause(ccc: &bindings_raw::CTECycleClause) -> protobuf::CteCycleClause {
+    protobuf::CteCycleClause {
         cycle_col_list: convert_list_to_nodes(ccc.cycle_col_list),
         cycle_mark_column: convert_c_string(ccc.cycle_mark_column),
         cycle_mark_value: convert_node_boxed(ccc.cycle_mark_value),
@@ -1166,7 +1210,7 @@ unsafe fn convert_cte_cycle_clause(ccc: &bindings_raw::CTECycleClause) -> protob
     }
 }
 
-unsafe fn convert_cte_cycle_clause_opt(ccc: *mut bindings_raw::CTECycleClause) -> Option<Box<protobuf::CtecycleClause>> {
+unsafe fn convert_cte_cycle_clause_opt(ccc: *mut bindings_raw::CTECycleClause) -> Option<Box<protobuf::CteCycleClause>> {
     if ccc.is_null() {
         None
     } else {

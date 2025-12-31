@@ -2068,3 +2068,320 @@ fn it_parses_chained_dml_ctes() {
 
     assert_eq!(raw_result.protobuf, proto_result.protobuf);
 }
+
+// ============================================================================
+// Tests for previously stubbed fields
+// ============================================================================
+
+/// Test column with COLLATE clause
+#[test]
+fn it_parses_column_with_collate() {
+    let query = "CREATE TABLE test_collate (
+        name TEXT COLLATE \"C\",
+        description VARCHAR(255) COLLATE \"en_US.UTF-8\"
+    )";
+    let raw_result = parse_raw(query).unwrap();
+    let proto_result = parse(query).unwrap();
+
+    assert_eq!(raw_result.protobuf, proto_result.protobuf);
+}
+
+/// Test partitioned table with PARTITION BY RANGE
+#[test]
+fn it_parses_partition_by_range() {
+    let query = "CREATE TABLE measurements (
+        id SERIAL,
+        logdate DATE NOT NULL,
+        peaktemp INT
+    ) PARTITION BY RANGE (logdate)";
+    let raw_result = parse_raw(query).unwrap();
+    let proto_result = parse(query).unwrap();
+
+    assert_eq!(raw_result.protobuf, proto_result.protobuf);
+}
+
+/// Test partitioned table with PARTITION BY LIST
+#[test]
+fn it_parses_partition_by_list() {
+    let query = "CREATE TABLE orders (
+        id SERIAL,
+        region TEXT NOT NULL,
+        order_date DATE
+    ) PARTITION BY LIST (region)";
+    let raw_result = parse_raw(query).unwrap();
+    let proto_result = parse(query).unwrap();
+
+    assert_eq!(raw_result.protobuf, proto_result.protobuf);
+}
+
+/// Test partitioned table with PARTITION BY HASH
+#[test]
+fn it_parses_partition_by_hash() {
+    let query = "CREATE TABLE users_partitioned (
+        id SERIAL,
+        username TEXT
+    ) PARTITION BY HASH (id)";
+    let raw_result = parse_raw(query).unwrap();
+    let proto_result = parse(query).unwrap();
+
+    assert_eq!(raw_result.protobuf, proto_result.protobuf);
+}
+
+/// Test partition with FOR VALUES (range)
+#[test]
+fn it_parses_partition_for_values_range() {
+    let query = "CREATE TABLE measurements_2023 PARTITION OF measurements
+        FOR VALUES FROM ('2023-01-01') TO ('2024-01-01')";
+    let raw_result = parse_raw(query).unwrap();
+    let proto_result = parse(query).unwrap();
+
+    assert_eq!(raw_result.protobuf, proto_result.protobuf);
+}
+
+/// Test partition with FOR VALUES (list)
+#[test]
+fn it_parses_partition_for_values_list() {
+    let query = "CREATE TABLE orders_west PARTITION OF orders
+        FOR VALUES IN ('west', 'northwest', 'southwest')";
+    let raw_result = parse_raw(query).unwrap();
+    let proto_result = parse(query).unwrap();
+
+    assert_eq!(raw_result.protobuf, proto_result.protobuf);
+}
+
+/// Test partition with FOR VALUES (hash)
+#[test]
+fn it_parses_partition_for_values_hash() {
+    let query = "CREATE TABLE users_part_0 PARTITION OF users_partitioned
+        FOR VALUES WITH (MODULUS 4, REMAINDER 0)";
+    let raw_result = parse_raw(query).unwrap();
+    let proto_result = parse(query).unwrap();
+
+    assert_eq!(raw_result.protobuf, proto_result.protobuf);
+}
+
+/// Test partition with DEFAULT
+#[test]
+fn it_parses_partition_default() {
+    let query = "CREATE TABLE orders_other PARTITION OF orders DEFAULT";
+    let raw_result = parse_raw(query).unwrap();
+    let proto_result = parse(query).unwrap();
+
+    assert_eq!(raw_result.protobuf, proto_result.protobuf);
+}
+
+/// Test recursive CTE with SEARCH BREADTH FIRST
+#[test]
+fn it_parses_cte_search_breadth_first() {
+    let query = "WITH RECURSIVE search_tree(id, parent_id, data, depth) AS (
+        SELECT id, parent_id, data, 0 FROM tree WHERE parent_id IS NULL
+        UNION ALL
+        SELECT t.id, t.parent_id, t.data, st.depth + 1
+        FROM tree t, search_tree st WHERE t.parent_id = st.id
+    ) SEARCH BREADTH FIRST BY id SET ordercol
+    SELECT * FROM search_tree ORDER BY ordercol";
+    let raw_result = parse_raw(query).unwrap();
+    let proto_result = parse(query).unwrap();
+
+    assert_eq!(raw_result.protobuf, proto_result.protobuf);
+}
+
+/// Test recursive CTE with SEARCH DEPTH FIRST
+#[test]
+fn it_parses_cte_search_depth_first() {
+    let query = "WITH RECURSIVE search_tree(id, parent_id, data) AS (
+        SELECT id, parent_id, data FROM tree WHERE parent_id IS NULL
+        UNION ALL
+        SELECT t.id, t.parent_id, t.data
+        FROM tree t, search_tree st WHERE t.parent_id = st.id
+    ) SEARCH DEPTH FIRST BY id SET ordercol
+    SELECT * FROM search_tree ORDER BY ordercol";
+    let raw_result = parse_raw(query).unwrap();
+    let proto_result = parse(query).unwrap();
+
+    assert_eq!(raw_result.protobuf, proto_result.protobuf);
+}
+
+/// Test recursive CTE with CYCLE detection
+#[test]
+fn it_parses_cte_cycle() {
+    let query = "WITH RECURSIVE search_graph(id, link, data, depth) AS (
+        SELECT g.id, g.link, g.data, 0 FROM graph g
+        UNION ALL
+        SELECT g.id, g.link, g.data, sg.depth + 1
+        FROM graph g, search_graph sg WHERE g.id = sg.link
+    ) CYCLE id SET is_cycle USING path
+    SELECT * FROM search_graph";
+    let raw_result = parse_raw(query).unwrap();
+    let proto_result = parse(query).unwrap();
+
+    assert_eq!(raw_result.protobuf, proto_result.protobuf);
+}
+
+/// Test recursive CTE with both SEARCH and CYCLE
+#[test]
+fn it_parses_cte_search_and_cycle() {
+    let query = "WITH RECURSIVE search_graph(id, link, data, depth) AS (
+        SELECT g.id, g.link, g.data, 0 FROM graph g WHERE id = 1
+        UNION ALL
+        SELECT g.id, g.link, g.data, sg.depth + 1
+        FROM graph g, search_graph sg WHERE g.id = sg.link
+    ) SEARCH DEPTH FIRST BY id SET ordercol
+      CYCLE id SET is_cycle USING path
+    SELECT * FROM search_graph";
+    let raw_result = parse_raw(query).unwrap();
+    let proto_result = parse(query).unwrap();
+
+    assert_eq!(raw_result.protobuf, proto_result.protobuf);
+}
+
+// ============================================================================
+// Benchmark
+// ============================================================================
+
+/// Benchmark comparing parse_raw vs parse performance
+#[test]
+fn benchmark_parse_raw_vs_parse() {
+    use std::time::{Duration, Instant};
+
+    // Complex query with multiple features: CTEs, JOINs, subqueries, window functions, etc.
+    let query = r#"
+        WITH RECURSIVE
+            category_tree AS (
+                SELECT id, name, parent_id, 0 AS depth
+                FROM categories
+                WHERE parent_id IS NULL
+                UNION ALL
+                SELECT c.id, c.name, c.parent_id, ct.depth + 1
+                FROM categories c
+                INNER JOIN category_tree ct ON c.parent_id = ct.id
+                WHERE ct.depth < 10
+            ),
+            recent_orders AS (
+                SELECT
+                    o.id,
+                    o.user_id,
+                    o.total_amount,
+                    o.created_at,
+                    ROW_NUMBER() OVER (PARTITION BY o.user_id ORDER BY o.created_at DESC) as rn
+                FROM orders o
+                WHERE o.created_at > NOW() - INTERVAL '30 days'
+                    AND o.status IN ('completed', 'shipped', 'delivered')
+            )
+        SELECT
+            u.id AS user_id,
+            u.email,
+            u.first_name || ' ' || u.last_name AS full_name,
+            COALESCE(ua.city, 'Unknown') AS city,
+            COUNT(DISTINCT ro.id) AS order_count,
+            SUM(ro.total_amount) AS total_spent,
+            AVG(ro.total_amount) AS avg_order_value,
+            MAX(ro.created_at) AS last_order_date,
+            CASE
+                WHEN SUM(ro.total_amount) > 10000 THEN 'platinum'
+                WHEN SUM(ro.total_amount) > 5000 THEN 'gold'
+                WHEN SUM(ro.total_amount) > 1000 THEN 'silver'
+                ELSE 'bronze'
+            END AS customer_tier,
+            (
+                SELECT COUNT(*)
+                FROM user_reviews ur
+                WHERE ur.user_id = u.id AND ur.rating >= 4
+            ) AS positive_reviews,
+            ARRAY_AGG(DISTINCT ct.name ORDER BY ct.name) FILTER (WHERE ct.depth = 1) AS top_categories
+        FROM users u
+        LEFT JOIN user_addresses ua ON ua.user_id = u.id AND ua.is_primary = true
+        LEFT JOIN recent_orders ro ON ro.user_id = u.id AND ro.rn <= 5
+        LEFT JOIN order_items oi ON oi.order_id = ro.id
+        LEFT JOIN products p ON p.id = oi.product_id
+        LEFT JOIN category_tree ct ON ct.id = p.category_id
+        WHERE u.is_active = true
+            AND u.created_at < NOW() - INTERVAL '7 days'
+            AND EXISTS (
+                SELECT 1 FROM user_logins ul
+                WHERE ul.user_id = u.id
+                AND ul.logged_in_at > NOW() - INTERVAL '90 days'
+            )
+        GROUP BY u.id, u.email, u.first_name, u.last_name, ua.city
+        HAVING COUNT(DISTINCT ro.id) > 0
+        ORDER BY total_spent DESC NULLS LAST, u.created_at ASC
+        LIMIT 100
+        OFFSET 0
+        FOR UPDATE OF u SKIP LOCKED
+    "#;
+
+    // Verify both produce the same result first
+    let raw_result = parse_raw(query).unwrap();
+    let proto_result = parse(query).unwrap();
+    assert_eq!(raw_result.protobuf, proto_result.protobuf);
+
+    // Warm up
+    for _ in 0..100 {
+        let _ = parse_raw(query).unwrap();
+        let _ = parse(query).unwrap();
+    }
+
+    // Target ~2 seconds per benchmark (4 seconds total)
+    let target_duration = Duration::from_millis(2000);
+
+    // Benchmark parse_raw
+    let mut raw_iterations = 0u64;
+    let raw_start = Instant::now();
+    while raw_start.elapsed() < target_duration {
+        for _ in 0..100 {
+            let _ = parse_raw(query).unwrap();
+            raw_iterations += 1;
+        }
+    }
+    let raw_elapsed = raw_start.elapsed();
+    let raw_ns_per_iter = raw_elapsed.as_nanos() as f64 / raw_iterations as f64;
+
+    // Benchmark parse (protobuf)
+    let mut proto_iterations = 0u64;
+    let proto_start = Instant::now();
+    while proto_start.elapsed() < target_duration {
+        for _ in 0..100 {
+            let _ = parse(query).unwrap();
+            proto_iterations += 1;
+        }
+    }
+    let proto_elapsed = proto_start.elapsed();
+    let proto_ns_per_iter = proto_elapsed.as_nanos() as f64 / proto_iterations as f64;
+
+    // Calculate speedup and time saved
+    let speedup = proto_ns_per_iter / raw_ns_per_iter;
+    let time_saved_ns = proto_ns_per_iter - raw_ns_per_iter;
+    let time_saved_us = time_saved_ns / 1000.0;
+
+    // Calculate throughput (queries per second)
+    let raw_qps = 1_000_000_000.0 / raw_ns_per_iter;
+    let proto_qps = 1_000_000_000.0 / proto_ns_per_iter;
+
+    println!("\n");
+    println!("============================================================");
+    println!("            parse_raw vs parse Benchmark                    ");
+    println!("============================================================");
+    println!("Query: {} chars (CTEs + JOINs + subqueries + window functions)", query.len());
+    println!();
+    println!("┌─────────────────────────────────────────────────────────┐");
+    println!("│                    RESULTS                              │");
+    println!("├─────────────────────────────────────────────────────────┤");
+    println!("│  parse_raw (direct C struct reading):                   │");
+    println!("│    Iterations:    {:>10}                            │", raw_iterations);
+    println!("│    Total time:    {:>10.2?}                            │", raw_elapsed);
+    println!("│    Per iteration: {:>10.2} μs                         │", raw_ns_per_iter / 1000.0);
+    println!("│    Throughput:    {:>10.0} queries/sec                 │", raw_qps);
+    println!("├─────────────────────────────────────────────────────────┤");
+    println!("│  parse (protobuf serialization):                        │");
+    println!("│    Iterations:    {:>10}                            │", proto_iterations);
+    println!("│    Total time:    {:>10.2?}                            │", proto_elapsed);
+    println!("│    Per iteration: {:>10.2} μs                         │", proto_ns_per_iter / 1000.0);
+    println!("│    Throughput:    {:>10.0} queries/sec                 │", proto_qps);
+    println!("├─────────────────────────────────────────────────────────┤");
+    println!("│  COMPARISON                                             │");
+    println!("│    Speedup:       {:>10.2}x faster                     │", speedup);
+    println!("│    Time saved:    {:>10.2} μs per parse                │", time_saved_us);
+    println!("│    Extra queries: {:>10.0} more queries/sec           │", raw_qps - proto_qps);
+    println!("└─────────────────────────────────────────────────────────┘");
+    println!();
+}

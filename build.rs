@@ -142,6 +142,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .allowlist_type("PartitionSpec")
         .allowlist_type("PartitionBoundSpec")
         .allowlist_type("PartitionRangeDatum")
+        .allowlist_type("PartitionElem")
         .allowlist_type("CTESearchClause")
         .allowlist_type("CTECycleClause")
         .allowlist_type("RangeSubselect")
