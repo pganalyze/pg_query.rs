@@ -3,6 +3,7 @@ use std::os::raw::c_char;
 
 use prost::Message;
 
+use crate::ast;
 use crate::bindings::*;
 use crate::error::*;
 use crate::parse_result::ParseResult;
@@ -278,4 +279,66 @@ pub fn split_with_scanner(query: &str) -> Result<Vec<&str>> {
     };
     unsafe { pg_query_free_split_result(result) };
     split_result
+}
+
+/// Parses the given SQL statement into native Rust AST types.
+///
+/// This function provides an ergonomic alternative to [`parse`] that returns
+/// native Rust types instead of protobuf-generated types. The native types
+/// are easier to work with as they don't require unwrapping `Option<Box<Node>>`
+/// at every level.
+///
+/// # Example
+///
+/// ```rust
+/// use pg_query::ast::{Node, SelectStmt};
+///
+/// let result = pg_query::parse_to_ast("SELECT * FROM users WHERE id = 1").unwrap();
+///
+/// // Direct access to statements without unwrapping
+/// for stmt in &result.stmts {
+///     if let Node::SelectStmt(select) = &stmt.stmt {
+///         // Access fields directly
+///         for node in &select.from_clause {
+///             if let Node::RangeVar(range_var) = node {
+///                 println!("Table: {}", range_var.relname);
+///             }
+///         }
+///     }
+/// }
+/// ```
+pub fn parse_to_ast(statement: &str) -> Result<ast::ParseResult> {
+    let input = CString::new(statement)?;
+    let result = unsafe { pg_query_parse_protobuf(input.as_ptr()) };
+    let parse_result = if !result.error.is_null() {
+        let message = unsafe { CStr::from_ptr((*result.error).message) }.to_string_lossy().to_string();
+        Err(Error::Parse(message))
+    } else {
+        let data = unsafe { std::slice::from_raw_parts(result.parse_tree.data as *const u8, result.parse_tree.len as usize) };
+        protobuf::ParseResult::decode(data)
+            .map_err(Error::Decode)
+            .map(|pb| ast::ParseResult::from(pb))
+    };
+    unsafe { pg_query_free_protobuf_parse_result(result) };
+    parse_result
+}
+
+/// Converts a native AST parse result back into a SQL string.
+///
+/// This function uses the original protobuf stored in the AST to deparse.
+/// Note: Any modifications made to the AST fields will NOT be reflected
+/// in the deparsed output. This function is primarily useful for round-trip
+/// testing and verification.
+///
+/// # Example
+///
+/// ```rust
+/// use pg_query::ast::Node;
+///
+/// let result = pg_query::parse_to_ast("SELECT * FROM users").unwrap();
+/// let sql = pg_query::deparse_ast(&result).unwrap();
+/// assert_eq!(sql, "SELECT * FROM users");
+/// ```
+pub fn deparse_ast(parse_result: &ast::ParseResult) -> Result<String> {
+    deparse(parse_result.as_protobuf())
 }

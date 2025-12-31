@@ -38,7 +38,9 @@
 //! ```
 //!
 
+pub mod ast;
 mod bindings;
+mod bindings_raw;
 mod error;
 mod node_enum;
 mod node_mut;
@@ -46,6 +48,7 @@ mod node_ref;
 mod node_structs;
 mod parse_result;
 mod query;
+mod raw_parse;
 mod truncate;
 
 pub use error::*;
@@ -54,6 +57,7 @@ pub use node_mut::*;
 pub use node_ref::*;
 pub use node_structs::*;
 pub use query::*;
+pub use raw_parse::parse_raw;
 pub use truncate::*;
 
 pub mod protobuf {
