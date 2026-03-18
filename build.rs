@@ -3,7 +3,9 @@
 
 use fs_extra::dir::CopyOptions;
 use glob::glob;
+use std::collections::hash_map::DefaultHasher;
 use std::env;
+use std::hash::Hasher;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -18,7 +20,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rustc-link-search=native={}", out_dir.display());
     println!("cargo:rustc-link-lib=static=pg_query");
 
-    // Copy the relevant source files to the OUT_DIR
+    // Copy the relevant source files to the OUT_DIR, but only if they changed.
+    // Without this check, fs_extra::copy_items overwrites files unconditionally,
+    // updating their mtimes and causing Cargo to re-run the build script every time.
     let source_paths = vec![
         build_path.join("pg_query").with_extension("h"),
         build_path.join("postgres_deparse").with_extension("h"),
@@ -28,9 +32,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         build_path.join("vendor"),
     ];
 
-    let copy_options = CopyOptions { overwrite: true, ..CopyOptions::default() };
+    let hash_file = out_dir.join(".source_hash");
+    let current_hash = hash_source_paths(&source_paths);
+    let cached_hash = std::fs::read_to_string(&hash_file).unwrap_or_default();
 
-    fs_extra::copy_items(&source_paths, &out_dir, &copy_options)?;
+    if cached_hash.trim() != current_hash {
+        let copy_options = CopyOptions { overwrite: true, ..CopyOptions::default() };
+        fs_extra::copy_items(&source_paths, &out_dir, &copy_options)?;
+        std::fs::write(&hash_file, &current_hash)?;
+    }
 
     // Compile the C library.
     let mut build = cc::Build::new();
@@ -70,15 +80,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     if !is_built_by_docs_rs && (env::var("REGENERATE_PROTOBUF").is_ok() || protoc_exists) {
         println!("generating protobuf bindings");
-        // HACK: Set OUT_DIR to src/ so that the generated protobuf file is copied to src/protobuf.rs
         let src_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR")?).join("src");
-        env::set_var("OUT_DIR", &src_dir);
+        let proto_tmp_dir = out_dir.join("proto_gen");
+        std::fs::create_dir_all(&proto_tmp_dir)?;
+
+        // Generate into a temp dir (inside OUT_DIR) instead of directly into src/
+        env::set_var("OUT_DIR", &proto_tmp_dir);
 
         let mut prost_build = prost_build::Config::new();
         prost_build.type_attribute(".", "#[derive(serde::Serialize)]");
         prost_build.compile_protos(&[&out_protobuf_path.join("pg_query").with_extension("proto")], &[&out_protobuf_path])?;
 
-        std::fs::rename(src_dir.join("pg_query.rs"), src_dir.join("protobuf.rs"))?;
+        // Only update src/protobuf.rs if the generated output actually changed,
+        // to avoid invalidating Cargo's fingerprint on every build
+        let new_content = std::fs::read(proto_tmp_dir.join("pg_query.rs"))?;
+        let existing = std::fs::read(src_dir.join("protobuf.rs")).unwrap_or_default();
+        if new_content != existing {
+            std::fs::copy(proto_tmp_dir.join("pg_query.rs"), src_dir.join("protobuf.rs"))?;
+        }
 
         // Reset OUT_DIR to the original value
         env::set_var("OUT_DIR", &out_dir);
@@ -87,4 +106,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
+}
+
+/// Hash the contents of all files under the given paths to detect changes.
+fn hash_source_paths(paths: &[PathBuf]) -> String {
+    let mut hasher = DefaultHasher::new();
+    for path in paths {
+        hash_path(&mut hasher, path);
+    }
+    format!("{:x}", hasher.finish())
+}
+
+fn hash_path(hasher: &mut DefaultHasher, path: &Path) {
+    if path.is_file() {
+        if let Ok(contents) = std::fs::read(path) {
+            hasher.write(path.to_string_lossy().as_bytes());
+            hasher.write(&contents);
+        }
+    } else if path.is_dir() {
+        if let Ok(entries) = std::fs::read_dir(path) {
+            let mut entries: Vec<_> = entries.filter_map(|e| e.ok()).collect();
+            entries.sort_by_key(|e| e.file_name());
+            for entry in entries {
+                hash_path(hasher, &entry.path());
+            }
+        }
+    }
 }
