@@ -1,3 +1,8 @@
 /target
 .idea/
 .DS_Store
+
+# Fuzzing artifacts
+hfuzz_workspace/
+hfuzz_target/
+fuzz/target

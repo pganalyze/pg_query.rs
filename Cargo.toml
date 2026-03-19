@@ -42,3 +42,6 @@ regex = "1.6.0"
 [[bench]]
 name = "parse_vs_summary"
 harness = false
+
+[workspace]
+members = ["fuzz"]

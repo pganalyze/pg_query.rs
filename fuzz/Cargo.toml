@@ -1,0 +1,13 @@
+[package]
+name = "pg_query-fuzz"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+honggfuzz = "=0.5.58"
+pg_query = { path = ".." }
+
+[[bin]]
+name = "fuzz_parse"
+path = "src/fuzz_parse.rs"
