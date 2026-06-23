@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use std::collections::VecDeque;
 
 use crate::*;
 
@@ -35,13 +36,13 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
     // https://ricardomartins.cc/2016/07/11/interior-mutability-behind-the-curtain
     unsafe {
         let mut protobuf = protobuf.clone();
-        let mut truncations: Vec<PossibleTruncation> = Vec::new();
+        let mut truncations: VecDeque<PossibleTruncation> = VecDeque::new();
         for (node, depth, _context) in protobuf.nodes_mut().into_iter() {
             match node {
                 NodeMut::SelectStmt(s) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
                     if !s.target_list.is_empty() {
-                        truncations.push(PossibleTruncation {
+                        truncations.push_back(PossibleTruncation {
                             attr: TruncationAttr::TargetList,
                             node,
                             depth,
@@ -49,7 +50,7 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                         });
                     }
                     if let Some(clause) = s.where_clause.as_ref() {
-                        truncations.push(PossibleTruncation {
+                        truncations.push_back(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
                             node,
                             depth,
@@ -57,7 +58,7 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                         });
                     }
                     if !s.values_lists.is_empty() {
-                        truncations.push(PossibleTruncation {
+                        truncations.push_back(PossibleTruncation {
                             attr: TruncationAttr::ValuesLists,
                             node,
                             depth,
@@ -68,7 +69,7 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                 NodeMut::UpdateStmt(s) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
                     if !s.target_list.is_empty() {
-                        truncations.push(PossibleTruncation {
+                        truncations.push_back(PossibleTruncation {
                             attr: TruncationAttr::TargetList,
                             node,
                             depth,
@@ -76,7 +77,7 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                         });
                     }
                     if let Some(clause) = s.where_clause.as_ref() {
-                        truncations.push(PossibleTruncation {
+                        truncations.push_back(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
                             node,
                             depth,
@@ -87,7 +88,7 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                 NodeMut::DeleteStmt(s) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
                     if let Some(clause) = s.where_clause.as_ref() {
-                        truncations.push(PossibleTruncation {
+                        truncations.push_back(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
                             node,
                             depth,
@@ -98,7 +99,7 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                 NodeMut::CopyStmt(s) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
                     if let Some(clause) = s.where_clause.as_ref() {
-                        truncations.push(PossibleTruncation {
+                        truncations.push_back(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
                             node,
                             depth,
@@ -109,13 +110,13 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                 NodeMut::InsertStmt(s) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
                     if !s.cols.is_empty() {
-                        truncations.push(PossibleTruncation { attr: TruncationAttr::Cols, node, depth, length: cols_len(s.cols.clone())? });
+                        truncations.push_back(PossibleTruncation { attr: TruncationAttr::Cols, node, depth, length: cols_len(s.cols.clone())? });
                     }
                 }
                 NodeMut::IndexStmt(s) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
                     if let Some(clause) = s.where_clause.as_ref() {
-                        truncations.push(PossibleTruncation {
+                        truncations.push_back(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
                             node,
                             depth,
@@ -126,7 +127,7 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                 NodeMut::RuleStmt(s) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
                     if let Some(clause) = s.where_clause.as_ref() {
-                        truncations.push(PossibleTruncation {
+                        truncations.push_back(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
                             node,
                             depth,
@@ -137,7 +138,7 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                 NodeMut::CommonTableExpr(s) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
                     if let Some(cte) = s.ctequery.as_ref() {
-                        truncations.push(PossibleTruncation {
+                        truncations.push_back(PossibleTruncation {
                             attr: TruncationAttr::CTEQuery,
                             node,
                             depth: depth + 1,
@@ -148,7 +149,7 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                 NodeMut::InferClause(s) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
                     if let Some(clause) = s.where_clause.as_ref() {
-                        truncations.push(PossibleTruncation {
+                        truncations.push_back(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
                             node,
                             depth,
@@ -159,7 +160,7 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                 NodeMut::OnConflictClause(s) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;
                     if !s.target_list.is_empty() {
-                        truncations.push(PossibleTruncation {
+                        truncations.push_back(PossibleTruncation {
                             attr: TruncationAttr::TargetList,
                             node,
                             depth,
@@ -167,7 +168,7 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
                         });
                     }
                     if let Some(clause) = s.where_clause.as_ref() {
-                        truncations.push(PossibleTruncation {
+                        truncations.push_back(PossibleTruncation {
                             attr: TruncationAttr::WhereClause,
                             node,
                             depth,
@@ -179,13 +180,12 @@ pub fn truncate(protobuf: &protobuf::ParseResult, max_length: usize) -> Result<S
             }
         }
 
-        truncations.sort_by(|a, b| match a.depth.cmp(&b.depth).reverse() {
+        truncations.make_contiguous().sort_by(|a, b| match a.depth.cmp(&b.depth).reverse() {
             Ordering::Equal => a.length.cmp(&b.length).reverse(),
             other => other,
         });
 
-        while !truncations.is_empty() {
-            let truncation = truncations.remove(0);
+        while let Some(truncation) = truncations.pop_front() {
             match (truncation.node, truncation.attr) {
                 (NodeMut::SelectStmt(s), TruncationAttr::TargetList) => {
                     let s = s.as_mut().ok_or(Error::InvalidPointer)?;

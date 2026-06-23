@@ -1,6 +1,7 @@
 use crate::*;
 
 pub use protobuf::node::Node as NodeEnum;
+use std::collections::VecDeque;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, serde::Serialize)]
 pub enum Context {
@@ -20,10 +21,10 @@ impl NodeEnum {
     }
 
     pub fn nodes(&self) -> Vec<(NodeRef<'_>, i32, Context, bool)> {
-        let mut iter = vec![(self.to_ref(), 0, Context::None, false)];
+        let mut iter = VecDeque::new();
+        iter.push_front((self.to_ref(), 0, Context::None, false));
         let mut nodes = Vec::new();
-        while !iter.is_empty() {
-            let (node, depth, context, has_filter_columns) = iter.remove(0);
+        while let Some((node, depth, context, has_filter_columns)) = iter.pop_front() {
             let depth = depth + 1;
             match node {
                 //
@@ -32,33 +33,33 @@ impl NodeEnum {
                 NodeRef::SelectStmt(s) => {
                     s.target_list.iter().for_each(|n| {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, Context::Select, false));
+                            iter.push_back((n.to_ref(), depth, Context::Select, false));
                         }
                     });
                     if let Some(n) = &s.where_clause {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, Context::Select, true));
+                            iter.push_back((n.to_ref(), depth, Context::Select, true));
                         }
                     }
                     s.sort_clause.iter().for_each(|n| {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, Context::Select, false));
+                            iter.push_back((n.to_ref(), depth, Context::Select, false));
                         }
                     });
                     s.group_clause.iter().for_each(|n| {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, Context::Select, false));
+                            iter.push_back((n.to_ref(), depth, Context::Select, false));
                         }
                     });
                     if let Some(n) = &s.having_clause {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, Context::Select, false));
+                            iter.push_back((n.to_ref(), depth, Context::Select, false));
                         }
                     }
                     if let Some(clause) = &s.with_clause {
                         clause.ctes.iter().for_each(|n| {
                             if let Some(n) = n.node.as_ref() {
-                                iter.push((n.to_ref(), depth, Context::Select, false));
+                                iter.push_back((n.to_ref(), depth, Context::Select, false));
                             }
                         });
                     }
@@ -66,32 +67,32 @@ impl NodeEnum {
                         Ok(protobuf::SetOperation::SetopNone) => {
                             s.from_clause.iter().for_each(|n| {
                                 if let Some(n) = n.node.as_ref() {
-                                    iter.push((n.to_ref(), depth, Context::Select, false));
+                                    iter.push_back((n.to_ref(), depth, Context::Select, false));
                                 }
                             });
                         }
                         Ok(protobuf::SetOperation::SetopUnion) => {
                             if let Some(left) = s.larg.as_ref() {
-                                iter.push((left.to_ref(), depth, Context::Select, false));
+                                iter.push_back((left.to_ref(), depth, Context::Select, false));
                             }
                             if let Some(right) = s.rarg.as_ref() {
-                                iter.push((right.to_ref(), depth, Context::Select, false));
+                                iter.push_back((right.to_ref(), depth, Context::Select, false));
                             }
                         }
                         Ok(protobuf::SetOperation::SetopExcept) => {
                             if let Some(left) = s.larg.as_ref() {
-                                iter.push((left.to_ref(), depth, Context::Select, false));
+                                iter.push_back((left.to_ref(), depth, Context::Select, false));
                             }
                             if let Some(right) = s.rarg.as_ref() {
-                                iter.push((right.to_ref(), depth, Context::Select, false));
+                                iter.push_back((right.to_ref(), depth, Context::Select, false));
                             }
                         }
                         Ok(protobuf::SetOperation::SetopIntersect) => {
                             if let Some(left) = s.larg.as_ref() {
-                                iter.push((left.to_ref(), depth, Context::Select, false));
+                                iter.push_back((left.to_ref(), depth, Context::Select, false));
                             }
                             if let Some(right) = s.rarg.as_ref() {
-                                iter.push((right.to_ref(), depth, Context::Select, false));
+                                iter.push_back((right.to_ref(), depth, Context::Select, false));
                             }
                         }
                         Ok(protobuf::SetOperation::Undefined) | Err(_) => (),
@@ -100,46 +101,46 @@ impl NodeEnum {
                 NodeRef::InsertStmt(s) => {
                     if let Some(n) = &s.select_stmt {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, Context::DML, false));
+                            iter.push_back((n.to_ref(), depth, Context::DML, false));
                         }
                     }
                     if let Some(rel) = s.relation.as_ref() {
-                        iter.push((rel.to_ref(), depth, Context::DML, false));
+                        iter.push_back((rel.to_ref(), depth, Context::DML, false));
                     }
                     if let Some(clause) = &s.with_clause {
                         clause.ctes.iter().for_each(|n| {
                             if let Some(n) = n.node.as_ref() {
-                                iter.push((n.to_ref(), depth, Context::DML, false));
+                                iter.push_back((n.to_ref(), depth, Context::DML, false));
                             }
                         });
                     }
                     if let Some(n) = &s.on_conflict_clause {
-                        iter.push((n.to_ref(), depth, Context::DML, false));
+                        iter.push_back((n.to_ref(), depth, Context::DML, false));
                     }
                 }
                 NodeRef::UpdateStmt(s) => {
                     s.target_list.iter().for_each(|n| {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, Context::DML, false));
+                            iter.push_back((n.to_ref(), depth, Context::DML, false));
                         }
                     });
                     s.where_clause.iter().for_each(|n| {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, Context::DML, true));
+                            iter.push_back((n.to_ref(), depth, Context::DML, true));
                         }
                     });
                     s.from_clause.iter().for_each(|n| {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, Context::Select, false));
+                            iter.push_back((n.to_ref(), depth, Context::Select, false));
                         }
                     });
                     if let Some(rel) = s.relation.as_ref() {
-                        iter.push((rel.to_ref(), depth, Context::DML, false));
+                        iter.push_back((rel.to_ref(), depth, Context::DML, false));
                     }
                     if let Some(clause) = &s.with_clause {
                         clause.ctes.iter().for_each(|n| {
                             if let Some(n) = n.node.as_ref() {
-                                iter.push((n.to_ref(), depth, Context::DML, false));
+                                iter.push_back((n.to_ref(), depth, Context::DML, false));
                             }
                         });
                     }
@@ -147,74 +148,74 @@ impl NodeEnum {
                 NodeRef::DeleteStmt(s) => {
                     if let Some(n) = &s.where_clause {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, Context::DML, true));
+                            iter.push_back((n.to_ref(), depth, Context::DML, true));
                         }
                     }
                     if let Some(rel) = s.relation.as_ref() {
-                        iter.push((rel.to_ref(), depth, Context::DML, false));
+                        iter.push_back((rel.to_ref(), depth, Context::DML, false));
                     }
                     if let Some(clause) = &s.with_clause {
                         clause.ctes.iter().for_each(|n| {
                             if let Some(n) = n.node.as_ref() {
-                                iter.push((n.to_ref(), depth, Context::DML, false));
+                                iter.push_back((n.to_ref(), depth, Context::DML, false));
                             }
                         });
                     }
                     s.using_clause.iter().for_each(|n| {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, Context::Select, false));
+                            iter.push_back((n.to_ref(), depth, Context::Select, false));
                         }
                     });
                 }
                 NodeRef::MergeStmt(m) => {
                     if let Some(t) = m.relation.as_ref() {
-                        iter.push((t.to_ref(), depth, Context::DML, false));
+                        iter.push_back((t.to_ref(), depth, Context::DML, false));
                     }
 
                     if let Some(clause) = &m.with_clause {
                         clause.ctes.iter().for_each(|n| {
                             if let Some(n) = n.node.as_ref() {
-                                iter.push((n.to_ref(), depth, Context::DML, false));
+                                iter.push_back((n.to_ref(), depth, Context::DML, false));
                             }
                         });
                     }
 
                     m.source_relation.iter().for_each(|n| {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, Context::Select, false));
+                            iter.push_back((n.to_ref(), depth, Context::Select, false));
                         }
                     });
                     m.merge_when_clauses.iter().for_each(|n| {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, Context::DML, true));
+                            iter.push_back((n.to_ref(), depth, Context::DML, true));
                         }
                     });
                     m.join_condition.iter().for_each(|n| {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, Context::Select, false));
+                            iter.push_back((n.to_ref(), depth, Context::Select, false));
                         }
                     });
                 }
                 NodeRef::CommonTableExpr(s) => {
                     if let Some(n) = &s.ctequery {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, context, false));
+                            iter.push_back((n.to_ref(), depth, context, false));
                         }
                     }
                 }
                 NodeRef::CopyStmt(s) => {
                     if let Some(n) = &s.query {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, Context::DML, false));
+                            iter.push_back((n.to_ref(), depth, Context::DML, false));
                         }
                     }
                     if let Some(rel) = s.relation.as_ref() {
-                        iter.push((rel.to_ref(), depth, Context::DML, false));
+                        iter.push_back((rel.to_ref(), depth, Context::DML, false));
                     }
                 }
                 NodeRef::CallStmt(s) => {
                     if let Some(n) = s.funccall.as_ref() {
-                        iter.push((n.to_ref(), depth, Context::Call, false));
+                        iter.push_back((n.to_ref(), depth, Context::Call, false));
                     }
                 }
                 //
@@ -222,91 +223,91 @@ impl NodeEnum {
                 //
                 NodeRef::AlterTableStmt(s) => {
                     if let Some(rel) = s.relation.as_ref() {
-                        iter.push((rel.to_ref(), depth, Context::DDL, false));
+                        iter.push_back((rel.to_ref(), depth, Context::DDL, false));
                     }
                 }
                 NodeRef::CreateStmt(s) => {
                     if let Some(rel) = s.relation.as_ref() {
-                        iter.push((rel.to_ref(), depth, Context::DDL, false));
+                        iter.push_back((rel.to_ref(), depth, Context::DDL, false));
                     }
                 }
                 NodeRef::CreateTableAsStmt(s) => {
                     if let Some(n) = &s.query {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, Context::DDL, false));
+                            iter.push_back((n.to_ref(), depth, Context::DDL, false));
                         }
                     }
                     if let Some(n) = &s.into {
                         if let Some(rel) = n.rel.as_ref() {
-                            iter.push((rel.to_ref(), depth, Context::DDL, false));
+                            iter.push_back((rel.to_ref(), depth, Context::DDL, false));
                         }
                     }
                 }
                 NodeRef::TruncateStmt(s) => {
                     s.relations.iter().for_each(|n| {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, Context::DDL, false));
+                            iter.push_back((n.to_ref(), depth, Context::DDL, false));
                         }
                     });
                 }
                 NodeRef::ViewStmt(s) => {
                     if let Some(n) = &s.query {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, Context::DDL, false));
+                            iter.push_back((n.to_ref(), depth, Context::DDL, false));
                         }
                     }
                     if let Some(rel) = s.view.as_ref() {
-                        iter.push((rel.to_ref(), depth, Context::DDL, false));
+                        iter.push_back((rel.to_ref(), depth, Context::DDL, false));
                     }
                 }
                 NodeRef::IndexStmt(s) => {
                     if let Some(rel) = s.relation.as_ref() {
-                        iter.push((rel.to_ref(), depth, Context::DDL, false));
+                        iter.push_back((rel.to_ref(), depth, Context::DDL, false));
                     }
                     s.index_params.iter().for_each(|n| {
                         if let Some(NodeEnum::IndexElem(n)) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, Context::DDL, false));
+                            iter.push_back((n.to_ref(), depth, Context::DDL, false));
 
                             if let Some(n) = n.expr.as_ref().and_then(|n| n.node.as_ref()) {
-                                iter.push((n.to_ref(), depth, Context::DDL, false));
+                                iter.push_back((n.to_ref(), depth, Context::DDL, false));
                             }
                         }
                     });
                     if let Some(n) = s.where_clause.as_ref() {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, Context::DDL, true));
+                            iter.push_back((n.to_ref(), depth, Context::DDL, true));
                         }
                     }
                 }
                 NodeRef::CreateTrigStmt(s) => {
                     if let Some(rel) = s.relation.as_ref() {
-                        iter.push((rel.to_ref(), depth, Context::DDL, false));
+                        iter.push_back((rel.to_ref(), depth, Context::DDL, false));
                     }
                 }
                 NodeRef::RuleStmt(s) => {
                     if let Some(rel) = s.relation.as_ref() {
-                        iter.push((rel.to_ref(), depth, Context::DDL, false));
+                        iter.push_back((rel.to_ref(), depth, Context::DDL, false));
                     }
                 }
                 NodeRef::VacuumStmt(s) => {
                     for node in &s.rels {
                         if let Some(NodeEnum::VacuumRelation(r)) = &node.node {
                             if let Some(rel) = r.relation.as_ref() {
-                                iter.push((rel.to_ref(), depth, Context::DDL, false));
+                                iter.push_back((rel.to_ref(), depth, Context::DDL, false));
                             }
                         }
                     }
                 }
                 NodeRef::RefreshMatViewStmt(s) => {
                     if let Some(rel) = s.relation.as_ref() {
-                        iter.push((rel.to_ref(), depth, Context::DDL, false));
+                        iter.push_back((rel.to_ref(), depth, Context::DDL, false));
                     }
                 }
                 NodeRef::GrantStmt(s) => {
                     if let Ok(protobuf::ObjectType::ObjectTable) = protobuf::ObjectType::try_from(s.objtype) {
                         s.objects.iter().for_each(|n| {
                             if let Some(n) = n.node.as_ref() {
-                                iter.push((n.to_ref(), depth, Context::DDL, false));
+                                iter.push_back((n.to_ref(), depth, Context::DDL, false));
                             }
                         });
                     }
@@ -314,14 +315,14 @@ impl NodeEnum {
                 NodeRef::LockStmt(s) => {
                     s.relations.iter().for_each(|n| {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, Context::DDL, false));
+                            iter.push_back((n.to_ref(), depth, Context::DDL, false));
                         }
                     });
                 }
                 NodeRef::ExplainStmt(s) => {
                     if let Some(n) = &s.query {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, context, false));
+                            iter.push_back((n.to_ref(), depth, context, false));
                         }
                     }
                 }
@@ -331,106 +332,106 @@ impl NodeEnum {
                 NodeRef::AExpr(e) => {
                     if let Some(n) = &e.lexpr {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, context, has_filter_columns));
+                            iter.push_back((n.to_ref(), depth, context, has_filter_columns));
                         }
                     }
                     if let Some(n) = &e.rexpr {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, context, has_filter_columns));
+                            iter.push_back((n.to_ref(), depth, context, has_filter_columns));
                         }
                     }
                 }
                 NodeRef::BoolExpr(e) => {
                     e.args.iter().for_each(|n| {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, context, has_filter_columns));
+                            iter.push_back((n.to_ref(), depth, context, has_filter_columns));
                         }
                     });
                 }
                 NodeRef::BooleanTest(e) => {
                     if let Some(n) = &e.arg {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, context, has_filter_columns));
+                            iter.push_back((n.to_ref(), depth, context, has_filter_columns));
                         }
                     }
                 }
                 NodeRef::CoalesceExpr(e) => {
                     e.args.iter().for_each(|n| {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, context, has_filter_columns));
+                            iter.push_back((n.to_ref(), depth, context, has_filter_columns));
                         }
                     });
                 }
                 NodeRef::MinMaxExpr(e) => {
                     e.args.iter().for_each(|n| {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, context, has_filter_columns));
+                            iter.push_back((n.to_ref(), depth, context, has_filter_columns));
                         }
                     });
                 }
                 NodeRef::NullTest(e) => {
                     if let Some(n) = &e.arg {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, context, has_filter_columns));
+                            iter.push_back((n.to_ref(), depth, context, has_filter_columns));
                         }
                     }
                 }
                 NodeRef::ResTarget(t) => {
                     if let Some(n) = &t.val {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, context, has_filter_columns));
+                            iter.push_back((n.to_ref(), depth, context, has_filter_columns));
                         }
                     }
                 }
                 NodeRef::SubLink(l) => {
                     if let Some(n) = &l.subselect {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, context, has_filter_columns));
+                            iter.push_back((n.to_ref(), depth, context, has_filter_columns));
                         }
                     }
                 }
                 NodeRef::FuncCall(c) => {
                     c.args.iter().for_each(|n| {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, context, has_filter_columns));
+                            iter.push_back((n.to_ref(), depth, context, has_filter_columns));
                         }
                     });
                 }
                 NodeRef::CaseExpr(c) => {
                     c.args.iter().for_each(|n| {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, context, has_filter_columns));
+                            iter.push_back((n.to_ref(), depth, context, has_filter_columns));
                         }
                     });
                     if let Some(n) = &c.defresult {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, context, has_filter_columns));
+                            iter.push_back((n.to_ref(), depth, context, has_filter_columns));
                         }
                     }
                 }
                 NodeRef::CaseWhen(w) => {
                     if let Some(n) = &w.expr {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, context, has_filter_columns));
+                            iter.push_back((n.to_ref(), depth, context, has_filter_columns));
                         }
                     }
                     if let Some(n) = &w.result {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, context, has_filter_columns));
+                            iter.push_back((n.to_ref(), depth, context, has_filter_columns));
                         }
                     }
                 }
                 NodeRef::SortBy(n) => {
                     if let Some(n) = &n.node {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, context, has_filter_columns));
+                            iter.push_back((n.to_ref(), depth, context, has_filter_columns));
                         }
                     }
                 }
                 NodeRef::TypeCast(n) => {
                     if let Some(n) = &n.arg {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, context, has_filter_columns));
+                            iter.push_back((n.to_ref(), depth, context, has_filter_columns));
                         }
                     }
                 }
@@ -440,7 +441,7 @@ impl NodeEnum {
                 NodeRef::List(l) => {
                     l.items.iter().for_each(|n| {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, context, has_filter_columns));
+                            iter.push_back((n.to_ref(), depth, context, has_filter_columns));
                         }
                     });
                 }
@@ -448,7 +449,7 @@ impl NodeEnum {
                     [&e.larg, &e.rarg, &e.quals].iter().for_each(|n| {
                         if let Some(n) = n {
                             if let Some(n) = n.node.as_ref() {
-                                iter.push((n.to_ref(), depth, context, has_filter_columns));
+                                iter.push_back((n.to_ref(), depth, context, has_filter_columns));
                             }
                         }
                     });
@@ -456,21 +457,21 @@ impl NodeEnum {
                 NodeRef::RowExpr(e) => {
                     e.args.iter().for_each(|n| {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, context, has_filter_columns));
+                            iter.push_back((n.to_ref(), depth, context, has_filter_columns));
                         }
                     });
                 }
                 NodeRef::RangeSubselect(s) => {
                     if let Some(n) = &s.subquery {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, context, has_filter_columns));
+                            iter.push_back((n.to_ref(), depth, context, has_filter_columns));
                         }
                     }
                 }
                 NodeRef::RangeFunction(f) => {
                     f.functions.iter().for_each(|n| {
                         if let Some(n) = n.node.as_ref() {
-                            iter.push((n.to_ref(), depth, context, has_filter_columns));
+                            iter.push_back((n.to_ref(), depth, context, has_filter_columns));
                         }
                     });
                 }
@@ -488,10 +489,10 @@ impl NodeEnum {
     /// The caller may have to deal with dangling pointers, and passing an
     /// invalid tree back to libpg_query may cause it to panic.
     pub unsafe fn nodes_mut(&mut self) -> Vec<(NodeMut, i32, Context)> {
-        let mut iter = vec![(self.to_mut(), 0, Context::None)];
+        let mut iter = VecDeque::new();
+        iter.push_front((self.to_mut(), 0, Context::None));
         let mut nodes = Vec::new();
-        while !iter.is_empty() {
-            let (node, depth, context) = iter.remove(0);
+        while let Some((node, depth, context)) = iter.pop_front() {
             let depth = depth + 1;
             match node {
                 //
@@ -501,33 +502,33 @@ impl NodeEnum {
                     let s = s.as_mut().unwrap();
                     s.target_list.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, Context::Select));
+                            iter.push_back((n.to_mut(), depth, Context::Select));
                         }
                     });
                     if let Some(n) = s.where_clause.as_mut() {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, Context::Select));
+                            iter.push_back((n.to_mut(), depth, Context::Select));
                         }
                     }
                     s.sort_clause.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, Context::Select));
+                            iter.push_back((n.to_mut(), depth, Context::Select));
                         }
                     });
                     s.group_clause.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, Context::Select));
+                            iter.push_back((n.to_mut(), depth, Context::Select));
                         }
                     });
                     if let Some(n) = s.having_clause.as_mut() {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, Context::Select));
+                            iter.push_back((n.to_mut(), depth, Context::Select));
                         }
                     }
                     if let Some(clause) = s.with_clause.as_mut() {
                         clause.ctes.iter_mut().for_each(|n| {
                             if let Some(n) = n.node.as_mut() {
-                                iter.push((n.to_mut(), depth, Context::Select));
+                                iter.push_back((n.to_mut(), depth, Context::Select));
                             }
                         });
                     }
@@ -535,32 +536,32 @@ impl NodeEnum {
                         Ok(protobuf::SetOperation::SetopNone) => {
                             s.from_clause.iter_mut().for_each(|n| {
                                 if let Some(n) = n.node.as_mut() {
-                                    iter.push((n.to_mut(), depth, Context::Select));
+                                    iter.push_back((n.to_mut(), depth, Context::Select));
                                 }
                             });
                         }
                         Ok(protobuf::SetOperation::SetopUnion) => {
                             if let Some(left) = s.larg.as_mut() {
-                                iter.push((left.to_mut(), depth, Context::Select));
+                                iter.push_back((left.to_mut(), depth, Context::Select));
                             }
                             if let Some(right) = s.rarg.as_mut() {
-                                iter.push((right.to_mut(), depth, Context::Select));
+                                iter.push_back((right.to_mut(), depth, Context::Select));
                             }
                         }
                         Ok(protobuf::SetOperation::SetopExcept) => {
                             if let Some(left) = s.larg.as_mut() {
-                                iter.push((left.to_mut(), depth, Context::Select));
+                                iter.push_back((left.to_mut(), depth, Context::Select));
                             }
                             if let Some(right) = s.rarg.as_mut() {
-                                iter.push((right.to_mut(), depth, Context::Select));
+                                iter.push_back((right.to_mut(), depth, Context::Select));
                             }
                         }
                         Ok(protobuf::SetOperation::SetopIntersect) => {
                             if let Some(left) = s.larg.as_mut() {
-                                iter.push((left.to_mut(), depth, Context::Select));
+                                iter.push_back((left.to_mut(), depth, Context::Select));
                             }
                             if let Some(right) = s.rarg.as_mut() {
-                                iter.push((right.to_mut(), depth, Context::Select));
+                                iter.push_back((right.to_mut(), depth, Context::Select));
                             }
                         }
                         Ok(protobuf::SetOperation::Undefined) | Err(_) => (),
@@ -570,47 +571,47 @@ impl NodeEnum {
                     let s = s.as_mut().unwrap();
                     if let Some(n) = s.select_stmt.as_mut() {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, Context::DML));
+                            iter.push_back((n.to_mut(), depth, Context::DML));
                         }
                     }
                     if let Some(rel) = s.relation.as_mut() {
-                        iter.push((rel.to_mut(), depth, Context::DML));
+                        iter.push_back((rel.to_mut(), depth, Context::DML));
                     }
                     if let Some(clause) = s.with_clause.as_mut() {
                         clause.ctes.iter_mut().for_each(|n| {
                             if let Some(n) = n.node.as_mut() {
-                                iter.push((n.to_mut(), depth, Context::DML));
+                                iter.push_back((n.to_mut(), depth, Context::DML));
                             }
                         });
                     }
                     if let Some(n) = s.on_conflict_clause.as_mut() {
-                        iter.push((n.to_mut(), depth, Context::DML));
+                        iter.push_back((n.to_mut(), depth, Context::DML));
                     }
                 }
                 NodeMut::UpdateStmt(s) => {
                     let s = s.as_mut().unwrap();
                     s.target_list.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, Context::DML));
+                            iter.push_back((n.to_mut(), depth, Context::DML));
                         }
                     });
                     s.where_clause.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, Context::DML));
+                            iter.push_back((n.to_mut(), depth, Context::DML));
                         }
                     });
                     s.from_clause.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, Context::Select));
+                            iter.push_back((n.to_mut(), depth, Context::Select));
                         }
                     });
                     if let Some(rel) = s.relation.as_mut() {
-                        iter.push((rel.to_mut(), depth, Context::DML));
+                        iter.push_back((rel.to_mut(), depth, Context::DML));
                     }
                     if let Some(clause) = s.with_clause.as_mut() {
                         clause.ctes.iter_mut().for_each(|n| {
                             if let Some(n) = n.node.as_mut() {
-                                iter.push((n.to_mut(), depth, Context::DML));
+                                iter.push_back((n.to_mut(), depth, Context::DML));
                             }
                         });
                     }
@@ -619,22 +620,22 @@ impl NodeEnum {
                     let s = s.as_mut().unwrap();
                     if let Some(n) = s.where_clause.as_mut() {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, Context::DML));
+                            iter.push_back((n.to_mut(), depth, Context::DML));
                         }
                     }
                     if let Some(rel) = s.relation.as_mut() {
-                        iter.push((rel.to_mut(), depth, Context::DML));
+                        iter.push_back((rel.to_mut(), depth, Context::DML));
                     }
                     if let Some(clause) = s.with_clause.as_mut() {
                         clause.ctes.iter_mut().for_each(|n| {
                             if let Some(n) = n.node.as_mut() {
-                                iter.push((n.to_mut(), depth, Context::DML));
+                                iter.push_back((n.to_mut(), depth, Context::DML));
                             }
                         });
                     }
                     s.using_clause.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, Context::Select));
+                            iter.push_back((n.to_mut(), depth, Context::Select));
                         }
                     });
                 }
@@ -642,7 +643,7 @@ impl NodeEnum {
                     let s = s.as_mut().unwrap();
                     if let Some(n) = s.ctequery.as_mut() {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, context));
+                            iter.push_back((n.to_mut(), depth, context));
                         }
                     }
                 }
@@ -650,17 +651,17 @@ impl NodeEnum {
                     let s = s.as_mut().unwrap();
                     if let Some(n) = s.query.as_mut() {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, Context::DML));
+                            iter.push_back((n.to_mut(), depth, Context::DML));
                         }
                     }
                     if let Some(rel) = s.relation.as_mut() {
-                        iter.push((rel.to_mut(), depth, Context::DML));
+                        iter.push_back((rel.to_mut(), depth, Context::DML));
                     }
                 }
                 NodeMut::CallStmt(s) => {
                     let s = s.as_mut().unwrap();
                     if let Some(n) = s.funccall.as_mut() {
-                        iter.push((n.to_mut(), depth, Context::Call));
+                        iter.push_back((n.to_mut(), depth, Context::Call));
                     }
                 }
                 //
@@ -669,25 +670,25 @@ impl NodeEnum {
                 NodeMut::AlterTableStmt(s) => {
                     let s = s.as_mut().unwrap();
                     if let Some(rel) = s.relation.as_mut() {
-                        iter.push((rel.to_mut(), depth, Context::DDL));
+                        iter.push_back((rel.to_mut(), depth, Context::DDL));
                     }
                 }
                 NodeMut::CreateStmt(s) => {
                     let s = s.as_mut().unwrap();
                     if let Some(rel) = s.relation.as_mut() {
-                        iter.push((rel.to_mut(), depth, Context::DDL));
+                        iter.push_back((rel.to_mut(), depth, Context::DDL));
                     }
                 }
                 NodeMut::CreateTableAsStmt(s) => {
                     let s = s.as_mut().unwrap();
                     if let Some(n) = s.query.as_mut() {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, Context::DDL));
+                            iter.push_back((n.to_mut(), depth, Context::DDL));
                         }
                     }
                     if let Some(n) = s.into.as_mut() {
                         if let Some(rel) = n.rel.as_mut() {
-                            iter.push((rel.to_mut(), depth, Context::DDL));
+                            iter.push_back((rel.to_mut(), depth, Context::DDL));
                         }
                     }
                 }
@@ -695,7 +696,7 @@ impl NodeEnum {
                     let s = s.as_mut().unwrap();
                     s.relations.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, Context::DDL));
+                            iter.push_back((n.to_mut(), depth, Context::DDL));
                         }
                     });
                 }
@@ -703,22 +704,22 @@ impl NodeEnum {
                     let s = s.as_mut().unwrap();
                     if let Some(n) = s.query.as_mut() {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, Context::DDL));
+                            iter.push_back((n.to_mut(), depth, Context::DDL));
                         }
                     }
                     if let Some(rel) = s.view.as_mut() {
-                        iter.push((rel.to_mut(), depth, Context::DDL));
+                        iter.push_back((rel.to_mut(), depth, Context::DDL));
                     }
                 }
                 NodeMut::IndexStmt(s) => {
                     let s = s.as_mut().unwrap();
                     if let Some(rel) = s.relation.as_mut() {
-                        iter.push((rel.to_mut(), depth, Context::DDL));
+                        iter.push_back((rel.to_mut(), depth, Context::DDL));
                     }
                     s.index_params.iter_mut().for_each(|n| {
                         if let Some(NodeEnum::IndexElem(n)) = n.node.as_mut() {
                             if let Some(n) = n.expr.as_mut().and_then(|n| n.node.as_mut()) {
-                                iter.push((n.to_mut(), depth, Context::DDL));
+                                iter.push_back((n.to_mut(), depth, Context::DDL));
                             }
                         }
                     });
@@ -726,13 +727,13 @@ impl NodeEnum {
                 NodeMut::CreateTrigStmt(s) => {
                     let s = s.as_mut().unwrap();
                     if let Some(rel) = s.relation.as_mut() {
-                        iter.push((rel.to_mut(), depth, Context::DDL));
+                        iter.push_back((rel.to_mut(), depth, Context::DDL));
                     }
                 }
                 NodeMut::RuleStmt(s) => {
                     let s = s.as_mut().unwrap();
                     if let Some(rel) = s.relation.as_mut() {
-                        iter.push((rel.to_mut(), depth, Context::DDL));
+                        iter.push_back((rel.to_mut(), depth, Context::DDL));
                     }
                 }
                 NodeMut::VacuumStmt(s) => {
@@ -740,7 +741,7 @@ impl NodeEnum {
                     for node in s.rels.iter_mut() {
                         if let Some(NodeEnum::VacuumRelation(r)) = node.node.as_mut() {
                             if let Some(rel) = r.relation.as_mut() {
-                                iter.push((rel.to_mut(), depth, Context::DDL));
+                                iter.push_back((rel.to_mut(), depth, Context::DDL));
                             }
                         }
                     }
@@ -748,7 +749,7 @@ impl NodeEnum {
                 NodeMut::RefreshMatViewStmt(s) => {
                     let s = s.as_mut().unwrap();
                     if let Some(rel) = s.relation.as_mut() {
-                        iter.push((rel.to_mut(), depth, Context::DDL));
+                        iter.push_back((rel.to_mut(), depth, Context::DDL));
                     }
                 }
                 NodeMut::GrantStmt(s) => {
@@ -756,7 +757,7 @@ impl NodeEnum {
                     if let Ok(protobuf::ObjectType::ObjectTable) = protobuf::ObjectType::try_from(s.objtype) {
                         s.objects.iter_mut().for_each(|n| {
                             if let Some(n) = n.node.as_mut() {
-                                iter.push((n.to_mut(), depth, Context::DDL));
+                                iter.push_back((n.to_mut(), depth, Context::DDL));
                             }
                         });
                     }
@@ -765,7 +766,7 @@ impl NodeEnum {
                     let s = s.as_mut().unwrap();
                     s.relations.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, Context::DDL));
+                            iter.push_back((n.to_mut(), depth, Context::DDL));
                         }
                     });
                 }
@@ -773,7 +774,7 @@ impl NodeEnum {
                     let s = s.as_mut().unwrap();
                     if let Some(n) = s.query.as_mut() {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, context));
+                            iter.push_back((n.to_mut(), depth, context));
                         }
                     }
                 }
@@ -784,12 +785,12 @@ impl NodeEnum {
                     let e = e.as_mut().unwrap();
                     if let Some(n) = e.lexpr.as_mut() {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, context));
+                            iter.push_back((n.to_mut(), depth, context));
                         }
                     }
                     if let Some(n) = e.rexpr.as_mut() {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, context));
+                            iter.push_back((n.to_mut(), depth, context));
                         }
                     }
                 }
@@ -797,7 +798,7 @@ impl NodeEnum {
                     let e = e.as_mut().unwrap();
                     e.args.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, context));
+                            iter.push_back((n.to_mut(), depth, context));
                         }
                     });
                 }
@@ -805,7 +806,7 @@ impl NodeEnum {
                     let e = e.as_mut().unwrap();
                     e.args.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, context));
+                            iter.push_back((n.to_mut(), depth, context));
                         }
                     });
                 }
@@ -813,7 +814,7 @@ impl NodeEnum {
                     let e = e.as_mut().unwrap();
                     e.args.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, context));
+                            iter.push_back((n.to_mut(), depth, context));
                         }
                     });
                 }
@@ -821,7 +822,7 @@ impl NodeEnum {
                     let e = e.as_mut().unwrap();
                     if let Some(n) = e.arg.as_mut() {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, context));
+                            iter.push_back((n.to_mut(), depth, context));
                         }
                     }
                 }
@@ -829,7 +830,7 @@ impl NodeEnum {
                     let t = t.as_mut().unwrap();
                     if let Some(n) = t.val.as_mut() {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, context));
+                            iter.push_back((n.to_mut(), depth, context));
                         }
                     }
                 }
@@ -837,7 +838,7 @@ impl NodeEnum {
                     let l = l.as_mut().unwrap();
                     if let Some(n) = l.subselect.as_mut() {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, context));
+                            iter.push_back((n.to_mut(), depth, context));
                         }
                     }
                 }
@@ -845,7 +846,7 @@ impl NodeEnum {
                     let c = c.as_mut().unwrap();
                     c.args.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, context));
+                            iter.push_back((n.to_mut(), depth, context));
                         }
                     });
                 }
@@ -853,12 +854,12 @@ impl NodeEnum {
                     let c = c.as_mut().unwrap();
                     c.args.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, context));
+                            iter.push_back((n.to_mut(), depth, context));
                         }
                     });
                     if let Some(n) = c.defresult.as_mut() {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, context));
+                            iter.push_back((n.to_mut(), depth, context));
                         }
                     }
                 }
@@ -866,12 +867,12 @@ impl NodeEnum {
                     let w = w.as_mut().unwrap();
                     if let Some(n) = w.expr.as_mut() {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, context));
+                            iter.push_back((n.to_mut(), depth, context));
                         }
                     }
                     if let Some(n) = w.result.as_mut() {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, context));
+                            iter.push_back((n.to_mut(), depth, context));
                         }
                     }
                 }
@@ -879,7 +880,7 @@ impl NodeEnum {
                     let n = n.as_mut().unwrap();
                     if let Some(n) = n.node.as_mut() {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, context));
+                            iter.push_back((n.to_mut(), depth, context));
                         }
                     }
                 }
@@ -887,7 +888,7 @@ impl NodeEnum {
                     let t = t.as_mut().unwrap();
                     if let Some(n) = t.arg.as_mut() {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, context));
+                            iter.push_back((n.to_mut(), depth, context));
                         }
                     }
                 }
@@ -898,7 +899,7 @@ impl NodeEnum {
                     let l = l.as_mut().unwrap();
                     l.items.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, context));
+                            iter.push_back((n.to_mut(), depth, context));
                         }
                     });
                 }
@@ -906,17 +907,17 @@ impl NodeEnum {
                     let e = e.as_mut().unwrap();
                     if let Some(n) = e.larg.as_mut() {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, context));
+                            iter.push_back((n.to_mut(), depth, context));
                         }
                     }
                     if let Some(n) = e.rarg.as_mut() {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, context));
+                            iter.push_back((n.to_mut(), depth, context));
                         }
                     }
                     if let Some(n) = e.quals.as_mut() {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, context));
+                            iter.push_back((n.to_mut(), depth, context));
                         }
                     }
                 }
@@ -924,7 +925,7 @@ impl NodeEnum {
                     let e = e.as_mut().unwrap();
                     e.args.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, context));
+                            iter.push_back((n.to_mut(), depth, context));
                         }
                     });
                 }
@@ -932,7 +933,7 @@ impl NodeEnum {
                     let s = s.as_mut().unwrap();
                     if let Some(n) = s.subquery.as_mut() {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, context));
+                            iter.push_back((n.to_mut(), depth, context));
                         }
                     }
                 }
@@ -940,7 +941,7 @@ impl NodeEnum {
                     let f = f.as_mut().unwrap();
                     f.functions.iter_mut().for_each(|n| {
                         if let Some(n) = n.node.as_mut() {
-                            iter.push((n.to_mut(), depth, context));
+                            iter.push_back((n.to_mut(), depth, context));
                         }
                     });
                 }

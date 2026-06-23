@@ -42,3 +42,7 @@ regex = "1.6.0"
 [[bench]]
 name = "parse_vs_summary"
 harness = false
+
+[[bench]]
+name = "parse_very_large_query"
+harness = false
