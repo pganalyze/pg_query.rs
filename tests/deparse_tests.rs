@@ -1,14 +1,64 @@
 #![allow(non_snake_case)]
 #![cfg(test)]
 
-use pg_query::parse;
+use pg_query::{parse, DeparseOptions};
 
 #[cfg(test)]
 use regex::Regex;
 
+#[test]
+fn it_deparses_with_pretty_print_options() {
+    let result = parse("SELECT a, b FROM t WHERE x = 1", 0).unwrap();
+    let out = pg_query::deparse(&result.protobuf, DeparseOptions { pretty_print: true, trailing_newline: true, ..Default::default() }).unwrap();
+    assert_eq!(
+        out,
+        "SELECT a, b
+FROM t
+WHERE x = 1
+"
+    );
+
+    let long = "SELECT column_one, column_two, column_three, column_four, column_five FROM my_table";
+    let result = parse(long, 0).unwrap();
+    let out = pg_query::deparse(
+        &result.protobuf,
+        DeparseOptions { pretty_print: true, indent_size: 2, max_line_length: 20, commas_start_of_line: true, ..Default::default() },
+    )
+    .unwrap();
+    assert_eq!(
+        out,
+        "SELECT
+  column_one
+  , column_two
+  , column_three
+  , column_four
+  , column_five
+FROM my_table"
+    );
+}
+
+#[test]
+fn it_parses_pg18_returning_aliases() {
+    // Postgres 18 RETURNING OLD/NEW aliases (new in PG18)
+    let result = parse("INSERT INTO t (a) VALUES (1) RETURNING OLD AS old_row, NEW AS new_row", 0);
+    assert!(result.is_ok(), "PG18 RETURNING alias syntax should parse: {:?}", result.err());
+}
+
+#[test]
+fn it_roundtrips_comments() {
+    let query = "SELECT 1 -- cast to string\n";
+    let comments = pg_query::deparse_comments_for_query(query).unwrap();
+    assert_eq!(comments.len(), 1);
+    assert_eq!(comments[0].text, "-- cast to string");
+
+    let parsed = parse(query, 0).unwrap();
+    let out = pg_query::deparse(&parsed.protobuf, DeparseOptions { comments, ..Default::default() }).unwrap();
+    assert!(out.contains("-- cast to string"), "actual: {}", out);
+}
+
 fn assert_deparse(input: &str, output: &str) {
-    let result = parse(input).unwrap();
-    assert_eq!(result.deparse().unwrap(), output);
+    let result = parse(input, 0).unwrap();
+    assert_eq!(result.deparse(Default::default()).unwrap(), output);
 }
 
 fn oneline(query: &str) -> String {

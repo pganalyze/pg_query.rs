@@ -29,8 +29,8 @@ fn it_does_not_error_when_run_in_parallel() {
     Parallel::new()
         .each(queries, |query| {
             for _ in 0..100 {
-                let result = pg_query::parse(query).unwrap();
-                pg_query::fingerprint(query).unwrap();
+                let result = pg_query::parse(query, 0).unwrap();
+                pg_query::fingerprint(query, 0, 0).unwrap();
                 result.truncate(10).unwrap();
                 pg_query::normalize(query).unwrap();
             }
