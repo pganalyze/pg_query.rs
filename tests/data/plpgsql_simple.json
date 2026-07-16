@@ -16,12 +16,6 @@
                 "then_body": [
                   {
                     "PLpgSQL_stmt_return": {
-                      "expr": {
-                        "PLpgSQL_expr": {
-                          "parseMode": 2,
-                          "query": "v_name"
-                        }
-                      },
                       "lineno": 4
                     }
                   }
@@ -48,7 +42,7 @@
           "PLpgSQL_var": {
             "datatype": {
               "PLpgSQL_type": {
-                "typname": "pg_catalog.\"varchar\""
+                "typname": "varchar"
               }
             },
             "refname": "v_name"
@@ -58,7 +52,7 @@
           "PLpgSQL_var": {
             "datatype": {
               "PLpgSQL_type": {
-                "typname": "pg_catalog.\"varchar\""
+                "typname": "varchar"
               }
             },
             "refname": "v_version"
@@ -68,7 +62,7 @@
           "PLpgSQL_var": {
             "datatype": {
               "PLpgSQL_type": {
-                "typname": "pg_catalog.\"boolean\""
+                "typname": "bool"
               }
             },
             "refname": "found"
