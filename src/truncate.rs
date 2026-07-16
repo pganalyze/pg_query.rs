@@ -358,7 +358,7 @@ fn dummy_insert(cols: Vec<Node>) -> Box<Node> {
             cols,
             select_stmt: None,
             on_conflict_clause: None,
-            returning_list: vec![],
+            returning_clause: None,
             with_clause: None,
             r#override: 1,
         }))),
@@ -380,7 +380,7 @@ fn dummy_update(target_list: Vec<Node>) -> Box<Node> {
             from_clause: vec![],
             target_list,
             where_clause: None,
-            returning_list: vec![],
+            returning_clause: None,
             with_clause: None,
         }))),
     })
