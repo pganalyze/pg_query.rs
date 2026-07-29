@@ -1,5 +1,13 @@
 # Changelog
 
+## 6.2.0   2026-07-29
+
+* Add `pg_query::summary` function
+  - This uses the new `pg_query_summary` C function that significantly improves performance when
+    you need metadata (like a list of referenced tables) but don't need the full parse tree.
+* `NodeEnum`: Improve performance when iterating over parse tree using `nodes` and `nodes_mut`
+* Fix build caching issues in `build.rs` script
+
 ## 6.1.1   2025-08-22
 
 * `NodeEnum`: Support `MERGE` queries
