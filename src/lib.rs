@@ -22,7 +22,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! pg_query = "6.1"
+//! pg_query = "6.2"
 //! ```
 //!
 //! # Example: Parsing a query
