@@ -2,6 +2,7 @@
 
 ## 6.2.0   2026-07-29
 
+* Upgrade to libpg_query 17-6.2.2
 * Add `pg_query::summary` function
   - This uses the new `pg_query_summary` C function that significantly improves performance when
     you need metadata (like a list of referenced tables) but don't need the full parse tree.
