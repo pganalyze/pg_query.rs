@@ -10,7 +10,8 @@ include = [
     # pg_query.rs
     "README.md", "build.rs", "src/**/*.rs",
     # libpg_query
-    "Makefile", "pg_query.h",
+    "Makefile",
+    "libpg_query/*.h",
     "libpg_query/{src,vendor}/**/*.{c,h}",
     "libpg_query/protobuf/pg_query.pb-c.{c,h}",
     "libpg_query/protobuf/pg_query.proto",
