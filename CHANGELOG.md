@@ -2,7 +2,7 @@
 
 ## 6.2.1   2026-09-30
 
-* Upgrade to libpg_query 17-6.2.4
+* Upgrade to libpg_query 17-6.2.5
 * Security fix: Heap out-of-bounds write and read in pg_query_normalize ([GHSA-6ggm-xmc9-8ffg](https://github.com/pganalyze/libpg_query/security/advisories/GHSA-6ggm-xmc9-8ffg))
 * Deparser:
   - Add strict checking for unexpected pointer values
