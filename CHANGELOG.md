@@ -1,5 +1,18 @@
 # Changelog
 
+## 6.2.1   2026-09-30
+
+* Upgrade to libpg_query 17-6.2.4
+* Security fix: Heap out-of-bounds write and read in pg_query_normalize ([GHSA-6ggm-xmc9-8ffg](https://github.com/pganalyze/libpg_query/security/advisories/GHSA-6ggm-xmc9-8ffg))
+* Deparser:
+  - Add strict checking for unexpected pointer values
+  - Preserve parentheses around subscripted array constructors
+    - This prevents `(ARRAY[...])[...]` from being deparsed as invalid SQL
+  - Fix handling of constraint key named `value` in `ALTER TABLE`
+* pg_query_normalize:
+  - Add support for `NOTIFY` statements
+  - Avoid undefined behaviour for overly large parameter references
+
 ## 6.2.0   2026-07-29
 
 * Upgrade to libpg_query 17-6.2.2
