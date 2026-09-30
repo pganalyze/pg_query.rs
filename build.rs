@@ -70,7 +70,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     bindgen::Builder::default()
         .header(out_header_path.to_str().ok_or("Invalid header path")?)
         .generate()
-        .map_err(|_| "Unable to generate bindings")?
+        .map_err(|e| format!("Unable to generate bindings: {e}"))?
         .write_to_file(out_dir.join("bindings.rs"))?;
 
     // Only generate protobuf bindings if protoc is available
