@@ -11,21 +11,34 @@ name: Continuous integration
 jobs:
   ci:
     env:
-      RUSTFLAGS: ${{ matrix.rust == 'nightly' && matrix.os == 'ubuntu-latest' && '-Z sanitizer=leak' || '' }}
+      RUSTFLAGS: ${{ matrix.rustflags }}
     strategy:
       fail-fast: false
       matrix:
-        rust:
-          - stable
-          - nightly
-        os:
-          - ubuntu-latest
-          - windows-latest
         include:
+          - rust: stable
+            os: ubuntu-latest
+          - rust: beta
+            os: ubuntu-latest
+          # Without an explicit --target, RUSTFLAGS also reaches proc-macro
+          # crates, which rustc rejects with sanitizers enabled. --target
+          # splits the build graph so only target units see -Z sanitizer.
+          - rust: nightly
+            os: ubuntu-latest
+            rustflags: "-Z sanitizer=leak"
+            target: x86_64-unknown-linux-gnu
+          - rust: stable
+            os: windows-latest
+          - rust: nightly
+            os: windows-latest
           - rust: stable-x86_64-pc-windows-gnu
             os: windows-latest
+          # An i686 host toolchain cannot run on x86_64 runners; install the
+          # stable host toolchain and add the i686 target instead.
           - rust: stable-i686-pc-windows-msvc
             os: windows-latest
+            toolchain: stable
+            target: i686-pc-windows-msvc
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -51,18 +64,23 @@ jobs:
         shell: bash
 
       - name: Install toolchain
-        run: rustup toolchain install ${{ matrix.rust }} --profile minimal --no-self-update
+        run: rustup toolchain install ${{ matrix.toolchain || matrix.rust }} --profile minimal --no-self-update
         shell: bash
 
       - name: Default to nightly if requested
         run: rustup default nightly
         if: matrix.rust == 'nightly'
 
+      - name: Add extra compilation target
+        run: rustup target add ${{ matrix.target }}
+        if: matrix.target
+        shell: bash
+
       - name: Build pg_query
-        run: cargo build
+        run: cargo build ${{ matrix.target && format('--target {0}', matrix.target) || '' }}
 
       - name: Run tests
-        run: cargo test
+        run: cargo test ${{ matrix.target && format('--target {0}', matrix.target) || '' }}
 
   check_style:
     name: Check file formatting and style
