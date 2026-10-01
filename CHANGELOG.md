@@ -3,16 +3,9 @@
 ## 18.0.0   2026-09-01
 
 * Upgrade to Postgres 18.6 (libpg_query 18.1.0)
-  - **Breaking**: libpg_query now uses upb instead of protobuf-c for
+  - Performance: libpg_query now uses upb instead of protobuf-c for
     serialization, which is substantially faster thanks to its built-in arena
-    allocation, and also allows limiting parse depth for complex protobuf input
-  - Security: fix heap out-of-bounds read/write in `normalize` when
-    normalizing certain utility statements containing string constants
-    (e.g. `DO ... LANGUAGE`, statements with string options, or
-    `CREATE/ALTER SUBSCRIPTION ... CONNECTION`); constant locations are now
-    recorded by the parser instead of searched in the query text
-    ([GHSA-6ggm-xmc9-8ffg](https://github.com/pganalyze/libpg_query/security/advisories/GHSA-6ggm-xmc9-8ffg));
-    applications that normalize untrusted query text should upgrade
+    allocation, resulting in 2x faster runtime.
   - Robustness: overly deep queries now return a "stack depth limit exceeded"
     error instead of crashing the process
     ([#348](https://github.com/pganalyze/libpg_query/pull/348)), and the
