@@ -1,6 +1,6 @@
 # Changelog
 
-## 18.0.0   2026-09-01
+## 18.1.0   2026-10-27
 
 * Upgrade to Postgres 18.6 (libpg_query 18.1.0)
   - Performance: libpg_query now uses upb instead of protobuf-c for
