@@ -5,7 +5,7 @@ use std::time::Duration;
 brunch::benches! {
     Bench::new("parse large query")
         .with_timeout(Duration::from_secs(180))
-        .run_seeded_with(build_large_query, |sql| pg_query::parse(black_box(&*sql)).unwrap()),
+        .run_seeded_with(build_large_query, |sql| pg_query::parse(black_box(&*sql), 0).unwrap()),
 }
 
 fn build_large_query() -> String {
