@@ -34,8 +34,14 @@ pub struct Fingerprint {
 /// assert!(matches!(result.protobuf.nodes()[0].0, NodeRef::SelectStmt(_)));
 /// ```
 pub fn parse(statement: &str, parser_options: impl Into<ParserOptions>) -> Result<ParseResult> {
+    parse_inner(statement, parser_options.into())
+}
+
+// Not generic, so the recursive protobuf decode is compiled at this crate's opt-level, not the caller's.
+// https://github.com/pganalyze/pg_query.rs/issues/85
+fn parse_inner(statement: &str, parser_options: ParserOptions) -> Result<ParseResult> {
     let input = CString::new(statement)?;
-    let result = unsafe { pg_query_parse_protobuf_opts(input.as_ptr(), parser_options.into().bits()) };
+    let result = unsafe { pg_query_parse_protobuf_opts(input.as_ptr(), parser_options.bits()) };
     let parse_result = if !result.error.is_null() {
         let message = unsafe { CStr::from_ptr((*result.error).message) }.to_string_lossy().to_string();
         Err(Error::Parse(message))
@@ -237,8 +243,12 @@ pub fn normalize(statement: &str) -> Result<String> {
 pub fn fingerprint(
     statement: &str, parser_options: impl Into<ParserOptions>, fingerprint_options: impl Into<FingerprintOptions>,
 ) -> Result<Fingerprint> {
+    fingerprint_inner(statement, parser_options.into(), fingerprint_options.into())
+}
+
+fn fingerprint_inner(statement: &str, parser_options: ParserOptions, fingerprint_options: FingerprintOptions) -> Result<Fingerprint> {
     let input = CString::new(statement)?;
-    let result = unsafe { pg_query_fingerprint_opts(input.as_ptr(), parser_options.into().bits(), fingerprint_options.into().bits()) };
+    let result = unsafe { pg_query_fingerprint_opts(input.as_ptr(), parser_options.bits(), fingerprint_options.bits()) };
     let fingerprint = if !result.error.is_null() {
         let message = unsafe { CStr::from_ptr((*result.error).message) }.to_string_lossy().to_string();
         Err(Error::Parse(message))

@@ -32,8 +32,12 @@ use crate::summary_result::SummaryResult;
 /// assert_eq!(result.tables(), vec!["contacts"]);
 /// ```
 pub fn summary(statement: &str, parser_options: impl Into<ParserOptions>, truncate_limit: i32) -> Result<SummaryResult> {
+    summary_inner(statement, parser_options.into(), truncate_limit)
+}
+
+fn summary_inner(statement: &str, parser_options: ParserOptions, truncate_limit: i32) -> Result<SummaryResult> {
     let input = CString::new(statement)?;
-    let result = unsafe { pg_query_summary(input.as_ptr(), parser_options.into().bits(), truncate_limit) };
+    let result = unsafe { pg_query_summary(input.as_ptr(), parser_options.bits(), truncate_limit) };
     let parse_result = if !result.error.is_null() {
         let message = unsafe { CStr::from_ptr((*result.error).message) }.to_string_lossy().to_string();
         Err(Error::Parse(message))
