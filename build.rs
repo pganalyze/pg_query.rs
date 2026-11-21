@@ -19,6 +19,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rerun-if-changed=libpg_query");
     println!("cargo:rustc-link-search=native={}", out_dir.display());
     println!("cargo:rustc-link-lib=static=pg_query");
+    // Dependents' build scripts read this as DEP_PG_QUERY_ROOT, to find libpg_query's headers and sources.
+    println!("cargo:root={}", env::var("CARGO_MANIFEST_DIR")?);
 
     // Copy the relevant source files to the OUT_DIR, but only if they changed.
     // Without this check, fs_extra::copy_items overwrites files unconditionally,

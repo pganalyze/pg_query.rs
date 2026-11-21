@@ -6,6 +6,7 @@ edition = "2021"
 documentation = "https://docs.rs/pg_query"
 license = "MIT"
 repository = "https://github.com/pganalyze/pg_query.rs"
+links = "pg_query"
 include = [
     # pg_query.rs
     "README.md", "build.rs", "src/**/*.rs",
